@@ -5,9 +5,10 @@
       nerd-fonts.jetbrains-mono
       material-design-icons
       noto-fonts
-      noto-fonts-emoji
-      noto-fonts-cjk
-      noto-fonts-extra
+      noto-fonts-color-emoji
+      noto-fonts-cjk-sans
+      noto-fonts-cjk-serif
+      noto-fonts-lgc-plus
     ];
 
     environment.systemPackages = with pkgs; [

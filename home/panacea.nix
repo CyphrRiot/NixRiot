@@ -1,4 +1,4 @@
-{ lib, panaceaSrc, ... }:
+{ config, lib, panaceaSrc, ... }:
 let
   copyIfMissing = name: ''
     if [ ! -e "$HOME/.config/${name}" ]; then
@@ -7,14 +7,29 @@ let
       run chmod -R u+w "$HOME/.config/${name}"
     fi
   '';
+
+  # Panacea ships its desktop entries with an @HOME@ placeholder that upstream's
+  # install.sh substitutes. Generate them here rather than copying verbatim,
+  # which would leave a literal @HOME@ in every Exec line.
+  desktopFile = name: {
+    text = builtins.replaceStrings
+      [ "@HOME@" ]
+      [ config.home.homeDirectory ]
+      (builtins.readFile "${panaceaSrc}/applications/${name}.desktop");
+  };
 in
 {
+  xdg.dataFile = {
+    "applications/panacea-files.desktop" = desktopFile "panacea-files";
+    "applications/panacea-media.desktop" = desktopFile "panacea-media";
+    "applications/panacea-text.desktop" = desktopFile "panacea-text";
+  };
+
   home.activation.panaceaConfig = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     ${copyIfMissing "panacea"}
     ${copyIfMissing "hypr"}
     ${copyIfMissing "foot"}
     ${copyIfMissing "fastfetch"}
-    ${copyIfMissing "fish"}
 
     run chmod -R u+x "$HOME/.config/panacea/scripts" "$HOME/.config/hypr/scripts" 2>/dev/null || true
 
@@ -26,12 +41,6 @@ in
     run cp -r ${panaceaSrc}/bin/. "$HOME/.local/bin/"
     run chmod -R u+w "$HOME/.local/bin"
     run chmod -R u+x "$HOME/.local/bin"
-
-    run mkdir -p "$HOME/.local/share/applications"
-    for f in ${panaceaSrc}/applications/*.desktop; do
-      [ -e "$f" ] || continue
-      run cp -n "$f" "$HOME/.local/share/applications/"
-    done
 
     run mkdir -p "$HOME/.config/quickshell"
     if [ ! -e "$HOME/.config/quickshell/panacea" ]; then

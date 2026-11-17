@@ -15,7 +15,7 @@
 
     services.mpd = {
       enable = true;
-      musicDirectory = "/home/${config.nixriot.user}/Music";
+      settings.music_directory = "/home/${config.nixriot.user}/Music";
     };
 
     users.users.mpd.extraGroups = [ "users" ];

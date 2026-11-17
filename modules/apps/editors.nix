@@ -5,7 +5,7 @@
       helix
       neovim
       zed-editor
-      kate
+      kdePackages.kate
       gnome-text-editor
       crush
       git

@@ -5,6 +5,7 @@
     ./helix.nix
     ./crush.nix
     ./xdg.nix
+    ./gtk.nix
     ./panacea.nix
   ];
 

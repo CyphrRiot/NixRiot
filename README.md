@@ -39,27 +39,26 @@ NixRiot ships no wallet files, no secrets, and no `crypto.toml`. You own those.
 
 ---
 
-## Get NixRiot
+## Download
 
-You need a bootable image. Two ways, in order of preference.
+Grab the latest image and write it to a USB stick. No build tools required.
 
-**1. The NixRiot image (preferred).** Download the latest ISO from the releases
-page and write it to a USB stick:
-
-```sh
-sudo dd if=nixriot-*.iso of=/dev/sdX bs=4M status=progress oflag=sync
-```
-
-**2. A stock NixOS image.** Boot the official NixOS graphical ISO, then pull the
-installer straight from the flake:
+- **Download page:** https://github.com/CyphrRiot/NixRiot/releases/latest
+- **Image:** `nixriot-x86_64.iso` (about 2.5 GB)
 
 ```sh
-sudo nix run github:CyphrRiot/NixRiot#installer
+sudo dd if=nixriot-x86_64.iso of=/dev/sdX bs=4M status=progress oflag=sync
 ```
 
-No NixRiot ISO is published yet, so until a release exists the only way to get
-the image is to build one yourself. That is under Advanced, at the end of this
-file.
+**No release yet?** Two fallbacks:
+
+- Boot a stock NixOS graphical ISO and install over it:
+
+  ```sh
+  sudo nix run github:CyphrRiot/NixRiot#installer
+  ```
+
+- Or build the image yourself. See Advanced, at the end of this file.
 
 ---
 
@@ -119,34 +118,40 @@ passwd
 
 ## Keybindings
 
-`SUPER` is the modifier. These come from Panacea's
-`vendor/panacea/hypr/lua/keybindings.lua`; rebind them from the settings panel
-(`SUPER + I`), which writes overrides that survive updates.
+`SUPER` is the modifier. Panacea's map lives in
+`vendor/panacea/hypr/lua/keybindings.lua`. NixRiot adds an OpenRiot-compatible
+overlay in `vendor/panacea/hypr/custom/keybindings.lua` and the matching
+`keybinds.conf`. Rebind anything from the settings panel (`SUPER + I`), which
+writes overrides that survive updates.
 
 ### Shell and launcher
 
 | Keys | Action |
 |---|---|
-| `SUPER + A` | Launcher |
+| `SUPER + D` or `SUPER + A` | Launcher |
 | `SUPER + G` | Launchpad |
 | `SUPER + Tab` | Overview |
 | `SUPER + /` | Shortcut list |
 | `SUPER + I` | Settings |
 | `SUPER + Z` | Control center |
 | `SUPER + SHIFT + N` | Notifications |
-| `SUPER + V` | Clipboard history |
-| `CTRL + ALT + Delete` | Power menu |
+| `SUPER + V` or `SUPER + SHIFT + V` | Clipboard history |
+| `SUPER + Escape` or `CTRL + ALT + Delete` | Power menu |
 | `SUPER + SHIFT + P` | Password vault |
 
 ### Apps and windows
 
 | Keys | Action |
 |---|---|
-| `SUPER + T` or `SUPER + Return` | Terminal (foot) |
-| `SUPER + F` | Firefox |
-| `SUPER + E` | Files |
+| `SUPER + Return` | Terminal (foot) |
+| `SUPER + T` | btop, process viewer |
+| `SUPER + B` | Firefox |
+| `SUPER + F` | Thunar (file manager) |
+| `SUPER + E` | Panacea Files view |
 | `SUPER + SHIFT + E` | Yazi in the terminal |
-| `SUPER + O` | Notes (Obsidian, see Troubleshooting) |
+| `SUPER + O` | Text editor |
+| `SUPER + C` | Crush |
+| `SUPER + SHIFT + K` | Music player (rmpc) |
 | `SUPER + Q` | Close window |
 | `SUPER + W` | Toggle floating |
 | `SUPER + SHIFT + Space` | Float, resize, center |
@@ -155,7 +160,7 @@ passwd
 | `SUPER + L` | Lock |
 | `SUPER + SHIFT + T` | Switch theme |
 | `SUPER + SHIFT + M` | Exit Hyprland |
-| `SUPER + SHIFT + S` | Screenshot (region) |
+| `SUPER + SHIFT + S` or `Print` | Screenshot (region) |
 | `SUPER + P` | Screen recording |
 | `SUPER + SHIFT + F12` | Screen off |
 
@@ -295,15 +300,16 @@ nix build .#iso
 ```
 
 The image lands at `result/iso/nixos-*.iso`. It is a hybrid image, so `dd` it to
-a USB stick exactly as in Get NixRiot. Building needs about 40 GB of free space
-and network access for the first `nix flake lock`.
+a USB stick as in Download. Building needs about 40 GB of free space and network
+access for the first `nix flake lock`.
 
 ---
 
 ## Troubleshooting
 
-- **`SUPER + O` does nothing.** It is bound to Obsidian, which is not installed
-  by default. Install it or rebind `notes` in the settings panel.
+- **Notes are not installed.** Panacea's `notes` action points at Obsidian, which
+  NixRiot does not ship, so `SUPER + O` is rebound to the text editor. Install
+  Obsidian or rebind it from the settings panel.
 - **The greeter does not look like Panacea.** The SDDM theme may need a Qt5/Qt6
   shim depending on the SDDM version in nixpkgs. The session still works.
 - **The install failed partway.** Re-run `sudo nixriot-install`; it wipes and

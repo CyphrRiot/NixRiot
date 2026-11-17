@@ -36,6 +36,10 @@ Upstream: https://github.com/EnsixD/Panacea at commit
    NixRiot updates through the flake.
 8. `grub/` is not vendored: NixRiot boots with systemd-boot, so the upstream
    GRUB theme is unused.
+9. `hypr/custom/keybinds.conf` and `hypr/custom/keybindings.lua` carry an
+   OpenRiot-compatible keybinding overlay: the launcher, browser, file manager,
+   process viewer, editor, Crush, music player, clipboard, power menu, and
+   screenshot move back to OpenRiot's keys.
 
 ## Not yet changed
 
