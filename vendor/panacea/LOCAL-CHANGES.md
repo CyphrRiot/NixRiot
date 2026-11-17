@@ -1,0 +1,39 @@
+# Local changes to vendored Panacea
+
+Upstream: https://github.com/EnsixD/Panacea at commit
+`45ddf2e11d5193779d4539ebde3ee3376c87870a` (version 1.0.24).
+
+## What is vendored
+
+`panacea/`, `hypr/`, `foot/`, `fish/`, `fastfetch/`, `nano/`,
+`applications/`, `bin/`, `grub/`, `sddm/`, `LICENSE`, `VERSION`.
+
+## What is not vendored
+
+- `install.sh`: the Arch installer. NixRiot replaces it with Nix modules.
+- `docs/`, `README.md`, `AGENTS.md`, `.gitignore`, `graphify-out/`,
+  `Panacea Vault/`: upstream housekeeping.
+- `niri/`: experimental second compositor, not used here.
+- `assets/`: only the `logo*.png` files are kept, under
+  `panacea/assets/` because the shell reads `~/.config/panacea/assets/`.
+- `wallpapers/`: upstream set is third-party work with mixed terms and is
+  not redistributed.
+
+## Changes made
+
+1. `hypr/wallpaper/` is replaced with the OpenRiot background set.
+2. `hypr/wallpaper.conf` and `hypr/hyprpaper.conf` point at
+   `~/.config/hypr/wallpaper/01.webp`.
+3. Upstream `assets/logo*.png` moved to `panacea/assets/` so the shell
+   finds them after the config tree is copied.
+4. `hypr/scripts/switch_theme.sh` fallback now includes `*.webp`.
+5. `panacea/scripts/update.sh` is the upstream updater and does not apply
+   on NixOS. It is left in place but must not be exposed as the update
+   path. NixRiot updates through the flake.
+
+## Not yet changed
+
+- `panacea/scripts/*.sh` still assume common Arch tool names in a few
+  places. Audit and patch as each feature is exercised.
+- `hypr/scripts/*.sh` still write to `~/.config` directly. That is fine
+  for now because Home Manager copies the tree once and leaves it alone.
