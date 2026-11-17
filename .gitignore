@@ -3,3 +3,9 @@ result-*
 .direnv
 .vendor-panacea
 AGENTS.md
+
+# User-owned secrets. Never commit these.
+crypto.toml
+*.key
+*.pem
+.env

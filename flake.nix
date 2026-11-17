@@ -35,7 +35,7 @@
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
             home-manager.extraSpecialArgs = specialArgs;
-            home-manager.users.riot = import ./home;
+            home-manager.users.user = import ./home;
           }
         ];
       };
@@ -49,7 +49,7 @@
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
             home-manager.extraSpecialArgs = specialArgs;
-            home-manager.users.riot = import ./home;
+            home-manager.users.user = import ./home;
           }
         ];
       };

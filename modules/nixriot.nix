@@ -30,7 +30,7 @@ in
 
     user = lib.mkOption {
       type = lib.types.str;
-      default = "riot";
+      default = "user";
       description = "Primary desktop user.";
     };
 

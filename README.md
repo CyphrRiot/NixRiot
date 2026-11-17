@@ -92,7 +92,9 @@ enabled and about 40 GB free, only if you build the image yourself.
    safe.
 7. It partitions (512M ESP labeled `BOOT`, the rest as an encrypted `nixos`
    volume), formats, mounts, and runs `nixos-install`.
-8. When it finishes, reboot and remove the USB stick.
+8. When `nixos-install` finishes, the installer asks you to set a password for
+   the `riot` user. Choose one; there is no default.
+9. Reboot and remove the USB stick.
 
 The install builds the target system from the flake, so it needs network the
 first time. Offline installs are on the roadmap, not shipped yet.
@@ -101,18 +103,15 @@ first time. Offline installs are on the roadmap, not shipped yet.
 
 ## First boot
 
-The disk passphrase prompt comes first, then SDDM. Log in as:
+The disk passphrase prompt comes first, then SDDM. Log in as **`riot`** with the
+password you set at the end of the install. `sudo` asks for the same password.
+NixRiot ships no default password.
 
-- **user**: `riot`
-- **password**: `nixriot`
-
-Change it immediately:
+If you skipped that step, set one from the installer or a TTY:
 
 ```sh
 passwd
 ```
-
-`sudo` asks for the same password.
 
 ---
 

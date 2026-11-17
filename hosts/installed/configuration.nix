@@ -8,7 +8,7 @@
   nixriot = {
     enable = true;
     hostName = "nixriot";
-    user = "riot";
+    user = "user";
     desktop.enable = true;
     crypto = {
       monero = true;
@@ -18,7 +18,7 @@
     games = false;
   };
 
-  users.users.riot = {
+  users.users.user = {
     isNormalUser = true;
     group = "users";
     homeMode = "0750";
@@ -30,7 +30,6 @@
       "input"
       "uinput"
     ];
-    initialPassword = "nixriot";
   };
 
   security.sudo.wheelNeedsPassword = true;
