@@ -1,22 +1,23 @@
 #!/bin/bash
-# Громкость ровными шагами, с ускорением при удержании клавиши.
+# Volume in even steps, accelerating while a key is held.
 #
-# Базовый шаг 5%. Hyprland при зажатой клавише вызывает скрипт снова и снова,
-# поэтому меряем паузу между вызовами: если они идут подряд, шаг растёт.
+# Base step is 5%. Hyprland calls the script again and again while the key is
+# held, so we measure the pause between calls: if they come back to back, the
+# step grows.
 #
-# wpctl умеет относительные шаги (5%+), но если текущее значение не кратно
-# пяти, оно таким и останется: 43 -> 48 -> 53. Поэтому считаем сами:
-# округляем текущий уровень до кратного шагу и уже от него шагаем.
+# wpctl can do relative steps (5%+), but if the current value is not a multiple
+# of five it stays that way: 43 -> 48 -> 53. So we do the arithmetic ourselves:
+# round the current level to a multiple of the step and go from there.
 
 SINK="@DEFAULT_AUDIO_SINK@"
 MAX=100
 
 STATE="${XDG_RUNTIME_DIR:-/tmp}/panacea-vol.streak"
-GAP_MS=280          # паузa больше этой — удержание считается прерванным
+GAP_MS=280          # a longer pause counts as the hold being released
 
 now_ms() { date +%s%3N; }
 
-# --- определяем длину серии подряд идущих нажатий
+# --- work out the length of the current run of presses
 streak=0
 if [ -f "$STATE" ]; then
     read -r last prev_streak < "$STATE" 2>/dev/null
@@ -26,14 +27,14 @@ if [ -f "$STATE" ]; then
 fi
 echo "$(now_ms) $streak" > "$STATE"
 
-# --- шаг растёт по мере удержания
+# --- the step grows as the key is held
 if   [ "$streak" -lt 4 ];  then STEP=5
 elif [ "$streak" -lt 10 ]; then STEP=10
 else                            STEP=20
 fi
 
 cur_pct() {
-    # "Volume: 0.45" либо "Volume: 0.45 [MUTED]"
+    # "Volume: 0.45" or "Volume: 0.45 [MUTED]"
     wpctl get-volume "$SINK" | LC_ALL=C awk '{printf "%d", $2 * 100 + 0.5}'
 }
 
@@ -48,7 +49,7 @@ case "$1" in
     up)
         cur=$(cur_pct)
         set_pct $(( (cur / STEP) * STEP + STEP ))
-        # прибавление громкости снимает немоту — иначе непонятно, почему тихо
+        # raising the volume clears mute, otherwise it is unclear why it is quiet
         wpctl set-mute "$SINK" 0
         ;;
     down)
@@ -64,6 +65,6 @@ case "$1" in
         ;;
 esac
 
-# Уровень показывает сама пилюля: она следит за Pipewire и рисует полоску,
-# и делает это в любом режиме — отдельного индикатора для энергосбережения
-# больше нет.
+# The pill shows the level itself: it watches Pipewire and draws the bar, and
+# it does so in every mode. There is no separate power-saving indicator any
+# more.

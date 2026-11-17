@@ -79,20 +79,20 @@ hl.window_rule({
     workspace = "special:magic silent",
 })
 
--- Терминал теперь тайлится как обычное окно:
--- первый занимает весь экран, второй встаёт рядом (layout dwindle).
--- Старое правило принудительно делало его плавающим 850x650 по центру.
+-- The terminal now tiles like an ordinary window: the first fills the screen,
+-- the second sits beside it (dwindle layout). The old rule forced it to float
+-- at 850x650 in the centre.
 
--- "Terminal Cascade" удалён: он делал плавающими уже открытые терминалы
--- при каждом новом окне и ломал нормальный тайлинг.
+-- "Terminal Cascade" was removed: it floated already-open terminals on every
+-- new window and broke normal tiling.
 
--- Прозрачность терминала. Значение пишет оболочка (ползунок в Appearance)
--- в lua/term_data.lua; файла может не быть — тогда правила просто нет и
--- терминал остаётся непрозрачным.
+-- Terminal transparency. The value is written by the shell (the Appearance
+-- slider) into lua/term_data.lua; the file may be absent, in which case the
+-- rule simply does not exist and the terminal stays opaque.
 --
--- Правилом компоновщика, а не alpha в foot.ini: сам foot читает конфиг
--- только при запуске, и ползунок не менял бы ничего в уже открытых окнах.
--- Правило же применяется сразу, ко всем сразу.
+-- Via a compositor rule rather than alpha in foot.ini: foot itself only reads
+-- its config at startup, so the slider would change nothing in windows that are
+-- already open. A rule applies immediately, to all of them at once.
 local ok_term, term = pcall(require, "lua.term_data")
 if ok_term and term and term.opacity and term.opacity < 1 then
     hl.window_rule({

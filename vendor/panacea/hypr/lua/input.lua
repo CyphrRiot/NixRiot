@@ -6,51 +6,52 @@ hl.config({
         kb_layout  = input_data.layouts or "us,ru",
         kb_variant = input_data.variants or ",",
         kb_model   = "",
-        -- Alt+Shift переключает раскладку
+        -- Alt+Shift switches the layout
         kb_options = input_data.options or "grp:alt_shift_toggle",
         kb_rules   = "",
         follow_mouse = 1,
         sensitivity = 0,
         touchpad = {
-            -- natural_scroll = true: содержимое следует за пальцами.
-            -- Пальцы вверх => страница листается вниз.
-            -- Если ощущается наоборот — поставь false, это единственная строка.
+            -- natural_scroll = true: the content follows the fingers.
+            -- Fingers up means the page scrolls down.
+            -- If it feels backwards, set false; it is the only line involved.
             natural_scroll = true,
             scroll_factor = 1.0,
             disable_while_typing = true,
             tap_to_click = true,
-            -- drag_lock оставлял кнопку «нажатой» после отпускания пальца:
-            -- выделение продолжалось само по себе, пока не тапнешь ещё раз
+            -- drag_lock left the button "held" after the finger was lifted: the
+            -- selection kept going by itself until you tapped again
             drag_lock = false,
             clickfinger_behavior = true,
         },
     },
 })
 
--- ---------------------------------------------------------------- жесты
+-- ---------------------------------------------------------------- gestures
 --
--- Используем ВСТРОЕННЫЕ действия Hyprland, а не свои Lua-обработчики.
--- Разница принципиальная: обработчик срабатывает один раз, когда пальцы уже
--- отпущены, поэтому окно до последнего стояло на месте. Встроенные жесты
--- (CCloseTrackpadGesture, CFullscreenTrackpadGesture и другие) обновляются
--- на каждом движении, и окно едет за пальцами в реальном времени.
+-- We use Hyprland's BUILT-IN actions, not our own Lua handlers.
+-- The difference matters: a handler fires once, after the fingers are already
+-- lifted, so the window stayed put until then. The built-in gestures
+-- (CCloseTrackpadGesture, CFullscreenTrackpadGesture and others) update on
+-- every movement, and the window follows the fingers in real time.
 --
--- Обратный ход тоже работает: не довёл жест до конца — окно вернётся на место.
+-- The reverse works too: if you do not complete the gesture, the window
+-- returns to its place.
 
 hl.gesture({ fingers = 3, direction = "horizontal", action = "workspace" })
 hl.gesture({ fingers = 4, direction = "horizontal", action = "move" })
 
--- 3 пальца вниз -> окно уезжает вниз за пальцами и закрывается
+-- 3 fingers down -> the window follows the fingers down and closes
 hl.gesture({ fingers = 3, direction = "down", action = "close" })
 
--- 3 пальца вверх -> разворачивается на весь экран
+-- 3 fingers up -> fullscreen
 hl.gesture({ fingers = 3, direction = "up", action = "fullscreen" })
 
--- 4 пальца вниз -> открепить окно и таскать его
+-- 4 fingers down -> unfloat the window and drag it
 hl.gesture({ fingers = 4, direction = "down", action = "float" })
 
--- Блок hl.device({ name = "epic-mouse-v1", ... }) убран намеренно: это
--- устройство из примера в стоковом конфиге Hyprland, которого нет ни у кого.
--- Зато настройка устройства перебивает общую — и у того, чья мышь однажды
--- назвалась бы так же, ползунок скорости в настройках молча ничего не делал
--- бы. Скорость и разгон теперь живут в окне настроек (раздел Mouse).
+-- The hl.device block was removed on purpose: it is the example device from the
+-- stock Hyprland config, which nobody has. Worse, a device setting overrides
+-- the general one, so if your mouse were ever named the same, the speed slider
+-- in the settings would silently do nothing. Speed and acceleration now live in
+-- the settings window (Mouse section).

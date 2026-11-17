@@ -22,9 +22,10 @@ Upstream: https://github.com/EnsixD/Panacea at commit
 
 ## Changes made
 
-1. `hypr/wallpaper/` is replaced with the OpenRiot background set.
+1. `hypr/wallpaper/` is replaced with the NixRiot wallpaper set, `00.webp`
+   through `12.webp`, generated for the project.
 2. `hypr/wallpaper.conf` and `hypr/hyprpaper.conf` point at
-   `~/.config/hypr/wallpaper/01.webp`.
+   `~/.config/hypr/wallpaper/00.webp`.
 3. Upstream `assets/logo*.png` moved to `panacea/assets/` so the shell
    finds them after the config tree is copied.
 4. `hypr/scripts/switch_theme.sh` fallback now includes `*.webp`.

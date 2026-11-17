@@ -55,7 +55,7 @@ NixRiot ships no wallet files, no secrets, and no `crypto.toml`. You own those.
 - **Crypto**: Monero GUI, Bitcoin Core, WireGuard.
 - **Security**: firewall, SSH hardening, sysctl hardening, MAC randomization,
   `restic` and `rclone` for backups.
-- The **OpenRiot wallpaper set** (32 WebP images, BSD-3-Clause).
+- The **NixRiot wallpaper set** (13 WebP images).
 - Full-disk encryption (LUKS2) on the root volume, chosen during install.
 
 ---
@@ -262,8 +262,8 @@ binding.
 
 ## Wallpapers
 
-The OpenRiot set (32 WebP images) is vendored under
-`vendor/panacea/hypr/wallpaper/`, default `01.webp`. Change the wallpaper from
+The NixRiot set (13 WebP images, `00.webp` through `12.webp`) ships in
+`vendor/panacea/hypr/wallpaper/`, default `00.webp`. Change the wallpaper from
 the pill's appearance settings. The manifest is
 `vendor/panacea/hypr/wallpaper/WALLPAPERS.md`.
 

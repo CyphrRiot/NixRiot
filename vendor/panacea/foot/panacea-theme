@@ -1,3 +1,4 @@
-# Пишется оболочкой при смене темы: фон терминала под цвет карточек.
-# Пустой файл здесь нужен, чтобы include в foot.ini не падал до первого
-# запуска оболочки — foot ругается на отсутствующий include и не стартует.
+# Written by the shell on theme change: the terminal background follows the
+# widget cards. The empty file exists so the include in foot.ini does not fail
+# before the shell has started. foot complains about a missing include and
+# refuses to start.

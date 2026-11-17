@@ -996,6 +996,10 @@ QtObject {
         "Модель": "Model",
         "Ключ API (для локальных моделей не нужен)": "API key (not needed for local models)",
         "Ваши правки сохранены (новые версии рядом — *.panacea-new)": "Your edits were kept (new versions next to them — *.panacea-new)",
+        "Выполняется…": "Running…",
+        "Настройки API для вкладки «Чат» в острове: OpenAI-совместимый сервис, модель и ключ.": "API settings for the Chat tab in the island: an OpenAI-compatible service, model and key.",
+        "Все": "All",
+        "Файлы": "Files",
     })
     readonly property var tr: ({
         "Ожидание ответа клиента…": "İstemci bekleniyor…",

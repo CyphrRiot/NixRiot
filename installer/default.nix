@@ -75,22 +75,34 @@ pkgs.writeScriptBin "nixriot-install" ''
     break
   done
 
+  repo="https://github.com/CyphrRiot/NixRiot"
+
   if [ -n "''${NIXRIOT_FLAKE:-}" ]; then
     flake_ref="$NIXRIOT_FLAKE"
+  elif git clone --depth 1 "$repo" /mnt/etc/nixriot >/dev/null 2>&1; then
+    printf '{\n  nixriotUser = "%s";\n}\n' "$user" > /mnt/etc/nixriot/hosts/installed/local.nix
+    git -C /mnt/etc/nixriot add hosts/installed/local.nix
+    git -C /mnt/etc/nixriot -c user.name=nixriot -c user.email=nixriot@localhost \
+      commit -m "local: desktop user" >/dev/null
+    flake_ref="/mnt/etc/nixriot#installed"
   else
+    echo "Could not clone $repo; installing from the image copy." >&2
+    echo "Updates will need a manual clone into /etc/nixriot afterwards." >&2
     flake_dir=/tmp/nixriot-flake
     rm -rf "$flake_dir"
     cp -rL /etc/nixriot "$flake_dir"
     chmod -R u+w "$flake_dir"
-    sed -i "s/^\(  *\)user = \".*\";/\1user = \"$user\";/" "$flake_dir/hosts/installed/configuration.nix"
-    sed -i "s/users\.users\.[A-Za-z0-9_-]* = {/users.users.$user = {/" "$flake_dir/hosts/installed/configuration.nix"
-    sed -i "s/home-manager\.users\.[A-Za-z0-9_-]* = import \.\/home;/home-manager.users.$user = import .\/home;/" "$flake_dir/flake.nix"
-    sed -i "s/^\(  *\)home\.username = \".*\";/\1home.username = \"$user\";/" "$flake_dir/home/default.nix"
-    sed -i "s/^\(  *\)home\.homeDirectory = \".*\";/\1home.homeDirectory = \"\/home\/$user\";/" "$flake_dir/home/default.nix"
+    printf '{\n  nixriotUser = "%s";\n}\n' "$user" > "$flake_dir/hosts/installed/local.nix"
     flake_ref="$flake_dir#installed"
   fi
 
   nixos-install --root /mnt --flake "$flake_ref"
+
+  if [ -n "''${flake_dir:-}" ] && [ -d "$flake_dir" ]; then
+    mkdir -p /mnt/etc/nixriot
+    cp -rL "$flake_dir/." /mnt/etc/nixriot/
+    chmod -R u+w /mnt/etc/nixriot
+  fi
 
   echo
   echo "Set a password for the '$user' user:"

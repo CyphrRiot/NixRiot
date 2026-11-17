@@ -1,16 +1,17 @@
--- Экраны.
+-- Displays.
 --
--- Запомненные настройки приезжают сюда из settings.json через
--- panacea/scripts/genmonitors.sh — тем же способом, что и сочетания клавиш.
--- Файла нет (первая установка, чужая машина) — остаётся "preferred", и всё
--- работает как раньше.
+-- Saved settings arrive here from settings.json through
+-- panacea/scripts/genmonitors.sh, the same way the key bindings do. No file
+-- (first install, someone else's machine) means "preferred" stays and
+-- everything works as before.
 --
--- Почему режим задаётся здесь, а не только оболочкой: она применяет его
--- примерно через полсекунды после своего старта, а Qt привязывает таймер
--- анимаций к частоте обновления один раз, когда создаёт первое окно. Монитор
--- в этот момент ещё стоит в "preferred" — по HDMI это сплошь и рядом 60 Гц,
--- даже у панели на 144. В итоге оболочка весь сеанс крутит анимации по 60 Гц
--- на мониторе, который давно переключился. Режим обязан стоять до её запуска.
+-- Why the mode is set here and not only by the shell: it applies its own
+-- settings roughly half a second after it starts, and Qt binds the animation
+-- timer to the refresh rate once, when it creates its first window. At that
+-- moment the monitor is still on "preferred", which over HDMI is very often
+-- 60 Hz even on a 144 Hz panel. So the shell spends the whole session running
+-- animations at 60 Hz on a monitor that switched long ago. The mode has to be
+-- set before the shell starts.
 local ok, saved = pcall(require, "lua.monitors_data")
 if not ok or type(saved) ~= "table" then saved = {} end
 
@@ -25,7 +26,7 @@ for _, m in ipairs(saved) do
     })
 end
 
--- Всё остальное, что подключат: разрешение по предпочтению панели.
+-- Everything else that gets attached: the panel's preferred resolution.
 hl.monitor({
     output   = "",
     mode     = "preferred",

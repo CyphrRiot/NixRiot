@@ -1,4 +1,7 @@
 { config, lib, pkgs, ... }:
+let
+  local = import ./local.nix;
+in
 {
   imports = [
     ./hardware-configuration.nix
@@ -8,7 +11,7 @@
   nixriot = {
     enable = true;
     hostName = "nixriot";
-    user = "user";
+    user = local.nixriotUser;
     desktop.enable = true;
     crypto = {
       monero = true;
@@ -18,7 +21,7 @@
     games = false;
   };
 
-  users.users.user = {
+  users.users.${local.nixriotUser} = {
     isNormalUser = true;
     group = "users";
     homeMode = "0750";

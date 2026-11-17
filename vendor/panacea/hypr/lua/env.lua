@@ -1,14 +1,16 @@
--- Время в 24 часах, язык при этом остаётся английским.
+-- 24-hour time, with the interface language left as English.
 --
--- Формат часов приложения берут из LC_TIME, а не из своих настроек: en_US
--- означает «12 часов и AM/PM», и Telegram, календари и всё остальное
--- показывали 12:02 AM вместо 00:02. Отдельная переменная, а не смена LANG:
--- меняем ровно формат времени, не трогая язык интерфейса.
+-- Applications take their clock format from LC_TIME, not from their own
+-- settings: en_US means "12 hours and AM/PM", and Telegram, calendars and
+-- everything else showed 12:02 AM instead of 00:02. A separate variable rather
+-- than changing LANG: we change exactly the time format, not the interface
+-- language.
 hl.env("LC_TIME", "en_GB.UTF-8")
 
--- Курсор: Bibata Modern Classic — чёрный, без обводки и теней, ровно под
--- тёмную оболочку. Имя темы нужно и в переменных (их читают Xwayland и
--- программы на GTK/Qt), и в самом Hyprland — он рисует курсор сам.
+-- Cursor: Bibata Modern Classic, black, without outline or shadow, a match for
+-- the dark shell. The theme name is needed both in the variables (read by
+-- Xwayland and GTK/Qt programs) and in Hyprland itself, which draws the cursor
+-- on its own.
 hl.env("XCURSOR_THEME", "Bibata-Modern-Classic")
 hl.env("HYPRCURSOR_THEME", "Bibata-Modern-Classic")
 hl.env("XCURSOR_SIZE", "24")

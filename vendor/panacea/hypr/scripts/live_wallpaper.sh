@@ -1,19 +1,20 @@
 #!/bin/bash
-# Живые обои: видео вместо картинки на фоне рабочего стола.
+# Live wallpapers: video instead of a still image behind the desktop.
 #
-#   dir            -> печатает каталог живых обоев (создав его)
-#   list           -> строки  имя|постер|активны(yes|no)|путь
-#   set <путь|имя> -> поставить видео фоном
-#   stop           -> вернуть обычные обои
-#   state          -> печатает путь текущего видео или пусто
-#   warm           -> догнать постеры для всех видео
+#   dir            -> prints the live wallpaper directory (creating it)
+#   list           -> lines  name|poster|active(yes|no)|path
+#   set <path|name> -> put a video in the background
+#   stop           -> go back to the ordinary wallpaper
+#   state          -> prints the path of the current video, or nothing
+#   warm           -> catch up on posters for every video
 #
-# Играет mpvpaper: он кладёт mpv на слой background, поэтому окна и пилюля
-# остаются сверху. hyprpaper на это время выключается — два фоновых слоя
-# спорили бы за один и тот же экран.
+# mpvpaper plays it: it puts mpv on the background layer, so windows and the
+# pill stay on top. hyprpaper is turned off meanwhile, since two background
+# layers would fight over the same screen.
 #
-# Состояние живёт в wallpaper.conf рядом с обычными обоями ($live). Файл никто
-# не подключает через source, поэтому смена фона не трогает конфиги Hyprland.
+# State lives in wallpaper.conf alongside the ordinary wallpaper ($live).
+# Nothing includes that file via source, so changing the background does not
+# touch the Hyprland configs.
 
 LIVE_DIR="$HOME/.config/hypr/wallpaper/live"
 STATE="$HOME/.config/hypr/wallpaper.conf"
@@ -29,21 +30,23 @@ still_state() {
     grep -m1 '^\$wallpaper' "$STATE" 2>/dev/null | cut -d= -f2- | sed 's/^ *//; s/ *$//'
 }
 
-# Пишем $live, сохраняя строку с обычными обоями: к ней возвращаемся по stop.
+# Write $live while keeping the line with the ordinary wallpaper: stop returns
+# to it.
 save_live() {
     local v="$1" still
     still=$(still_state)
     {
-        printf '# Файл создаётся автоматически при смене обоев.\n'
-        printf '# Hyprland его не подключает: смена картинки не должна трогать конфиг.\n'
+        printf '# This file is written automatically when the wallpaper changes.\n'
+        printf '# Hyprland does not include it: changing the picture must not touch the config.\n'
         printf '$wallpaper = %s\n' "$still"
         [ -n "$v" ] && printf '$live = %s\n' "$v"
     } > "$STATE"
 }
 
 poster() {
-    # Кадр из середины видео — превью для карусели. Кладём в общий кеш
-    # миниатюр: карусель читает и картинки, и видео из одного места.
+    # A frame from the middle of the video, the preview for the carousel. It
+    # goes into the shared thumbnail cache: the carousel reads both images and
+    # videos from one place.
     local src="$1" name dst dur pos
     name=$(basename "$src"); name="${name%.*}.jpg"
     dst="$THUMBS/$name"
@@ -83,9 +86,9 @@ list)
         base=${v##*/}
         name=${base%.*}
         [ "$v" = "$cur" ] && act=yes || act=no
-        # Постер отдаём, только если он уже готов: вытаскивать кадры из
-        # десятков видео во время построения списка — это секунды ожидания,
-        # их догоняет «warm».
+        # The poster is returned only if it already exists: pulling frames out
+        # of dozens of videos while building the list means seconds of waiting,
+        # and "warm" catches up on those.
         p="$THUMBS/$name.jpg"
         [ -f "$p" ] && [ ! "$v" -nt "$p" ] || p=""
         printf '%s|%s|%s|%s\n' "$name" "$p" "$act" "$v"
@@ -100,29 +103,31 @@ warm)
 
 set)
     [ -z "$2" ] && exit 1
-    vid=$(resolve "$2") || { echo "не нашёл видео: $2" >&2; exit 1; }
+    vid=$(resolve "$2") || { echo "video not found: $2" >&2; exit 1; }
 
     pkill -x hyprpaper >/dev/null 2>&1
     pkill -x mpvpaper  >/dev/null 2>&1
     sleep 0.2
 
-    # Опции mpv идут БЕЗ двойных дефисов: mpvpaper передаёт строку своему
-    # парсеру, и «--loop-inf» до mpv не доходил — видео доигрывало до конца и
-    # экран становился чёрным.
-    #   loop-file=inf  — обои не должны кончаться
-    #   keep-open=yes  — даже если что-то пойдёт не так, остаётся последний кадр,
-    #                    а не чернота
-    #   no-audio       — обои не звучат
-    #   hwdec          — декодирование уезжает в видеокарту, где это возможно
+    # mpv options go WITHOUT double dashes: mpvpaper passes the string to its own
+    # parser, and "--loop-inf" never reached mpv, so the video played to the end
+    # and the screen went black.
+    #   loop-file=inf  the wallpaper must not end
+    #   keep-open=yes  even if something goes wrong, the last frame stays rather
+    #                  than black
+    #   no-audio       the wallpaper makes no sound
+    #   hwdec          decoding moves to the GPU where possible
     MPV_OPTS="loop-file=inf keep-open=yes no-audio hwdec=auto-safe vo=gpu"
 
-    # По одному экземпляру на монитор, а не один на всё через «*».
-    # Автопауза у mpvpaper считается на весь экземпляр: с общим на все выходы
-    # полноэкранное окно на одном мониторе останавливало обои и на остальных.
+    # One instance per monitor, not one for everything via "*".
+    # mpvpaper's autopause is counted per instance: with one shared across all
+    # outputs, a fullscreen window on one monitor also stopped the wallpaper on
+    # the others.
     #
-    # -p (и только он): mpv засыпает, когда обои закрыты. Флага -a MAX здесь
-    # нет намеренно — он расширяет паузу на ЛЮБОЕ развёрнутое окно в системе,
-    # а не на то, что закрывает сами обои.
+    # -p (and only it): mpv sleeps while the wallpaper is covered. The -a MAX
+    # flag is deliberately absent here, since it extends the pause to ANY
+    # fullscreen window in the system, not to the one covering the wallpaper
+    # itself.
     mons=$(hyprctl monitors -j 2>/dev/null | jq -r '.[].name')
     [ -n "$mons" ] || mons='*'
     for M in $mons; do
@@ -135,7 +140,7 @@ set)
 stop)
     pkill -x mpvpaper >/dev/null 2>&1
     save_live ""
-    # возвращаем ту картинку, что была до живых обоев
+    # bring back the picture that was there before the live wallpaper
     [ -x "$SWITCH" ] && "$SWITCH" --restore >/dev/null 2>&1
     ;;
 

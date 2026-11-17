@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
-# Клавиши яркости. Вся работа — в ~/.config/panacea/scripts/brightness.sh:
-# там же живёт выбор способа (внутренняя матрица или монитор по DDC/CI),
-# шаг с ускорением при удержании и уведомление пилюли.
+# Brightness keys. The real work lives in
+# ~/.config/panacea/scripts/brightness.sh: it picks the method (internal panel
+# or a monitor over DDC/CI), the accelerated step while a key is held, and the
+# pill notification.
 #
-# Отдельный файл здесь остаётся потому, что на него ссылается keybindings.lua
-# и он лежит в ~/.local/bin, то есть в PATH; настройки яркости при этом
-# принадлежат оболочке, а не системе, и дублировать логику в двух местах
-# означало бы чинить её дважды.
+# This file stays because keybindings.lua points at it and it lives in
+# ~/.local/bin, which is on PATH. Brightness settings belong to the shell, not
+# the system, and duplicating the logic in two places would mean fixing it
+# twice.
 exec "${XDG_CONFIG_HOME:-$HOME/.config}/panacea/scripts/brightness.sh" "$@"

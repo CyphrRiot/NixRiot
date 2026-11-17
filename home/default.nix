@@ -1,4 +1,4 @@
-{ ... }:
+{ nixriotUser ? "user", ... }:
 {
   imports = [
     ./fish.nix
@@ -9,7 +9,7 @@
     ./panacea.nix
   ];
 
-  home.username = "user";
-  home.homeDirectory = "/home/user";
+  home.username = nixriotUser;
+  home.homeDirectory = "/home/${nixriotUser}";
   home.stateVersion = "26.05";
 }

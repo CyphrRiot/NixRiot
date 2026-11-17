@@ -1,9 +1,9 @@
 -- ==============================================================================
 -- Custom User Configurations (Lua)
 -- ==============================================================================
--- Этот файл сохраняется при обновлениях Panacea и никогда не затирается.
--- Сюда можно добавлять любые свои бинды, правила, autostart и настройки.
+-- This file is kept across updates and never overwritten.
+-- Add any of your own binds, rules, autostart entries and settings here.
 --
--- Примеры:
+-- Examples:
 -- hl.bind("SUPER + B", hl.dsp.exec_cmd("brave"))
 -- hl.bind("SUPER + Return", hl.dsp.exec_cmd("foot"))

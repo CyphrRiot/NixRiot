@@ -21,7 +21,7 @@
       system = "x86_64-linux";
       lib = nixpkgs.lib;
       specialArgs = {
-        inherit inputs;
+        inherit self inputs;
         panaceaSrc = ./vendor/panacea;
       };
     in
@@ -34,7 +34,9 @@
           {
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
-            home-manager.extraSpecialArgs = specialArgs;
+            home-manager.extraSpecialArgs = specialArgs // {
+              nixriotUser = "user";
+            };
             home-manager.users.user = import ./home;
           }
         ];
@@ -43,13 +45,14 @@
       nixosConfigurations.installed = lib.nixosSystem {
         inherit system specialArgs;
         modules = [
-          ./hosts/installed/configuration.nix
+          ./hosts/installed/default.nix
           home-manager.nixosModules.home-manager
           {
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
-            home-manager.extraSpecialArgs = specialArgs;
-            home-manager.users.user = import ./home;
+            home-manager.extraSpecialArgs = specialArgs // {
+              nixriotUser = (import ./hosts/installed/local.nix).nixriotUser;
+            };
           }
         ];
       };

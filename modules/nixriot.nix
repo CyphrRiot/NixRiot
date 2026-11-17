@@ -1,4 +1,4 @@
-{ lib, config, pkgs, ... }:
+{ lib, config, pkgs, self, ... }:
 let
   cfg = config.nixriot;
 in
@@ -7,6 +7,7 @@ in
     ./desktop/panacea.nix
     ./desktop/theme.nix
     ./desktop/sddm.nix
+    ./update.nix
     ./apps/shell.nix
     ./apps/editors.nix
     ./apps/media.nix
@@ -60,6 +61,8 @@ in
     i18n.defaultLocale = "en_US.UTF-8";
 
     nix.settings.experimental-features = [ "nix-command" "flakes" ];
+
+    environment.etc."nixriot-revision".text = self.rev or self.dirtyRev or "unknown";
 
     environment.systemPackages = with pkgs; [
       git

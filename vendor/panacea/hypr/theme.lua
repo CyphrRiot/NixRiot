@@ -2,9 +2,9 @@ return {
     gaps_in = 5,
     gaps_out = 5,
     border_size = 1,
-    -- Рамка активного окна. Красный конец прежнего градиента лез в кадр
-    -- полосой под островом и спорил с чёрно-белой оболочкой; здесь он ничего
-    -- не обозначал — просто цвет.
+    -- Active window border. The red end of the former gradient crept into the
+    -- frame as a stripe under the island and clashed with the black and white
+    -- shell; here it marked nothing, it was simply a colour.
     active_border = { colors = { "rgba(ffffffff)","rgba(8a8a8aff)" }, angle = 45 },
     inactive_border = "rgba(2a2a2aaa)",
     rounding = 12,

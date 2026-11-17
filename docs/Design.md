@@ -128,7 +128,7 @@ declaratively. "Reuse" means the existing config or asset is copied.
 | fastfetch + motd | **Reuse** | Home Manager |
 | Bibata cursor, Kora icons | **Reuse** | Packaged assets |
 | Nerd Fonts | **Reuse** | nixpkgs fonts |
-| Wallpaper sets | **Reuse** | OpenRiot set, vendored under `vendor/panacea/hypr/wallpaper` |
+| Wallpaper sets | **Own** | NixRiot set, shipped in `vendor/panacea/hypr/wallpaper` |
 | Screenshots | **Port** | `grim`, `slurp`, `wl-clipboard` |
 | Screen recording | **Port** | `wf-recorder` |
 | Clipboard history | **Port** | `cliphist` |

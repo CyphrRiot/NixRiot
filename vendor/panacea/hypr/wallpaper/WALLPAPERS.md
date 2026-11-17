@@ -1,15 +1,17 @@
 # NixRiot Wallpapers
 
-The default set is the OpenRiot background collection, 32 WebP images. They
-ship with NixRiot under the OpenRiot project's BSD-3-Clause license.
+The set is 13 WebP images, `00.webp` through `12.webp`, generated for NixRiot.
+They are the project's own work and carry no third-party terms.
 
-Panacea's upstream wallpapers are deliberately not included. They are
-third-party work with mixed terms, and the collection is the bulk of the
-upstream repository.
+This set replaced the earlier OpenRiot background collection, which was
+BSD-3-Clause and borrowed. That collection is no longer shipped.
 
 | File | Source | License |
 |---|---|---|
-| `01.webp` through `32.webp` | OpenRiot `backgrounds/` | BSD-3-Clause, OpenRiot project |
+| `00.webp` through `12.webp` | Generated for NixRiot | NixRiot project, no third-party license |
+
+The default is `00.webp`, referenced by `hypr/wallpaper.conf` and
+`hypr/hyprpaper.conf`.
 
 To add an image, place it here and add a row above with its author, source,
 and license. Do not add an image without a license entry.

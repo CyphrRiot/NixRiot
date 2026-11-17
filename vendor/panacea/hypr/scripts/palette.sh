@@ -1,14 +1,13 @@
 #!/bin/bash
-# Раскладывает единственную палитру (~/.config/hypr/palette.conf) по
-# приложениям: fastfetch, foot, fish, zed, btop, neovim,
-# obsidian и экран входа.
+# Lays the single palette (~/.config/hypr/palette.conf) out across applications:
+# fastfetch, foot, fish, zed, btop, neovim, obsidian and the login screen.
 #
-# Раньше этим занимался switch_theme.sh, и цвета менялись вместе с обоями.
-# Теперь палитра одна: скрипт нужен установщику и после правки palette.conf
-# руками. Смена обоев его не зовёт.
+# switch_theme.sh used to do this, and colours changed along with the wallpaper.
+# Now the palette is one: this script is needed by the installer and after
+# editing palette.conf by hand. Changing the wallpaper does not call it.
 
 PALETTE="$HOME/.config/hypr/palette.conf"
-[ -f "$PALETTE" ] || { echo "нет $PALETTE" >&2; exit 1; }
+[ -f "$PALETTE" ] || { echo "no $PALETTE" >&2; exit 1; }
 
 val() {
     grep -m1 "^\\\$$1[[:space:]]*=" "$PALETTE" \
@@ -26,8 +25,8 @@ TERM_BG=$(val term_bg)
 [[ ! $TERM_BG =~ ^# ]] && TERM_BG="$BG"
 
 # ----------------------------------------------------------- fastfetch
-# Подписи и логотип красим акцентом. В конфиге строки помечены комментарием
-# panacea:accent — переписываем ровно следующую за ним.
+# Labels and the logo are painted with the accent. In the config the lines are
+# marked with a panacea:accent comment, and we rewrite exactly the one after it.
 FF="$HOME/.config/fastfetch/config.jsonc"
 if [ -f "$FF" ]; then
     R=$((16#${ACCENT:1:2})); G=$((16#${ACCENT:3:2})); B=$((16#${ACCENT:5:2}))
@@ -38,7 +37,7 @@ if [ -f "$FF" ]; then
 fi
 
 # ------------------------------------------------------------------- foot
-# Foot не хочет '#' в значениях цветов
+# foot does not want '#' in colour values
 if [ -d "$HOME/.config/foot" ]; then
     cat > "$HOME/.config/foot/theme" <<EOF
 [colors-dark]
@@ -49,10 +48,10 @@ selection-background=${FG#\#}
 EOF
 fi
 
-# Секцию [colors-dark] foot читает, только если портал сообщает
-# color-scheme=prefer-dark. По умолчанию в системе стоит «default», и тема
-# молча игнорировалась: терминал оставался на сером 242424 вместо нашего
-# почти чёрного фона. Палитра у нас тёмная — заявляем это один раз здесь.
+# foot reads the [colors-dark] section only if the portal reports
+# color-scheme=prefer-dark. The system default is "default", and the theme was
+# silently ignored: the terminal stayed on the grey 242424 instead of our almost
+# black background. Our palette is dark, so we declare that once, here.
 gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark' 2>/dev/null || true
 
 # ------------------------------------------ fish, zed, btop, neovim (python)
@@ -73,7 +72,7 @@ fg = "$FG"
 r, g, b = [x/255.0 for x in hex_to_rgb(accent)]
 h, s, v = colorsys.rgb_to_hsv(r, g, b)
 
-# Мягкие оттенки акцента для подсветки синтаксиса
+# Soft shades of the accent for syntax highlighting
 syntax_accent = rgb_to_hex(colorsys.hsv_to_rgb(h, s * 0.55, v * 0.85))
 color_param = rgb_to_hex(colorsys.hsv_to_rgb(h, s * 0.35, v * 0.7))
 color_quote = rgb_to_hex(colorsys.hsv_to_rgb(h, s * 0.45, v * 0.8))
@@ -186,15 +185,16 @@ if [ -d "$HOME/obsidian_vault/.obsidian" ]; then
 EOF
 fi
 
-# --------------------------------------------------------- экран входа
-# Палитру экрана входа пишет сама оболочка, а не этот скрипт.
+# --------------------------------------------------------- login screen
+# The login screen palette is written by the shell itself, not by this script.
 #
-# Здесь лежит палитра терминалов, редакторов и btop — она правится руками и
-# к теме оболочки отношения не имеет. Пока экран входа брал акцент отсюда,
-# на чёрно-белой теме он встречал терракотовым кружком: цвета совпадали
-# только по случайности, и стоило сменить тему, как расхождение вылезало.
+# What lives here is the palette of terminals, editors and btop. It is edited by
+# hand and has nothing to do with the shell theme. While the login screen took
+# its accent from here, on the black and white theme it greeted you with a
+# terracotta circle: the colours matched only by accident, and as soon as the
+# theme changed the mismatch showed.
 #
-# Оболочка знает выбранную тему и кладёт её цвета в /var/lib/panacea сама —
-# тем же QML-фрагментом и в тот же файл.
+# The shell knows the selected theme and writes its colours into
+# /var/lib/panacea itself, with the same QML fragment and into the same file.
 
 exit 0

@@ -1,13 +1,14 @@
 local p = require("lua.programs")
 local mainMod = "SUPER"
 
--- Переопределения сочетаний из панели настроек (Super+I).
--- Файл генерируется автоматически; если его нет — берутся значения по умолчанию.
-local ok, ov = pcall(require, "lua.binds_data")
+-- Overrides of the combinations from the settings panel (Super+I).
+-- The file is generated automatically; if it is absent the defaults below
+-- apply.
+local ok, ov = pcall(require("lua.binds_data"))
 if not ok or type(ov) ~= "table" then ov = {} end
 
--- B(id, сочетание по умолчанию, действие [, опции])
--- Пустая строка в переопределении = сочетание отключено.
+-- B(id, default combination, action [, options])
+-- An empty string in an override disables the combination.
 local function B(id, def, action, opts)
     local combo = ov[id]
     if combo == nil then combo = def end
@@ -15,12 +16,12 @@ local function B(id, def, action, opts)
     hl.bind(combo, action, opts)
 end
 
--- Абсолютный путь по той же причине, что и у programs.bar: «~» доживает до
--- qs как есть, если команду запускают не через шелл.
+-- Absolute path for the same reason as programs.bar: "~" survives as-is into
+-- qs when the command is not launched through a shell.
 local QS = "qs -c " .. os.getenv("HOME") .. "/.config/panacea ipc call pill "
 
 
--- ---------------------------------------------------------------- пилюля
+-- ---------------------------------------------------------------- the pill
 B("pillLauncher", mainMod .. " + A",             hl.dsp.exec_cmd(QS .. "launcher"))
 B("launchpad",    mainMod .. " + G",             hl.dsp.exec_cmd(QS .. "launchpad"))
 B("overview",     mainMod .. " + Tab",           hl.dsp.exec_cmd(QS .. "overview"))
@@ -35,16 +36,17 @@ B("pillNotif",    mainMod .. " + SHIFT + N",     hl.dsp.exec_cmd(QS .. "notifica
 B("pillRecord",   mainMod .. " + P",             hl.dsp.exec_cmd(QS .. "record"))
 B("pillVault",    mainMod .. " + SHIFT + P",     hl.dsp.exec_cmd(QS .. "passwords"))
 
--- Голос в текст (voxtype): зажми клавишу — говоришь, отпустил — текст
--- вставляется в активное поле. Одна клавиша, два бинда: нажатие запускает
--- запись, отпускание — расшифровку и вставку. Обёртка voxtype.sh заодно
--- показывает индикатор в острове. По умолчанию — правый Alt. id voxDictate
--- виден в окне Super+/, как остальные сочетания; переопределяется из настроек.
--- Обёрнуто в pcall нарочно: на некоторых версиях Hyprland/hl параметры бинда
--- (release, description) или отпускание модификатора могут не поддерживаться, и
--- голая ошибка здесь роняла ВЕСЬ конфиг Hyprland — сбрасывались все сочетания
--- на аварийные, а следом не поднимался и qs. Пусть в худшем случае отвалится
--- только голосовой ввод, а остальные сочетания останутся на месте.
+-- Voice to text (voxtype): hold the key, speak, release, and the text is
+-- inserted into the active field. One key, two binds: pressing starts the
+-- recording, releasing transcribes and pastes. The voxtype.sh wrapper also
+-- shows an indicator in the island. The default is right Alt. The id
+-- voxDictate shows up in the Super+/ window like the other combinations and
+-- can be overridden from the settings.
+-- Deliberately wrapped in pcall: on some Hyprland/hl versions the bind options
+-- (release, description) or releasing a modifier may be unsupported, and a bare
+-- error here took down the WHOLE Hyprland config, resetting every combination
+-- to the emergency defaults and taking qs down with it. Better that only voice
+-- input breaks.
 pcall(function()
     local VOX = os.getenv("HOME") .. "/.config/panacea/scripts/voxtype.sh"
     local combo = ov["voxDictate"]
@@ -58,7 +60,7 @@ pcall(function()
 end)
 
 -- Basic binds
--- Буквы в Hyprland регистронезависимы: SUPER+f == SUPER+F
+-- Letters are case-insensitive in Hyprland: SUPER+f == SUPER+F
 local CLOSE = os.getenv("HOME") .. "/.config/panacea/scripts/smart_close.sh"
 B("terminal",     mainMod .. " + T",         hl.dsp.exec_cmd(p.terminal))
 B("terminalAlt",  mainMod .. " + Return",    hl.dsp.exec_cmd(p.terminal))
@@ -68,9 +70,9 @@ B("fullscreen",   mainMod .. " + SHIFT + F", hl.dsp.window.fullscreen())
 B("exitHypr",     mainMod .. " + SHIFT + M", hl.dsp.exit())
 B("lockScreen",   mainMod .. " + L",         hl.dsp.exec_cmd(p.lock))
 B("themeSwitch",  mainMod .. " + SHIFT + T", hl.dsp.exec_cmd(QS .. "theme"))
--- окно в «плавающее» и обратно
+-- window into "floating" and back
 B("floatToggle",  mainMod .. " + W",         hl.dsp.window.float({ action = "toggle" }))
--- панель настроек: динамический остров раскрывается по центру
+-- settings panel: the dynamic island unfolds in the centre
 B("floatCenter", mainMod .. " + SHIFT + Space", function()
     hl.dispatch(hl.dsp.window.float({ action = "toggle" }))
     hl.dispatch(hl.dsp.window.resize({ x = 800, y = 600, relative = false }))
@@ -83,8 +85,8 @@ B("notes",        mainMod .. " + O",         hl.dsp.exec_cmd(p.note))
 B("screenshot",   mainMod .. " + SHIFT + S", hl.dsp.exec_cmd(p.screenshot))
 B("screenOff",    mainMod .. " + SHIFT + F12", hl.dsp.exec_cmd("brightnessctl s 0"))
 B("closeMouse", "mouse:277", hl.dsp.window.close())
--- Super+B удалён вместе с режимом энергосбережения оболочки:
--- профили питания теперь в панели (наведение на пилюлю).
+-- Super+B was removed along with the shell's power-saving mode: power profiles
+-- now live in the panel (hover the pill).
 
 
 -- Workspace Packing (SUPER+A)
@@ -169,14 +171,14 @@ B("lidOn", "switch:on:Lid Switch", hl.dsp.exec_cmd(p.lock), { locked = true })
 B("lidOff", "switch:off:Lid Switch", hl.dsp.exec_cmd(p.lock), { locked = true })
 
 
--- Пилюля: панели открываются в ней же
+-- The pill: panels open inside it
 
--- Пустой submap для захвата сочетаний в панели настроек.
--- Пока он активен, у Hyprland нет ни одного бинда, и клавиши целиком
--- уходят приложению — иначе при попытке назначить сочетание срабатывало
--- уже существующее действие.
+-- An empty submap to capture combinations in the settings panel.
+-- While it is active Hyprland has no bindings at all and keys go entirely to
+-- the application; otherwise trying to assign a combination fires an existing
+-- action.
 hl.define_submap("capture", function()
-    -- аварийный выход, если панель почему-то не вернёт обычный режим
+    -- emergency exit, in case the panel somehow fails to restore normal mode
     hl.bind("SUPER + SHIFT + Escape",
         hl.dsp.exec_cmd(os.getenv("HOME") .. "/.config/panacea/scripts/capture.sh off"))
 end)
