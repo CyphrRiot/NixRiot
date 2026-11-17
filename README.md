@@ -1,258 +1,298 @@
 # NixRiot
 
-**One flake. Complete NixOS desktop. Panacea shell, OpenRiot soul.**
+A reproducible NixOS desktop with the [Panacea](https://github.com/EnsixD/Panacea)
+shell and the parts of [OpenRiot](https://github.com/CyphrRiot/OpenRiot) that
+make sense on Linux. One flake builds the installer image and the installed
+system, so both stay in step.
 
-NixRiot is a proposal for a full, reproducible NixOS installer that ships
-NixOS, the [Panacea](https://github.com/EnsixD/Panacea) desktop shell, and the
-parts of [OpenRiot](https://github.com/CyphrRiot/OpenRiot) that make sense on
-Linux. It is not a remaster of the stock ISO. It is a flake that builds its own
-installer image and a declarative system profile, so the same source produces
-the live USB, the installed machine, and every future update.
+Status: **pre-release**. The flake evaluates and the ISO builds. It has not been
+booted on real hardware yet, so treat everything below as untested until you
+have installed it once.
 
-Status: **proposal**. Nothing here is implemented yet.
-
----
-
-## Why this exists
-
-OpenRiot is an OpenBSD desktop. Its installer is a Go binary that calls
-`pkg_add`, copies dotfiles, and runs shell commands. That model does not
-translate to NixOS, where the package manager is the configuration and the
-configuration is the system.
-
-OpenRiot also has a documented Hyprland migration proposal
-(`docs/Hyprland.md` in the OpenRiot tree). It is blocked on packaging the
-Hyprland stack in OpenBSD ports and on rewriting roughly 7,000 lines of X11
-integration. NixOS already has Hyprland, Quickshell, Wayland, and the whole
-graphics stack packaged and tested. Panacea already targets Hyprland.
-
-NixRiot takes the shortest honest path: keep OpenRiot's taste, drop OpenRiot's
-OpenBSD-specific plumbing, and let Nix own installation and updates.
+Read `docs/Design.md` for the reasoning, architecture, and roadmap. This file is
+the manual.
 
 ---
 
-## What it is
+## The usual free software warning
 
-Three deliverables from one flake:
+This installer **erases the disk you point it at**. It partitions, encrypts, and
+formats without asking twice. Back up anything you care about first.
 
-1. **A live ISO** built with `nixos-generators`, based on the NixOS 26.05
-   graphical installer, carrying the NixRiot profile and a post-install hook.
-2. **A NixOS module** (`nixriot.nix`) that declares the system: desktop,
-   services, users, security, crypto, media, and the Panacea stack.
-3. **A Home Manager module** that installs Panacea's dotfiles, fish, Helix,
-   Crush, and the per-user OpenRiot configuration.
-
-The installed system is the same flake the ISO was built from. There is no
-second installer script to drift.
+NixRiot ships no wallet files, no secrets, and no `crypto.toml`. You own those.
 
 ---
 
-## Relationship to the parents
+## What you get
 
-| Project | Role in NixRiot |
-|---|---|
-| **NixOS 26.05** | Base system, package set, kernel, bootloader, installer tooling |
-| **Panacea** | Desktop shell: Hyprland, Quickshell pill, SDDM and GRUB themes, wallpapers, keybindings |
-| **OpenRiot** | Feature list, visual language, fish/Helix/Crush defaults, crypto and media tooling, motd, XDG layout |
-
-NixRiot vendors Panacea's config trees and themes under `vendor/panacea/`,
-then ports `install.sh` logic into a Home Manager module. Upstream Panacea is
-the reference, not a build-time dependency.
-
-NixRiot does not fork OpenRiot. It reuses OpenRiot's dotfiles where they are
-platform-neutral (fish, Helix, fastfetch, wallpapers, cursors, icons) and
-reimplements the rest declaratively.
+- **Hyprland** with the Panacea pill (Quickshell): launcher, launchpad,
+  overview, clipboard, notifications, settings, power menu, lock screen.
+- **fish** with starship, plus the OpenRiot aliases and functions.
+- **Helix**, Zed, Kate, and Crush.
+- **Firefox**, LibreOffice, Thunderbird, zathura, Thunar.
+- **Media**: mpv, mpd with rmpc, yt-dlp, optional Transmission.
+- **Crypto**: Monero GUI, Bitcoin Core, WireGuard.
+- **Security**: firewall, SSH hardening, sysctl hardening, MAC randomization,
+  `restic` and `rclone` for backups.
+- The **OpenRiot wallpaper set** (32 WebP images, BSD-3-Clause).
+- Full-disk encryption (LUKS2) on the root volume, chosen during install.
 
 ---
 
-## Architecture
+## Requirements
 
-```
-NixRiot/
-  flake.nix                  # inputs: nixpkgs, home-manager, nixos-generators
-  README.md
-  modules/
-    nixriot.nix              # top-level NixOS module and options
-    desktop/
-      panacea.nix            # Hyprland, Quickshell, portals, session
-      theme.nix              # fonts, cursors, icons, wallpapers, palette
-      sddm.nix               # login theme
-      grub.nix               # boot theme
-    apps/
-      shell.nix              # fish, foot, eza, zoxide, ripgrep, btop
-      editors.nix            # Helix, Zed, Kate, Crush
-      media.nix              # mpv, mpd, rmpc, transmission, yt-dlp
-      office.nix             # LibreOffice, zathura, Firefox
-      printing.nix           # PrusaSlicer / OrcaSlicer
-    crypto/
-      monero.nix             # monero-gui, wallet paths
-      bitcoin.nix            # bitcoin-qt
-      wireguard.nix          # networking.wireguard
-    security/
-      hardening.nix          # SSH, firewall, MAC randomization
-      backup.nix             # restic, Proton Drive via rclone
-  home/
-    panacea.nix              # Home Manager port of Panacea install.sh
-    fish.nix
-    helix.nix
-    crush.nix
-    xdg.nix
-  iso/
-    configuration.nix        # live image, Calamares, post-install
-  installer/
-    calamares/               # branding, modules, post-install script
-  vendor/
-    panacea/                 # vendored config trees, themes, wallpapers
-      UPSTREAM               # pinned Panacea commit
-      hypr/wallpaper/        # OpenRiot wallpaper set
-  hosts/
-    example/                 # reference host config
-```
+- x86_64 machine that boots modern UEFI.
+- **To build the ISO**: any machine running Nix with flakes enabled, about
+  40 GB of free space, and network access for the first `nix flake lock`.
+  NixOS, or any Linux or macOS with Nix installed, works.
+- **To install**: a USB stick of at least 6 GB.
+- A target disk that can be erased.
 
-### Installer flow
-
-1. Boot the NixRiot ISO. The live session is the NixOS graphical installer
-   (GNOME live environment, Calamares).
-2. Calamares partitions the disk, creates the user, and selects the NixRiot
-   profile.
-3. The post-install hook writes the flake reference into `/mnt/etc/nixos`,
-   copies the host config, and runs `nixos-install --flake`.
-4. First boot applies Home Manager, which installs Panacea and the OpenRiot
-   user configuration.
-5. Updates are `nixos-rebuild switch --flake` or `nix flake update` plus a
-   rebuild. No package drift, no partial upgrades.
-
-A CLI path (`nixos-install --flake`) remains available for headless installs
-and for anyone who does not want Calamares.
+You do not need an existing NixOS install. You need something that can run Nix.
 
 ---
 
-## Feature parity
+## Build the ISO
 
-OpenRiot features mapped to NixRiot. "Port" means the feature is reimplemented
-declaratively. "Reuse" means the existing config or asset is copied.
-
-| OpenRiot feature | NixRiot | Notes |
-|---|---|---|
-| i3 tiling | **Replaced** | Hyprland via Panacea |
-| Polybar | **Replaced** | Panacea pill (Quickshell) |
-| Rofi launcher | **Replaced** | Panacea launcher and launchpad |
-| Dunst notifications | **Replaced** | Panacea notification daemon |
-| i3lock | **Replaced** | Panacea lock screen |
-| picom, feh, maim | **Replaced** | Hyprland compositor, hyprpaper, grim/slurp |
-| fish + starship prompt | **Reuse** | Home Manager |
-| Helix | **Reuse** | nixpkgs `helix` |
-| Crush | **Port** | Package if absent from nixpkgs |
-| fastfetch + motd | **Reuse** | Home Manager |
-| Bibata cursor, Kora icons | **Reuse** | Packaged assets |
-| Nerd Fonts | **Reuse** | nixpkgs fonts |
-| Wallpaper sets | **Reuse** | OpenRiot set, vendored under `vendor/panacea/hypr/wallpaper` |
-| Screenshots | **Port** | `grim`, `slurp`, `wl-clipboard` |
-| Screen recording | **Port** | `wf-recorder` |
-| Clipboard history | **Port** | `cliphist` |
-| Monero GUI | **Port** | nixpkgs `monero-gui` |
-| Bitcoin Core | **Port** | nixpkgs `bitcoind`, `bitcoin-qt` |
-| WireGuard | **Port** | `networking.wireguard` |
-| Transmission | **Port** | nixpkgs `transmission-gtk` |
-| mpv, mpd, rmpc | **Port** | nixpkgs |
-| Proton Drive sync | **Port** | `rclone` systemd user timer |
-| Signal (gurk) | **Port** | nixpkgs if available, else package |
-| LibreOffice, Firefox, Zed, Kate | **Port** | nixpkgs |
-| 3D printing | **Port** | PrusaSlicer or OrcaSlicer |
-| Backup and restore | **Port** | `restic` |
-| Disk manager | **Port** | `gnome-disks` or `gparted` |
-| MAC randomization | **Port** | NetworkManager setting |
-| SSH hardening | **Port** | NixOS options |
-| XDG user directories | **Port** | Home Manager |
-| Crypto config (`crypto.toml`) | **User-owned** | Never shipped, never overwritten |
-| Control center | **Replaced** | Panacea settings |
-| Games bundle | **Optional** | Curated subset, opt-in module |
-
-### Dropped, and why
-
-| OpenRiot item | Reason |
-|---|---|
-| `pkg_add` installer and OpenBSD firmware | NixOS has no equivalent and does not need one |
-| Xenodm, Xenocara, X11 hardening | Wayland stack replaces X11 |
-| OpenBSD version tracking | NixOS channels and flake locks replace it |
-| `openriot` Go binary installer paths | Nix modules replace imperative install |
-| OpenBSD-specific hardware notes | NixOS hardware profiles replace them |
-
----
-
-## Build and use
-
-Prerequisites: a Nix installation with flakes enabled, about 40 GB free, and
-the NixOS 26.05 ISO already on hand for reference
-(`~/Code/ISOs/NixOS.iso`).
+On the machine with Nix:
 
 ```sh
-git clone <nixriot-remote> ~/Code/NixRiot
-cd ~/Code/NixRiot
-
-# Build the live ISO
+git clone git@github.com:CyphrRiot/NixRiot.git
+cd NixRiot
 nix build .#iso
-
-# Install from the running ISO. The live image carries this repo at
-# /etc/nixriot, so the flake is available without network access to Git.
-sudo nixos-install --flake /etc/nixriot#nixriot
-
-# Rebuild an installed system
-sudo nixos-rebuild switch --flake .#nixriot
 ```
 
-The stock ISO is `nixos-graphical-26.05-x86_64` (GNOME live session). NixRiot
-does not modify that image in place. It builds a new image from the same
-nixpkgs revision, which keeps the installer and the installed system in sync.
+The image lands at `result/iso/nixos-*.iso`. It is a hybrid image, so it can be
+written to a USB stick directly.
 
-Current state: the flake, the NixOS modules, the Home Manager modules, and the
-Calamares ISO config are written. The ISO is a stock graphical installer with
-this repo at `/etc/nixriot`. The Calamares post-install hook that runs
-`nixos-install --flake` automatically is the next item, not yet implemented.
-See `docs/Panacea-Port.md` for the Panacea-specific work.
+```sh
+sudo dd if=result/iso/nixos-*.iso of=/dev/sdX bs=4M status=progress oflag=sync
+```
 
-The example host assumes the user `riot`, the root label `nixos`, and the ESP
-label `BOOT`. Change `hosts/example/configuration.nix` and
-`hosts/example/hardware-configuration.nix`, or regenerate the hardware config
-with `nixos-generate-config`, before installing on real hardware.
+Replace `/dev/sdX` with the USB device, not a partition.
 
 ---
 
-## Milestones
+## Install
 
-| Phase | Deliverable | Exit criteria |
-|---|---|---|
-| 0 | Flake skeleton, `nixosConfigurations.nixriot` | `nix flake check` passes, system builds |
-| 1 | Panacea Home Manager module | Hyprland session starts, pill runs, keybindings work |
-| 2 | Theme and assets | Fonts, cursors, icons, wallpapers, SDDM, GRUB |
-| 3 | OpenRiot app modules | fish, Helix, Crush, media, crypto, security |
-| 4 | ISO and Calamares | ISO boots, installs, first boot reaches the desktop |
-| 5 | Parity audit | Every row in the parity table is verified or explicitly cut |
-| 6 | Release | Tagged flake, checksums, install notes |
+1. Boot the USB stick (disable Secure Boot first if the firmware refuses it).
+2. You land in the NixOS live session with the NixRiot repo at `/etc/nixriot`.
+3. Open a terminal and run:
 
----
+   ```sh
+   sudo nixriot-install
+   ```
 
-## Risks
+4. The command lists the disks it can see. Type the target disk, for example
+   `/dev/nvme0n1`.
+5. Type `ERASE` to confirm. This is the point of no return.
+6. Enter the LUKS passphrase when `cryptsetup` prompts. You will type this at
+   every boot, so pick something you can remember and write it down somewhere
+   safe.
+7. It partitions (512M ESP labeled `BOOT`, the rest as an encrypted `nixos`
+   volume), formats, mounts, and runs `nixos-install`.
+8. When it finishes, reboot and remove the USB stick.
 
-- **Panacea is Arch-first.** Its `install.sh` assumes pacman, AUR, and
-  systemd unit names. The Home Manager port is the largest single work item.
-- **Quickshell and Hyprland versions must match.** Panacea tracks Hyprland
-  closely. NixRiot must pin both and test the pair.
-- **Some Panacea features need packaging.** `voxtype`, `mpvpaper`, and
-  `hyprsunset` may not be in nixpkgs at the required versions.
-- **Calamares on NixOS is thin.** The graphical installer works, but custom
-  post-install logic must be tested on UEFI and BIOS, with and without LUKS.
-- **The ISO is large.** A graphical live image plus Panacea assets will exceed
-  the stock 3.9 GB. Budget for a 5 to 6 GB USB.
+The install builds the target system from the flake, so it needs network the
+first time. Offline installs are on the roadmap, not shipped yet.
 
 ---
 
-## Non-goals
+## First boot
 
-- Replacing Panacea upstream. NixRiot packages it, it does not fork it.
-- Replacing OpenRiot on OpenBSD. NixRiot is the Linux sibling, not a port.
-- Supporting every OpenRiot game or every OpenBSD hardware quirk.
-- Shipping user secrets, wallet files, or `crypto.toml`.
+The disk passphrase prompt comes first, then SDDM. Log in as:
+
+- **user**: `riot`
+- **password**: `nixriot`
+
+Change it immediately:
+
+```sh
+passwd
+```
+
+`sudo` asks for the same password.
+
+---
+
+## Keybindings
+
+`SUPER` is the modifier. These come from Panacea's
+`vendor/panacea/hypr/lua/keybindings.lua`; rebind them from the settings panel
+(`SUPER + I`), which writes overrides that survive updates.
+
+### Shell and launcher
+
+| Keys | Action |
+|---|---|
+| `SUPER + A` | Launcher |
+| `SUPER + G` | Launchpad |
+| `SUPER + Tab` | Overview |
+| `SUPER + /` | Shortcut list |
+| `SUPER + I` | Settings |
+| `SUPER + Z` | Control center |
+| `SUPER + SHIFT + N` | Notifications |
+| `SUPER + V` | Clipboard history |
+| `CTRL + ALT + Delete` | Power menu |
+| `SUPER + SHIFT + P` | Password vault |
+
+### Apps and windows
+
+| Keys | Action |
+|---|---|
+| `SUPER + T` or `SUPER + Return` | Terminal (foot) |
+| `SUPER + F` | Firefox |
+| `SUPER + E` | Files |
+| `SUPER + SHIFT + E` | Yazi in the terminal |
+| `SUPER + O` | Notes (Obsidian, see Troubleshooting) |
+| `SUPER + Q` | Close window |
+| `SUPER + W` | Toggle floating |
+| `SUPER + SHIFT + Space` | Float, resize, center |
+| `SUPER + J` | Toggle split |
+| `SUPER + SHIFT + F` | Fullscreen |
+| `SUPER + L` | Lock |
+| `SUPER + SHIFT + T` | Switch theme |
+| `SUPER + SHIFT + M` | Exit Hyprland |
+| `SUPER + SHIFT + S` | Screenshot (region) |
+| `SUPER + P` | Screen recording |
+| `SUPER + SHIFT + F12` | Screen off |
+
+### Workspaces and movement
+
+| Keys | Action |
+|---|---|
+| `SUPER + 1..0` | Focus workspace |
+| `SUPER + SHIFT + 1..0` | Move window to workspace |
+| `SUPER + Space` | First empty workspace |
+| `SUPER + S` | Special workspace (`magic`) |
+| `SUPER + arrows` | Focus window |
+| `SUPER + SHIFT + arrows` | Move window |
+| `ALT + arrows` | Resize window |
+| `SUPER + SHIFT + A` | Pack workspaces |
+| `SUPER + mouse wheel` | Next or previous workspace |
+| `SUPER + drag` | Move window |
+| `SUPER + right drag` | Resize window |
+
+### Media and hardware
+
+| Keys | Action |
+|---|---|
+| `XF86Audio*` | Volume, mute, play/pause, tracks |
+| `XF86MonBrightness*` | Brightness |
+| Right Alt (hold) | Voice to text |
+
+Closing the lid locks the screen.
+
+---
+
+## What is installed
+
+Everything is declared in `modules/`. The example and installed hosts enable the
+full set.
+
+| Module | Packages |
+|---|---|
+| `apps/shell.nix` | fish, starship, eza, zoxide, ripgrep, fd, fzf, btop, fastfetch, lsd, bat, pv, tree, jq, yq |
+| `apps/editors.nix` | helix, neovim, zed-editor, kate, gnome-text-editor, crush, git |
+| `apps/media.nix` | mpv, mpd, rmpc, yt-dlp, ffmpeg, ffmpegthumbnailer, cava, transmission (optional) |
+| `apps/office.nix` | libreoffice, zathura, firefox, thunderbird, thunar, tumbler, file-roller, prusa-slicer, orca-slicer |
+| `desktop/panacea.nix` | hyprland, quickshell, hyprpaper, hyprsunset, hypridle, foot, grim, slurp, wl-clipboard, cliphist, wf-recorder, swaylock, yazi, voxtype, tesseract, and the rest of the shell's runtime |
+| `desktop/theme.nix` | JetBrains Mono Nerd Font, Material Design icons, Noto fonts, Bibata cursors, Kora and Papirus icons |
+| `crypto/*` | monero-gui, bitcoin and bitcoind, wireguard-tools |
+| `security/*` | restic, rclone, firewall, SSH hardening, sysctl hardening |
+| `apps/games.nix` | optional, off by default |
+
+---
+
+## Control center
+
+Panacea's settings live in the pill. `SUPER + I` opens them; every section is
+also reachable from the pill's expanded island. `SUPER + Z` opens the control
+center (Wi-Fi, Bluetooth, audio, power profile). `SUPER + /` lists every current
+binding.
+
+---
+
+## Wallpapers
+
+The OpenRiot set (32 WebP images) is vendored under
+`vendor/panacea/hypr/wallpaper/`, default `01.webp`. Change the wallpaper from
+the pill's appearance settings. The manifest is
+`vendor/panacea/hypr/wallpaper/WALLPAPERS.md`.
+
+Adding an image means adding a licence entry to that manifest. Live video
+wallpapers are not shipped.
+
+---
+
+## Crypto
+
+Enable in the host config:
+
+```nix
+nixriot = {
+  crypto.monero = true;
+  crypto.bitcoin = true;
+};
+```
+
+Monero GUI and Bitcoin Core come from nixpkgs. WireGuard is configured through
+`nixriot.wireguard`. Wallet files and keys are yours to create and back up; the
+flake never ships them.
+
+---
+
+## Browser
+
+The default browser is **Firefox**, which is also OpenRiot's. If you are moving
+from OpenRiot, your bookmarks and passwords export from Firefox and import into
+Firefox, so nothing about your browsing setup has to change.
+
+To make a different browser the default, set `xdg.mimeApps.defaultApplications`
+in `home/xdg.nix`. Brave is not installed by default.
+
+---
+
+## Games
+
+Off by default. To install the curated set, set `nixriot.games = true;` in your
+host config. It pulls supertux, openttd, cataclysm-dda, endless-sky, angband,
+and brogue-ce. It is deliberately a small subset of OpenRiot's list; several
+OpenRiot games are no longer in nixpkgs.
+
+---
+
+## Updating
+
+The flake is the update path. On an installed system:
+
+```sh
+sudo nixos-rebuild switch --flake /etc/nixriot#installed
+```
+
+To pick up newer packages, update the lock first, from a checkout with network:
+
+```sh
+nix flake update
+sudo nixos-rebuild switch --flake .#installed
+```
+
+Panacea's own updater is disabled on purpose; it would fight the flake.
+
+---
+
+## Troubleshooting
+
+- **`SUPER + O` does nothing.** It is bound to Obsidian, which is not installed
+  by default. Install it or rebind `notes` in the settings panel.
+- **The greeter does not look like Panacea.** The SDDM theme may need a Qt5/Qt6
+  shim depending on the SDDM version in nixpkgs. The session still works.
+- **The install failed partway.** Re-run `sudo nixriot-install`; it wipes and
+  starts over.
+- **No network during install.** The first cut needs network to build the
+  target. Offline installs are not implemented yet.
+- **Voice to text does nothing.** `voxtype` needs a speech model downloaded; it
+  is not packaged.
 
 ---
 
@@ -264,5 +304,3 @@ and bundled assets keep their original authors' terms.
 - [NixOS](https://nixos.org)
 - [Panacea](https://github.com/EnsixD/Panacea)
 - [OpenRiot](https://github.com/CyphrRiot/OpenRiot)
-- [Hyprland](https://hyprland.org)
-- [Quickshell](https://quickshell.org)

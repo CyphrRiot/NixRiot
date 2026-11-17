@@ -38,8 +38,11 @@
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
+  boot.initrd.availableKernelModules = [ "dm_crypt" ];
+  boot.initrd.luks.devices."cryptroot".device = "/dev/disk/by-label/nixos";
+
   fileSystems."/" = {
-    device = "/dev/disk/by-label/nixos";
+    device = "/dev/mapper/cryptroot";
     fsType = "ext4";
   };
 

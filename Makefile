@@ -24,7 +24,7 @@ fmt:
 vendor-panacea:
 	rm -rf .vendor-panacea
 	git clone --filter=blob:none --sparse $(PANACEA_REPO) .vendor-panacea
-	cd .vendor-panacea && git sparse-checkout set panacea hypr foot fish fastfetch nano applications bin grub sddm assets && git checkout $(PANACEA_REV)
+	cd .vendor-panacea && git sparse-checkout set panacea hypr foot fish fastfetch nano applications bin sddm assets && git checkout $(PANACEA_REV)
 	@echo "Upstream checkout in .vendor-panacea. Diff against vendor/panacea, then copy deliberately."
 
 vendor-diff:

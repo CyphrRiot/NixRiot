@@ -21,8 +21,8 @@ a Home Manager module. It is the largest open item in the project.
   Manager activation.
 - It does not port Panacea's `settings.json` merge logic. Panacea merges user
   settings with defaults via `jq`; that should become a Home Manager option.
-- It does not install the SDDM theme or the GRUB theme. Both are asset copies
-  plus a config pointer, and both need a NixOS module.
+- GRUB is not used; NixRiot boots with systemd-boot, so no boot theme is
+  installed.
 - It does not handle Panacea's updater. On NixOS the flake lock is the updater.
   Panacea's own update button should be disabled or repointed.
 - It does not verify that the pinned Quickshell version matches what Panacea

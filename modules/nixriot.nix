@@ -6,6 +6,7 @@ in
   imports = [
     ./desktop/panacea.nix
     ./desktop/theme.nix
+    ./desktop/sddm.nix
     ./apps/shell.nix
     ./apps/editors.nix
     ./apps/media.nix

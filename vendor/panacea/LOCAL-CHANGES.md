@@ -6,7 +6,7 @@ Upstream: https://github.com/EnsixD/Panacea at commit
 ## What is vendored
 
 `panacea/`, `hypr/`, `foot/`, `fish/`, `fastfetch/`, `nano/`,
-`applications/`, `bin/`, `grub/`, `sddm/`, `LICENSE`, `VERSION`.
+`applications/`, `bin/`, `sddm/`, `LICENSE`, `VERSION`.
 
 ## What is not vendored
 
@@ -14,6 +14,7 @@ Upstream: https://github.com/EnsixD/Panacea at commit
 - `docs/`, `README.md`, `AGENTS.md`, `.gitignore`, `graphify-out/`,
   `Panacea Vault/`: upstream housekeeping.
 - `niri/`: experimental second compositor, not used here.
+- `grub/`: NixRiot boots with systemd-boot, so the GRUB theme is not shipped.
 - `assets/`: only the `logo*.png` files are kept, under
   `panacea/assets/` because the shell reads `~/.config/panacea/assets/`.
 - `wallpapers/`: upstream set is third-party work with mixed terms and is
@@ -33,6 +34,8 @@ Upstream: https://github.com/EnsixD/Panacea at commit
    (`/usr/lib/qt6/qml/QtWebEngine/...`), which cannot resolve on NixOS.
 7. `panacea/scripts/update.sh` exits early unless `PANACEA_ALLOW_SELF_UPDATE=1`.
    NixRiot updates through the flake.
+8. `grub/` is not vendored: NixRiot boots with systemd-boot, so the upstream
+   GRUB theme is unused.
 
 ## Not yet changed
 
