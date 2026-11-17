@@ -139,8 +139,8 @@ passwd
 ## Keybindings
 
 `SUPER` is the modifier. Panacea's map lives in
-`vendor/panacea/hypr/lua/keybindings.lua`. NixRiot adds an OpenRiot-compatible
-overlay in `vendor/panacea/hypr/custom/keybindings.lua` and the matching
+`panacea/hypr/lua/keybindings.lua`. NixRiot adds an OpenRiot-compatible
+overlay in `panacea/hypr/custom/keybindings.lua` and the matching
 `keybinds.conf`. Rebind anything from the settings panel (`SUPER + I`), which
 writes overrides that survive updates.
 
@@ -263,9 +263,9 @@ binding.
 ## Wallpapers
 
 The NixRiot set (13 WebP images, `00.webp` through `12.webp`) ships in
-`vendor/panacea/hypr/wallpaper/`, default `00.webp`. Change the wallpaper from
+`panacea/hypr/wallpaper/`, default `00.webp`. Change the wallpaper from
 the pill's appearance settings. The manifest is
-`vendor/panacea/hypr/wallpaper/WALLPAPERS.md`.
+`panacea/hypr/wallpaper/WALLPAPERS.md`.
 
 Adding an image means adding a licence entry to that manifest. Live video
 wallpapers are not shipped.

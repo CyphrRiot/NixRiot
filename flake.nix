@@ -22,7 +22,7 @@
       lib = nixpkgs.lib;
       specialArgs = {
         inherit self inputs;
-        panaceaSrc = ./vendor/panacea;
+        panaceaSrc = ./panacea;
       };
     in
     {

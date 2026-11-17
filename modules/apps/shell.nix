@@ -20,6 +20,7 @@
       tree
       jq
       yq
+      gurk-rs
     ];
   };
 }

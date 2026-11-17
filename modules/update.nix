@@ -29,12 +29,14 @@ let
       check)
         mkdir -p "$dir"
         now=$(date -u +%Y-%m-%dT%H:%M:%SZ)
-        remote=$(curl -fsS --max-time 10 "$api" 2>/dev/null | jq -r .sha 2>/dev/null) || exit 0
+        body=$(curl -fsS --max-time 10 "$api" 2>/dev/null) || exit 0
+        remote=$(printf '%s' "$body" | jq -r .sha 2>/dev/null) || exit 0
         [ -n "$remote" ] && [ "$remote" != "null" ] || exit 0
+        subject=$(printf '%s' "$body" | jq -r '.commit.message' 2>/dev/null | head -n1)
         cur=$(installed_rev)
         if [ "$cur" = "$remote" ]; then avail=false; else avail=true; fi
-        jq -n --arg i "$cur" --arg a "$remote" --argjson u "$avail" --arg t "$now" \
-          '{installed:$i,available:$a,updateAvailable:$u,lastChecked:$t}' > "$status.tmp"
+        jq -n --arg i "$cur" --arg a "$remote" --arg s "$subject" --argjson u "$avail" --arg t "$now" \
+          '{installed:$i,available:$a,subject:$s,updateAvailable:$u,lastChecked:$t}' > "$status.tmp"
         mv "$status.tmp" "$status"
         chmod 644 "$status"
         ;;

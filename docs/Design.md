@@ -43,7 +43,7 @@ second installer script to drift.
 | **Panacea** | Desktop shell: Hyprland, Quickshell pill, SDDM theme, wallpapers, keybindings |
 | **OpenRiot** | Feature list, visual language, fish/Helix/Crush defaults, crypto and media tooling, motd, XDG layout |
 
-NixRiot vendors Panacea's config trees and themes under `vendor/panacea/`, then
+NixRiot carries Panacea's config trees and themes under `panacea/`, then
 ports `install.sh` logic into a Home Manager module. Upstream Panacea is the
 reference, not a build-time dependency.
 
@@ -84,10 +84,9 @@ NixRiot/
     xdg.nix
   iso/
     configuration.nix        # live image, install command with LUKS
-  vendor/
-    panacea/                 # vendored config trees, themes, wallpapers
-      UPSTREAM               # pinned Panacea commit
-      hypr/wallpaper/        # OpenRiot wallpaper set
+  panacea/                   # Panacea's config trees, themes, wallpapers
+    UPSTREAM                 # pinned Panacea commit, kept for provenance
+    hypr/wallpaper/          # NixRiot wallpaper set
   hosts/
     example/                 # reference host config
     installed/               # target of `nixriot-install` (LUKS root)
@@ -128,7 +127,7 @@ declaratively. "Reuse" means the existing config or asset is copied.
 | fastfetch + motd | **Reuse** | Home Manager |
 | Bibata cursor, Kora icons | **Reuse** | Packaged assets |
 | Nerd Fonts | **Reuse** | nixpkgs fonts |
-| Wallpaper sets | **Own** | NixRiot set, shipped in `vendor/panacea/hypr/wallpaper` |
+| Wallpaper sets | **Own** | NixRiot set, shipped in `panacea/hypr/wallpaper` |
 | Screenshots | **Port** | `grim`, `slurp`, `wl-clipboard` |
 | Screen recording | **Port** | `wf-recorder` |
 | Clipboard history | **Port** | `cliphist` |

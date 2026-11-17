@@ -1,14 +1,17 @@
-# Local changes to vendored Panacea
+# Panacea local changes
 
 Upstream: https://github.com/EnsixD/Panacea at commit
 `45ddf2e11d5193779d4539ebde3ee3376c87870a` (version 1.0.24).
 
-## What is vendored
+The trees below are NixRiot's own copies, edited in place. There is no sync
+tooling; `UPSTREAM` and `LICENSE` stay for attribution.
+
+## What is carried
 
 `panacea/`, `hypr/`, `foot/`, `fish/`, `fastfetch/`, `nano/`,
 `applications/`, `bin/`, `sddm/`, `LICENSE`, `VERSION`.
 
-## What is not vendored
+## What is not carried
 
 - `install.sh`: the Arch installer. NixRiot replaces it with Nix modules.
 - `docs/`, `README.md`, `AGENTS.md`, `.gitignore`, `graphify-out/`,
@@ -33,9 +36,11 @@ Upstream: https://github.com/EnsixD/Panacea at commit
    `-x` check regenerates the palette.
 6. `panacea/scripts/start.sh` drops the Arch-only QtWebEngine workaround
    (`/usr/lib/qt6/qml/QtWebEngine/...`), which cannot resolve on NixOS.
-7. `panacea/scripts/update.sh` exits early unless `PANACEA_ALLOW_SELF_UPDATE=1`.
-   NixRiot updates through the flake.
-8. `grub/` is not vendored: NixRiot boots with systemd-boot, so the upstream
+7. `panacea/scripts/update.sh` is an adapter between Panacea's update UI and
+   NixOS: `check` reads the status file that `nixriot-update` writes on its
+   timer and answers in Panacea's key=value format, and `apply` starts the
+   privileged `nixriot-update` service. The upstream updater is not used.
+8. `grub/` is not carried: NixRiot boots with systemd-boot, so the upstream
    GRUB theme is unused.
 9. `hypr/custom/keybinds.conf` and `hypr/custom/keybindings.lua` carry an
    OpenRiot-compatible keybinding overlay: the launcher, browser, file manager,

@@ -1,47 +1,39 @@
 # Panacea Port Notes
 
 This file tracks the work of turning Panacea's Arch-oriented `install.sh` into
-a Home Manager module. It is the largest open item in the project.
+a Home Manager module.
 
-## What the current skeleton does
+## What the port does
 
-- Vendors Panacea's config trees under `vendor/panacea/` at the commit recorded
-  in `vendor/panacea/UPSTREAM`. There is no Panacea flake input.
-- Copies the vendored config trees into `~/.config` on first activation, and
-  leaves them alone afterwards.
+- Carries Panacea's config trees under `panacea/`, at the commit recorded in
+  `panacea/UPSTREAM`. There is no Panacea flake input; the trees are NixRiot's
+  own copies and are edited in place.
+- Copies the config trees into `~/.config` on first activation and leaves them
+  alone afterwards, so later edits by the user survive.
 - Copies `bin/` helpers into `~/.local/bin`.
-- Ships the OpenRiot wallpaper set in `hypr/wallpaper/`, with its manifest.
+- Copies the desktop entries, with Panacea's `@HOME@` placeholder substituted.
+- Ships the NixRiot wallpaper set in `hypr/wallpaper/`, with its manifest.
+- Runs `hypr/scripts/palette.sh` at activation, which lays the palette out
+  across foot, fish, zed, btop, neovim and obsidian.
 - Installs the runtime dependencies from nixpkgs at the system level.
 
 ## What it does not do yet
 
-- It does not run Panacea's `hypr/scripts/palette.sh` or
-  `hypr/scripts/switch_theme.sh --restore`. Those need a live Hyprland session,
-  so they belong in an `exec-once` line or a systemd user unit, not in a Home
-  Manager activation.
 - It does not port Panacea's `settings.json` merge logic. Panacea merges user
   settings with defaults via `jq`; that should become a Home Manager option.
 - GRUB is not used; NixRiot boots with systemd-boot, so no boot theme is
   installed.
-- It does not handle Panacea's updater. On NixOS the flake lock is the updater.
-  Panacea's own update button should be disabled or repointed.
 - It does not verify that the pinned Quickshell version matches what Panacea
   expects. Check `quickshell --version` against Panacea's requirements before
   trusting the shell.
 
-## Vendoring and sync
+## Upstream relationship
 
-Panacea is vendored at the commit in `vendor/panacea/UPSTREAM`. To inspect a
-newer upstream without overwriting local changes:
-
-```sh
-make vendor-panacea
-make vendor-diff
-```
-
-`.vendor-panacea` is a sparse checkout that excludes wallpapers. Copy changes
-from it into `vendor/panacea/` deliberately, then update `UPSTREAM` and
-`LOCAL-CHANGES.md`.
+Panacea is MIT, so `panacea/UPSTREAM` and `panacea/LICENSE` stay for
+attribution. There is no sync tooling: the trees are first-party now, edited
+directly, and `panacea/LOCAL-CHANGES.md` records every deliberate difference
+from upstream. To compare against a newer upstream release, clone Panacea
+separately and diff by hand.
 
 ## Known version risk
 
@@ -53,7 +45,7 @@ without testing the pair.
 ## First-run checklist
 
 1. `nix flake lock` to pin every input.
-2. `nix build .#nixosConfigurations.nixriot.config.system.build.toplevel`.
+2. `nix build .#nixosConfigurations.installed.config.system.build.toplevel`.
 3. Boot the ISO, install, reboot.
 4. Log in through SDDM, confirm the pill starts.
 5. Run `hyprctl reload` and check the palette.

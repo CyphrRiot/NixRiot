@@ -1,7 +1,6 @@
 result
 result-*
 .direnv
-.vendor-panacea
 AGENTS.md
 
 # User-owned secrets. Never commit these.
