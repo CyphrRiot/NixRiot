@@ -12,6 +12,27 @@ have installed it once.
 Read [docs/Design.md](docs/Design.md) for the reasoning, architecture, and
 roadmap. This file is the manual.
 
+## Navigate this guide
+
+- [The usual free software warning](#the-usual-free-software-warning)
+- [What you get](#what-you-get)
+- [Download](#download)
+- [Requirements](#requirements)
+- [Install](#install)
+- [First boot](#first-boot)
+- [Keybindings](#keybindings)
+- [What is installed](#what-is-installed)
+- [Shell aliases and quick reference](#shell-aliases-and-quick-reference)
+- [Control center](#control-center)
+- [Wallpapers](#wallpapers)
+- [Blockchain](#blockchain)
+- [Browser and moving from OpenRiot](#browser-and-moving-from-openriot)
+- [Games](#games)
+- [Updating](#updating)
+- [Advanced: build your own image](#advanced-build-your-own-image)
+- [Troubleshooting](#troubleshooting)
+- [Licence and credits](#licence-and-credits)
+
 ---
 
 ## The usual free software warning
@@ -210,6 +231,26 @@ full set.
 
 ---
 
+## Shell aliases and quick reference
+
+These come from `home/fish.nix`, which is OpenRiot's fish configuration adapted
+for NixOS.
+
+| Command | Does |
+|---|---|
+| `vim`, `vi` | Helix (`hx`) |
+| `helix` | `hx` |
+| `signal` | Signal desktop (`gurk`) |
+| `ls`, `ll`, `la` | `lsd`, `lsd -l`, `lsd -la` |
+| `music` | `rmpc` (MPD client) |
+| `more` | `more -e` |
+| `dum` | top 10 largest items in the current directory |
+| `!!` | expands to the previous command |
+| `Ctrl+O` | inserts the previous command |
+
+The prompt shows hostname, working directory, git branch, and a non-zero exit
+code, with the Linux glyph in the accent colour driven by the Panacea palette.
+
 ## Control center
 
 Panacea's settings live in the pill. `SUPER + I` opens them; every section is
@@ -231,7 +272,7 @@ wallpapers are not shipped.
 
 ---
 
-## Crypto
+## Blockchain
 
 Enable in the host config:
 
@@ -248,14 +289,23 @@ flake never ships them.
 
 ---
 
-## Browser
+## Browser and moving from OpenRiot
 
-The default browser is **Firefox**, which is also OpenRiot's. If you are moving
-from OpenRiot, your bookmarks and passwords export from Firefox and import into
-Firefox, so nothing about your browsing setup has to change.
+The default browser is **Firefox**, which is also OpenRiot's. Nothing about
+your browsing setup has to change.
 
-To make a different browser the default, set `xdg.mimeApps.defaultApplications`
-in `home/xdg.nix`. Brave is not installed by default.
+Moving from OpenRiot:
+
+- **Bookmarks**: in Firefox, `Ctrl+Shift+O`, then Import and Backup, Export
+  Bookmarks to JSON. On the new machine, import the same file.
+- **Passwords**: in Firefox, `about:logins`, then the menu at the top right,
+  Export Logins. Import it the same way on the new machine. Delete the export
+  file afterwards; it is plain text.
+- **Default browser**: NixRiot sets Firefox for `http`, `https`, and
+  `text/html` in `home/xdg.nix`. To change it, edit
+  `xdg.mimeApps.defaultApplications` there.
+
+Brave, Chromium, and other browsers are not installed by default.
 
 ---
 
