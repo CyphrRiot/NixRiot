@@ -27,9 +27,12 @@ Upstream: https://github.com/EnsixD/Panacea at commit
 3. Upstream `assets/logo*.png` moved to `panacea/assets/` so the shell
    finds them after the config tree is copied.
 4. `hypr/scripts/switch_theme.sh` fallback now includes `*.webp`.
-5. `panacea/scripts/update.sh` is the upstream updater and does not apply
-   on NixOS. It is left in place but must not be exposed as the update
-   path. NixRiot updates through the flake.
+5. `hypr/scripts/palette.sh` is committed executable, so the activation-time
+   `-x` check regenerates the palette.
+6. `panacea/scripts/start.sh` drops the Arch-only QtWebEngine workaround
+   (`/usr/lib/qt6/qml/QtWebEngine/...`), which cannot resolve on NixOS.
+7. `panacea/scripts/update.sh` exits early unless `PANACEA_ALLOW_SELF_UPDATE=1`.
+   NixRiot updates through the flake.
 
 ## Not yet changed
 

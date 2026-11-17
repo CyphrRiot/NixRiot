@@ -14,6 +14,12 @@
 # уносим в сторону до установки и возвращаем после.
 set -u
 
+# NixRiot: updates are delivered by the NixOS flake, not this script.
+if [ "${PANACEA_ALLOW_SELF_UPDATE:-0}" != "1" ]; then
+    echo "NixRiot manages updates through the system flake. Nothing to do." >&2
+    exit 1
+fi
+
 # Проверочный прогон: ставим в свой каталог и НЕ перезапускаем оболочку.
 # Без этого установщик убивал бы рабочую оболочку той системы, на которой
 # идёт проверка, — что однажды и произошло.

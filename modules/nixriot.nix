@@ -52,6 +52,8 @@ in
   config = lib.mkIf cfg.enable {
     nixpkgs.config.allowUnfree = true;
 
+    system.stateVersion = "26.05";
+
     networking.hostName = cfg.hostName;
     time.timeZone = "UTC";
     i18n.defaultLocale = "en_US.UTF-8";

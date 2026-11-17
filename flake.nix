@@ -40,6 +40,20 @@
         ];
       };
 
+      nixosConfigurations.installed = lib.nixosSystem {
+        inherit system specialArgs;
+        modules = [
+          ./hosts/installed/configuration.nix
+          home-manager.nixosModules.home-manager
+          {
+            home-manager.useGlobalPkgs = true;
+            home-manager.useUserPackages = true;
+            home-manager.extraSpecialArgs = specialArgs;
+            home-manager.users.riot = import ./home;
+          }
+        ];
+      };
+
       packages.${system}.iso = nixos-generators.nixosGenerate {
         inherit system;
         format = "iso";

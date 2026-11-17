@@ -66,7 +66,7 @@
       gnome-keyring
 
       swaylock
-      tesseract
+      (tesseract.override { enableLanguages = [ "eng" "rus" ]; })
       voxtype
       wtype
       ddcutil

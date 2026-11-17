@@ -3,7 +3,7 @@ let
   copyIfMissing = name: ''
     if [ ! -e "$HOME/.config/${name}" ]; then
       run mkdir -p "$HOME/.config"
-      run cp -r --no-preserve=mode ${panaceaSrc}/${name} "$HOME/.config/${name}"
+      run cp -r ${panaceaSrc}/${name} "$HOME/.config/${name}"
       run chmod -R u+w "$HOME/.config/${name}"
     fi
   '';
@@ -16,13 +16,16 @@ in
     ${copyIfMissing "fastfetch"}
     ${copyIfMissing "fish"}
 
+    run chmod -R u+x "$HOME/.config/panacea/scripts" "$HOME/.config/hypr/scripts" 2>/dev/null || true
+
     if [ ! -e "$HOME/.nanorc" ] && [ -f ${panaceaSrc}/nano/nanorc ]; then
       run cp ${panaceaSrc}/nano/nanorc "$HOME/.nanorc"
     fi
 
     run mkdir -p "$HOME/.local/bin"
-    run cp -r --no-preserve=mode ${panaceaSrc}/bin/. "$HOME/.local/bin/"
+    run cp -r ${panaceaSrc}/bin/. "$HOME/.local/bin/"
     run chmod -R u+w "$HOME/.local/bin"
+    run chmod -R u+x "$HOME/.local/bin"
 
     run mkdir -p "$HOME/.local/share/applications"
     for f in ${panaceaSrc}/applications/*.desktop; do
