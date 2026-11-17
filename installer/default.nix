@@ -3,6 +3,18 @@ pkgs.writeScriptBin "nixriot-install" ''
   #!${pkgs.runtimeShell}
   set -euo pipefail
 
+  export PATH=${pkgs.lib.makeBinPath [
+      pkgs.gptfdisk
+      pkgs.parted
+      pkgs.dosfstools
+      pkgs.e2fsprogs
+      pkgs.cryptsetup
+      pkgs.util-linux
+      pkgs.coreutils
+      pkgs.gnused
+      pkgs.gnugrep
+    ]}:$PATH
+
   if [ "$(id -u)" -ne 0 ]; then
     echo "Run as root: sudo nixriot-install" >&2
     exit 1

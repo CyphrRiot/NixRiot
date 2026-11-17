@@ -54,10 +54,14 @@
         ];
       };
 
-      packages.${system}.iso = nixos-generators.nixosGenerate {
-        inherit system;
-        format = "iso";
-        modules = [ ./iso/configuration.nix ];
+      packages.${system} = {
+        iso = nixos-generators.nixosGenerate {
+          inherit system;
+          format = "iso";
+          modules = [ ./iso/configuration.nix ];
+        };
+
+        installer = import ./installer { pkgs = nixpkgs.legacyPackages.${system}; };
       };
 
       formatter.${system} = nixpkgs.legacyPackages.${system}.nixfmt-rfc-style;

@@ -9,8 +9,8 @@ Status: **pre-release**. The flake evaluates and the ISO builds. It has not been
 booted on real hardware yet, so treat everything below as untested until you
 have installed it once.
 
-Read `docs/Design.md` for the reasoning, architecture, and roadmap. This file is
-the manual.
+Read [docs/Design.md](docs/Design.md) for the reasoning, architecture, and
+roadmap. This file is the manual.
 
 ---
 
@@ -39,37 +39,39 @@ NixRiot ships no wallet files, no secrets, and no `crypto.toml`. You own those.
 
 ---
 
-## Requirements
+## Get NixRiot
 
-- x86_64 machine that boots modern UEFI.
-- **To build the ISO**: any machine running Nix with flakes enabled, about
-  40 GB of free space, and network access for the first `nix flake lock`.
-  NixOS, or any Linux or macOS with Nix installed, works.
-- **To install**: a USB stick of at least 6 GB.
-- A target disk that can be erased.
+You need a bootable image. Two ways, in order of preference.
 
-You do not need an existing NixOS install. You need something that can run Nix.
+**1. The NixRiot image (preferred).** Download the latest ISO from the releases
+page and write it to a USB stick:
+
+```sh
+sudo dd if=nixriot-*.iso of=/dev/sdX bs=4M status=progress oflag=sync
+```
+
+**2. A stock NixOS image.** Boot the official NixOS graphical ISO, then pull the
+installer straight from the flake:
+
+```sh
+sudo nix run github:CyphrRiot/NixRiot#installer
+```
+
+No NixRiot ISO is published yet, so until a release exists the only way to get
+the image is to build one yourself. That is under Advanced, at the end of this
+file.
 
 ---
 
-## Build the ISO
+## Requirements
 
-On the machine with Nix:
+- x86_64 machine that boots modern UEFI.
+- A USB stick of at least 6 GB.
+- A target disk that can be erased.
+- Network during install, unless you are using an offline image.
 
-```sh
-git clone git@github.com:CyphrRiot/NixRiot.git
-cd NixRiot
-nix build .#iso
-```
-
-The image lands at `result/iso/nixos-*.iso`. It is a hybrid image, so it can be
-written to a USB stick directly.
-
-```sh
-sudo dd if=result/iso/nixos-*.iso of=/dev/sdX bs=4M status=progress oflag=sync
-```
-
-Replace `/dev/sdX` with the USB device, not a partition.
+You do not need to know Nix to install NixRiot. You need Nix, with flakes
+enabled and about 40 GB free, only if you build the image yourself.
 
 ---
 
@@ -278,6 +280,23 @@ sudo nixos-rebuild switch --flake .#installed
 ```
 
 Panacea's own updater is disabled on purpose; it would fight the flake.
+
+---
+
+## Advanced: build your own image
+
+For a reproducible build of your own, or an air-gapped install, build the ISO
+from source on any machine running Nix with flakes enabled:
+
+```sh
+git clone git@github.com:CyphrRiot/NixRiot.git
+cd NixRiot
+nix build .#iso
+```
+
+The image lands at `result/iso/nixos-*.iso`. It is a hybrid image, so `dd` it to
+a USB stick exactly as in Get NixRiot. Building needs about 40 GB of free space
+and network access for the first `nix flake lock`.
 
 ---
 
