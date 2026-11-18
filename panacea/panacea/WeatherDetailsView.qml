@@ -2,11 +2,6 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Layouts
 
-// Окно детального прогноза погоды в стиле Nothing OS
-// Премиальный двухколоночный Bento-Grid дизайн:
-// Слева (520px): текущая погода, крупные карточки ключевых параметров и 24-часовая карусель
-// Справа (340px): полный 7-дневный прогноз с графическими температурными шкалами (все 7 дней видны сразу без обрезки)
-// Полная поддержка локализации (English / Русский) согласно системному языку
 Item {
     id: view
 
@@ -17,34 +12,30 @@ Item {
     implicitWidth: 920
     implicitHeight: 560
 
-    readonly property bool isEn: view?.sys?.isEn ?? false
-
     function dayName(dateStr, idx) {
-        if (idx === 0) return view.isEn ? "Today" : "Сегодня";
-        if (idx === 1) return view.isEn ? "Tomorrow" : "Завтра";
+        if (idx === 0) return "Today";
+        if (idx === 1) return "Tomorrow";
         if (!dateStr) return "";
         var parts = dateStr.split("-");
         if (parts.length < 3) return dateStr;
         var d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
-        var daysRu = ["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"];
         var daysEn = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-        var monthsRu = ["янв", "фев", "мар", "апр", "мая", "июн", "июл", "авг", "сен", "окт", "ноя", "дек"];
         var monthsEn = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-        var dayArr = view.isEn ? daysEn : daysRu;
-        var monArr = view.isEn ? monthsEn : monthsRu;
+        var dayArr = daysEn;
+        var monArr = monthsEn;
         return dayArr[d.getDay()] + ", " + d.getDate() + " " + monArr[d.getMonth()];
     }
 
     function iconGlyph(code) {
         var k = String(code).slice(0, 2);
         return String.fromCodePoint(
-              k === "01" ? 0xF0599                        // солнце
-            : k === "02" ? 0xF0595                        // солнце за облаком
-            : (k === "03" || k === "04") ? 0xF0590         // облако
-            : (k === "09" || k === "10") ? 0xF0597         // дождь
-            : k === "11" ? 0xF0593                        // гроза
-            : k === "13" ? 0xF0598                        // снег
-            : k === "50" ? 0xF0591                        // туман
+              k === "01" ? 0xF0599
+            : k === "02" ? 0xF0595
+            : (k === "03" || k === "04") ? 0xF0590
+            : (k === "09" || k === "10") ? 0xF0597
+            : k === "11" ? 0xF0593
+            : k === "13" ? 0xF0598
+            : k === "50" ? 0xF0591
                          : 0xF0590);
     }
 
@@ -53,7 +44,6 @@ Item {
     readonly property var hourlyList: (view.forecastData && view.forecastData.hourly) ? view.forecastData.hourly : []
     readonly property var activeDay: (dailyList.length > selectedDayIndex) ? dailyList[selectedDayIndex] : null
 
-    // Экстремумы недели для графических полосок температур
     readonly property int weekMinTemp: {
         if (!dailyList || !dailyList.length) return 0;
         var m = dailyList[0].tempMin;
@@ -83,7 +73,6 @@ Item {
         border.width: 1
         clip: true
 
-        // Блокировка кликов сквозь карточку
         MouseArea {
             anchors.fill: parent
             acceptedButtons: Qt.LeftButton | Qt.RightButton
@@ -95,12 +84,10 @@ Item {
             anchors.margins: 20
             spacing: 12
 
-            // ---------------------------------------------------- Шапка
             RowLayout {
                 Layout.fillWidth: true
                 spacing: 12
 
-                // Фирменная красная точка Nothing OS
                 Rectangle {
                     width: 8; height: 8; radius: 4
                     color: view.sys ? view.sys.colCrit : "#d71921"
@@ -123,7 +110,7 @@ Item {
                     }
 
                     Text {
-                        text: (view.isEn ? "Weather forecast" : "Прогноз погоды") +
+                        text: ("Weather forecast") +
                               (view.activeDay ? " · " + view.dayName(view.activeDay.date, view.selectedDayIndex) : "")
                         color: view.sys ? view.sys.colMuted : "#888888"
                         font {
@@ -133,7 +120,6 @@ Item {
                     }
                 }
 
-                // Кнопка обновления с вращением
                 Rectangle {
                     id: refBtn
                     width: 32; height: 32; radius: 16
@@ -165,7 +151,6 @@ Item {
                     }
                 }
 
-                // Кнопка закрытия
                 Rectangle {
                     id: closeBtn
                     width: 32; height: 32; radius: 16
@@ -191,13 +176,11 @@ Item {
                 }
             }
 
-            // ---------------------------------------------------- Основной двухколоночный контент
             RowLayout {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 spacing: 18
 
-                // =============================================== ЛЕВАЯ КОЛОНКА (520px)
                 ColumnLayout {
                     Layout.preferredWidth: 520
                     Layout.minimumWidth: 520
@@ -205,7 +188,6 @@ Item {
                     Layout.fillHeight: true
                     spacing: 10
 
-                    // 1. Главная Hero-карточка погоды
                     Rectangle {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 100
@@ -237,7 +219,6 @@ Item {
                                         font { family: view.sys ? view.sys.fontFam : "sans-serif"; pixelSize: 36; bold: true }
                                     }
 
-                                    // Плашка диапазона температур дня
                                     Rectangle {
                                         visible: view.activeDay !== null
                                         Layout.alignment: Qt.AlignVCenter
@@ -268,7 +249,6 @@ Item {
                         }
                     }
 
-                    // 2. Bento Grid ключевых показателей (6 карточек с КРУПНЫМ текстом и иконками)
                     GridLayout {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 168
@@ -276,7 +256,6 @@ Item {
                         rowSpacing: 8
                         columnSpacing: 8
 
-                        // 1. Ощущается / Feels like
                         Rectangle {
                             Layout.fillWidth: true
                             Layout.fillHeight: true
@@ -297,7 +276,7 @@ Item {
                                         font { family: view.sys ? view.sys.fontFam : "sans-serif"; pixelSize: 15 }
                                     }
                                     Text {
-                                        text: view.isEn ? "FEELS LIKE" : "ОЩУЩАЕТСЯ"
+                                        text: "FEELS LIKE"
                                         color: view.sys ? view.sys.colMuted : "#888"
                                         font { family: view.sys ? view.sys.fontFam : "sans-serif"; pixelSize: 11; letterSpacing: 0.9; bold: true }
                                     }
@@ -310,7 +289,6 @@ Item {
                             }
                         }
 
-                        // 2. Влажность / Осадки (Humidity / Rain)
                         Rectangle {
                             Layout.fillWidth: true
                             Layout.fillHeight: true
@@ -331,7 +309,7 @@ Item {
                                         font { family: view.sys ? view.sys.fontFam : "sans-serif"; pixelSize: 15 }
                                     }
                                     Text {
-                                        text: view.activeDay ? (view.isEn ? "RAIN" : "ОСАДКИ") : (view.isEn ? "HUMIDITY" : "ВЛАЖНОСТЬ")
+                                        text: view.activeDay ? "RAIN" : "HUMIDITY"
                                         color: view.sys ? view.sys.colMuted : "#888"
                                         font { family: view.sys ? view.sys.fontFam : "sans-serif"; pixelSize: 11; letterSpacing: 0.9; bold: true }
                                     }
@@ -344,7 +322,6 @@ Item {
                             }
                         }
 
-                        // 3. Ветер / Wind
                         Rectangle {
                             Layout.fillWidth: true
                             Layout.fillHeight: true
@@ -365,7 +342,7 @@ Item {
                                         font { family: view.sys ? view.sys.fontFam : "sans-serif"; pixelSize: 15 }
                                     }
                                     Text {
-                                        text: view.isEn ? "WIND" : "ВЕТЕР"
+                                        text: "WIND"
                                         color: view.sys ? view.sys.colMuted : "#888"
                                         font { family: view.sys ? view.sys.fontFam : "sans-serif"; pixelSize: 11; letterSpacing: 0.9; bold: true }
                                     }
@@ -379,7 +356,7 @@ Item {
                                     }
                                     Text {
                                         Layout.alignment: Qt.AlignBaseline
-                                        text: view.isEn ? "m/s" : "м/с"
+                                        text: "m/s"
                                         color: view.sys ? view.sys.colMuted : "#888"
                                         font { family: view.sys ? view.sys.fontFam : "sans-serif"; pixelSize: 13; bold: true }
                                     }
@@ -387,7 +364,6 @@ Item {
                             }
                         }
 
-                        // 4. Давление / Pressure
                         Rectangle {
                             Layout.fillWidth: true
                             Layout.fillHeight: true
@@ -408,7 +384,7 @@ Item {
                                         font { family: view.sys ? view.sys.fontFam : "sans-serif"; pixelSize: 15 }
                                     }
                                     Text {
-                                        text: view.isEn ? "PRESSURE" : "ДАВЛЕНИЕ"
+                                        text: "PRESSURE"
                                         color: view.sys ? view.sys.colMuted : "#888"
                                         font { family: view.sys ? view.sys.fontFam : "sans-serif"; pixelSize: 11; letterSpacing: 0.9; bold: true }
                                     }
@@ -422,7 +398,7 @@ Item {
                                     }
                                     Text {
                                         Layout.alignment: Qt.AlignBaseline
-                                        text: view.isEn ? "hPa" : "гПа"
+                                        text: "hPa"
                                         color: view.sys ? view.sys.colMuted : "#888"
                                         font { family: view.sys ? view.sys.fontFam : "sans-serif"; pixelSize: 13; bold: true }
                                     }
@@ -430,7 +406,6 @@ Item {
                             }
                         }
 
-                        // 5. УФ-индекс / UV Index
                         Rectangle {
                             Layout.fillWidth: true
                             Layout.fillHeight: true
@@ -451,7 +426,7 @@ Item {
                                         font { family: view.sys ? view.sys.fontFam : "sans-serif"; pixelSize: 15 }
                                     }
                                     Text {
-                                        text: view.isEn ? "UV INDEX" : "УФ-ИНДЕКС"
+                                        text: "UV INDEX"
                                         color: view.sys ? view.sys.colMuted : "#888"
                                         font { family: view.sys ? view.sys.fontFam : "sans-serif"; pixelSize: 11; letterSpacing: 0.9; bold: true }
                                     }
@@ -466,7 +441,7 @@ Item {
                                     Text {
                                         Layout.alignment: Qt.AlignBaseline
                                         visible: view.activeDay !== null
-                                        text: (view.activeDay && view.activeDay.uv >= 6) ? (view.isEn ? "High" : "Высокий") : (view.isEn ? "Moderate" : "Умерен.")
+                                        text: (view.activeDay && view.activeDay.uv >= 6) ? "High" : "Moderate"
                                         color: view.sys ? view.sys.colMuted : "#888"
                                         font { family: view.sys ? view.sys.fontFam : "sans-serif"; pixelSize: 12; bold: true }
                                     }
@@ -474,7 +449,6 @@ Item {
                             }
                         }
 
-                        // 6. Восход / Закат (Sun)
                         Rectangle {
                             Layout.fillWidth: true
                             Layout.fillHeight: true
@@ -495,7 +469,7 @@ Item {
                                         font { family: view.sys ? view.sys.fontFam : "sans-serif"; pixelSize: 15 }
                                     }
                                     Text {
-                                        text: view.isEn ? "SUN" : "СОЛНЦЕ"
+                                        text: "SUN"
                                         color: view.sys ? view.sys.colMuted : "#888"
                                         font { family: view.sys ? view.sys.fontFam : "sans-serif"; pixelSize: 11; letterSpacing: 0.9; bold: true }
                                     }
@@ -512,7 +486,6 @@ Item {
                         }
                     }
 
-                    // 3. Почасовой прогноз (24 часа карусель)
                     ColumnLayout {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 130
@@ -521,7 +494,7 @@ Item {
                         RowLayout {
                             Layout.fillWidth: true
                             Text {
-                                text: view.isEn ? "HOURLY FORECAST" : "ПОЧАСОВОЙ ПРОГНОЗ"
+                                text: "HOURLY FORECAST"
                                 color: view.sys ? view.sys.colMuted : "#888"
                                 font { family: view.sys ? view.sys.fontFam : "sans-serif"; pixelSize: 10; letterSpacing: 1.1; bold: true }
                             }
@@ -580,7 +553,7 @@ Item {
 
                                             Text {
                                                 Layout.alignment: Qt.AlignHCenter
-                                                text: superreg.index === 0 ? (view.isEn ? "Now" : "Сейчас") : superreg.modelData.time
+                                                text: superreg.index === 0 ? "Now" : superreg.modelData.time
                                                 color: superreg.index === 0 ? (view.sys ? view.sys.colCrit : "#d71921") : (view.sys ? view.sys.colMuted : "#888")
                                                 font { family: view.sys ? view.sys.fontFam : "sans-serif"; pixelSize: 10; bold: superreg.index === 0 }
                                             }
@@ -619,7 +592,6 @@ Item {
                     }
                 }
 
-                // =============================================== ПРАВАЯ КОЛОНКА (7 ДНЕЙ)
                 ColumnLayout {
                     id: rightCol
                     Layout.fillWidth: true
@@ -628,7 +600,7 @@ Item {
                     spacing: 8
 
                     Text {
-                        text: view.isEn ? "7-DAY FORECAST" : "ПРОГНОЗ НА 7 ДНЕЙ"
+                        text: "7-DAY FORECAST"
                         color: view.sys ? view.sys.colMuted : "#888"
                         font { family: view.sys ? view.sys.fontFam : "sans-serif"; pixelSize: 10; letterSpacing: 1.1; bold: true }
                     }
@@ -655,7 +627,6 @@ Item {
                                 border.width: 1
                                 Behavior on color { ColorAnimation { duration: 120 } }
 
-                                // Название дня
                                 Text {
                                     id: dayLbl
                                     anchors.left: parent.left
@@ -672,7 +643,6 @@ Item {
                                     elide: Text.ElideRight
                                 }
 
-                                // Иконка погоды
                                 Text {
                                     id: dayIcon
                                     anchors.left: dayLbl.right
@@ -685,7 +655,6 @@ Item {
                                     font { family: view.sys ? view.sys.fontFam : "sans-serif"; pixelSize: 16 }
                                 }
 
-                                // Осадки
                                 Text {
                                     id: dayPop
                                     anchors.left: dayIcon.right
@@ -698,7 +667,6 @@ Item {
                                     font { family: view.sys ? view.sys.fontFam : "sans-serif"; pixelSize: 10 }
                                 }
 
-                                // Мин. температура
                                 Text {
                                     id: dayMin
                                     anchors.left: dayPop.right
@@ -711,7 +679,6 @@ Item {
                                     font { family: view.sys ? view.sys.fontFam : "sans-serif"; pixelSize: 11 }
                                 }
 
-                                // Макс. температура (прижата к правому краю карточки)
                                 Text {
                                     id: dayMax
                                     anchors.right: parent.right
@@ -724,7 +691,6 @@ Item {
                                     font { family: view.sys ? view.sys.fontFam : "sans-serif"; pixelSize: 11; bold: true }
                                 }
 
-                                // Графическая температурная полоска дня
                                 Item {
                                     id: dayBar
                                     anchors.left: dayMin.right

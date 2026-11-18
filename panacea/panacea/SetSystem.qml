@@ -4,9 +4,6 @@ import QtQuick.Layouts
 import Quickshell
 import Quickshell.Io
 
-// System. Слева от характеристик машины стоит живой опрос: память, нагрузка,
-// температура и число процессов. Опрашиваем раз в две секунды одной командой
-// — отдельные процессы на каждую строку стоили бы дороже самих данных.
 ColumnLayout {
     id: page
 
@@ -20,8 +17,7 @@ ColumnLayout {
     property string host: ""
     property string uptime: ""
 
-    // живые показатели
-    property real memUsed: 0      // ГиБ
+    property real memUsed: 0
     property real memTotal: 0
     property real swapUsed: 0
     property real swapTotal: 0
@@ -31,21 +27,20 @@ ColumnLayout {
     property real tempGpu: -1
     property real diskUsed: 0
     property real diskTotal: 0
-    property real selfMb: 0       // сколько занимает сама оболочка, МиБ
+    property real selfMb: 0
 
     function stepName(st) {
-        return st === "download"      ? page.sys.tr("скачивание")
-             : st === "selfupdate"    ? page.sys.tr("обновление обновлятора")
-             : st === "backup"        ? page.sys.tr("сохранение настроек")
-             : st === "install"       ? page.sys.tr("установка")
-             : st === "greeter"       ? page.sys.tr("экран входа")
-             : st === "restore"       ? page.sys.tr("возврат настроек")
-             : st === "voxtype_model" ? page.sys.tr("скачивание голосовой модели")
-             : st === "restart"       ? page.sys.tr("перезапуск")
-             : page.sys.tr("подготовка");
+        return st === "download"      ? page.sys.tr("downloading")
+             : st === "selfupdate"    ? page.sys.tr("updating the updater")
+             : st === "backup"        ? page.sys.tr("saving settings")
+             : st === "install"       ? page.sys.tr("installing")
+             : st === "greeter"       ? page.sys.tr("login screen")
+             : st === "restore"       ? page.sys.tr("restoring settings")
+             : st === "voxtype_model" ? page.sys.tr("downloading voice model")
+             : st === "restart"       ? page.sys.tr("restarting")
+             : page.sys.tr("preparing");
     }
 
-    // кнопка сброса взведена и ждёт подтверждения
     property bool armed: false
     Timer { id: disarm; interval: 4000; onTriggered: page.armed = false }
 
@@ -81,23 +76,15 @@ ColumnLayout {
         }
     }
 
-    // Температуру берём из hwmon по имени чипа, а не из thermal_zone:
-    // на этой машине единственная зона — acpitz, и она показывает шесть
-    // градусов. Из hwmon же понятно, чей это датчик, и его можно подписать.
     Process {
         id: pLive
         command: ["sh", "-c",
-            // память | подкачка | загрузка | процессы | ЦП | видео | диск | аптайм | сама оболочка
             "free -k | awk '/^Mem:/{printf \"%s %s|\", $3, $2} /^Swap:/{printf \"%s %s|\", $3, $2}'; " +
             "awk '{printf \"%s|\", $1}' /proc/loadavg; " +
             "ls -d /proc/[0-9]* | wc -l | tr -d '\\n'; printf '|'; " +
             "for h in /sys/class/hwmon/hwmon*; do n=$(cat $h/name 2>/dev/null); " +
             "case $n in k10temp|coretemp|zenpower|cpu_thermal|acpitz_cpu) " +
             "cat $h/temp1_input 2>/dev/null | tr -d '\\n'; break;; esac; done; printf '|'; " +
-            // Видео: сперва hwmon, как у процессора. Проприетарный драйвер
-            // Nvidia датчик туда не всегда выставляет, поэтому если пусто —
-            // спрашиваем nvidia-smi. Он отдаёт градусы целым числом, а hwmon
-            // — тысячные доли, поэтому домножаем.
             "gpu=''; for h in /sys/class/hwmon/hwmon*; do n=$(cat $h/name 2>/dev/null); " +
             "case $n in amdgpu|nouveau|radeon|i915|nvidia) " +
             "gpu=$(cat $h/temp1_input 2>/dev/null); break;; esac; done; " +
@@ -107,13 +94,9 @@ ColumnLayout {
             "printf '%s|' \"$gpu\"; " +
             "df -k --output=used,size / | tail -1 | tr -s ' ' | sed 's/^ //' | tr -d '\\n'; printf '|'; " +
             "uptime -p | tr -d '\\n'; printf '|'; " +
-            // сама оболочка: sh запущен из неё, поэтому её PID — это PPID
             "awk '/VmRSS/{printf \"%s\", $2}' /proc/$PPID/status; printf '@'"]
         stdout: StdioCollector {
             onStreamFinished: {
-                // Сборщик копит вывод всех запусков подряд, поэтому берём
-                // последнюю законченную запись, а не начало текста: без
-                // этого показания навсегда оставались снимком первого опроса.
                 var recs = text.split("@").filter(r => r.indexOf("|") > 0);
                 if (!recs.length) return;
                 var a = recs[recs.length - 1].trim().split("|");
@@ -126,7 +109,6 @@ ColumnLayout {
                 page.swapTotal = (+swp[1] || 0) / 1048576;
                 page.load1  = +a[2] || 0;
                 page.procs  = +a[3] || 0;
-                // датчики отдают тысячные доли градуса
                 page.tempCpu = (+a[4] > 0) ? (+a[4] / 1000) : -1;
                 page.tempGpu = (+a[5] > 0) ? (+a[5] / 1000) : -1;
                 page.diskUsed  = (+dsk[0] || 0) / 1048576;
@@ -137,9 +119,6 @@ ColumnLayout {
         }
     }
 
-    // Опрос перезапускаем через сброс: присваивание running = true, когда
-    // процесс ещё не отметился завершённым, ничего не делает — показания
-    // замирали на первом снимке.
     Timer {
         interval: 2000
         running: true
@@ -149,8 +128,6 @@ ColumnLayout {
 
     Process { id: pOpen; property string url: ""; command: ["xdg-open", pOpen.url] }
 
-    // ------------------------------------------------------------- автор
-    // Ссылка стоит первой и во всю ширину: это лицо страницы, а не сноска.
     Rectangle {
         Layout.fillWidth: true
         implicitHeight: 64
@@ -167,7 +144,7 @@ ColumnLayout {
             spacing: 14
 
             Text {
-                text: String.fromCodePoint(0xF02A4)   // логотип GitHub
+                text: String.fromCodePoint(0xF02A4)
                 color: page.sys.colFg
                 font { family: page.sys.fontFam; pixelSize: 26 }
             }
@@ -180,13 +157,13 @@ ColumnLayout {
                     font { family: page.sys.fontDisplay; pixelSize: page.sys.fontSize + 1 }
                 }
                 Text {
-                    text: page.sys.tr("Автор оболочки — профиль на GitHub")
+                    text: page.sys.tr("The author of the shell — GitHub profile")
                     color: page.sys.colMuted
                     font { family: page.sys.fontBody; pixelSize: page.sys.fontSize - 4 }
                 }
             }
             Text {
-                text: String.fromCodePoint(0xF0327)   // стрелка наружу
+                text: String.fromCodePoint(0xF0327)
                 color: page.sys.colMuted
                 font { family: page.sys.fontFam; pixelSize: page.sys.fontSize }
             }
@@ -201,11 +178,10 @@ ColumnLayout {
         }
     }
 
-    // ------------------------------------------------------------- обновление
     SetCard {
         sys: page.sys
 
-        SetLabel { sys: page.sys; text: page.sys.tr("Версия") }
+        SetLabel { sys: page.sys; text: page.sys.tr("Version") }
 
         RowLayout {
             Layout.fillWidth: true
@@ -218,13 +194,13 @@ ColumnLayout {
                 Text {
                     Layout.fillWidth: true
                     text: page.sys.updBusy
-                          ? page.sys.tr("Обновление…") + " " + page.stepName(page.sys.updStep)
-                          : page.sys.updChecking ? page.sys.tr("Проверка…")
-                          : page.sys.updateAvailable ? page.sys.tr("Доступна новая версия")
-                          : page.sys.updStatus === "current" ? page.sys.tr("Установлена последняя версия")
-                          : page.sys.updStatus === "offline" ? page.sys.tr("Нет связи с GitHub")
-                          : page.sys.updStatus === "unknown" ? page.sys.tr("Версия неизвестна: ставили не установщиком")
-                          : page.sys.tr("Проверка…")
+                          ? page.sys.tr("Updating…") + " " + page.stepName(page.sys.updStep)
+                          : page.sys.updChecking ? page.sys.tr("Checking\\u2026")
+                          : page.sys.updateAvailable ? page.sys.tr("A new version is available")
+                          : page.sys.updStatus === "current" ? page.sys.tr("You are on the latest version")
+                          : page.sys.updStatus === "offline" ? page.sys.tr("Cannot reach GitHub")
+                          : page.sys.updStatus === "unknown" ? page.sys.tr("Version unknown: this was not installed by the installer")
+                          : page.sys.tr("Checking\\u2026")
                     color: page.sys.updateAvailable ? page.sys.colOn : page.sys.colFg
                     wrapMode: Text.WordWrap
                     font { family: page.sys.fontBody; pixelSize: page.sys.fontSize - 1 }
@@ -236,19 +212,14 @@ ColumnLayout {
                         : page.sys.updateAvailable ? page.sys.updSubject
                         : "Panacea " + page.sys.version
                           + (page.sys.updCurrent.length
-                             ? " · " + page.sys.tr("сборка") + " " + page.sys.updCurrent.substring(0, 7) : "")
+                             ? " · " + page.sys.tr("build") + " " + page.sys.updCurrent.substring(0, 7) : "")
                     color: page.sys.updError.length ? page.sys.colCrit : page.sys.colMuted
                     wrapMode: Text.WordWrap
                     font { family: page.sys.fontBody; pixelSize: page.sys.fontSize - 4 }
                 }
             }
 
-            // Проверить · Обновить. Вторая появляется только когда есть что
-            // ставить: кнопка, которая иногда ничего не делает, хуже её отсутствия.
             Rectangle {
-                // Ширина по содержимому, но не уже прежней: надпись задана числом
-                // только на глаз, и на другом языке или крупном шрифте она вылезала
-                // за края плашки.
                 Layout.preferredWidth: Math.max(104, checkRow.implicitWidth + 24)
                 Layout.preferredHeight: 32
                 radius: 10
@@ -258,11 +229,6 @@ ColumnLayout {
                        : Qt.rgba(page.sys.colFg.r, page.sys.colFg.g, page.sys.colFg.b, 0.06)
                 Behavior on color { ColorAnimation { duration: page.sys.animFade } }
 
-                // Пока идёт проверка — вместо надписи крутится стрелка.
-                // Проверка занимает секунду-другую, и всё это время кнопка
-                // обязана показывать, что её нажатие дошло: если версия
-                // окажется прежней, в карточке больше ничего не изменится, и
-                // без крутилки нажатие выглядело бы проигнорированным.
                 RowLayout {
                     id: checkRow
                     anchors.centerIn: parent
@@ -283,14 +249,12 @@ ColumnLayout {
                             duration: 900
                             loops: Animation.Infinite
                         }
-                        // Оборвали на полпути — возвращаем в исходное
-                        // положение, иначе значок замирал под случайным углом.
                         onVisibleChanged: if (!visible) checkSpin.rotation = 0
                     }
 
                     Text {
-                        text: page.sys.updChecking ? page.sys.tr("Проверка…")
-                                                   : page.sys.tr("Проверить")
+                        text: page.sys.updChecking ? page.sys.tr("Checking\\u2026")
+                                                   : page.sys.tr("Check")
                         color: page.sys.updChecking ? page.sys.colFg : page.sys.colMuted
                         font { family: page.sys.fontBody; pixelSize: page.sys.fontSize - 3 }
                     }
@@ -306,9 +270,6 @@ ColumnLayout {
             }
 
             Rectangle {
-                // Ширина по содержимому, но не уже прежней: надпись задана числом
-                // только на глаз, и на другом языке или крупном шрифте она вылезала
-                // за края плашки.
                 Layout.preferredWidth: Math.max(120, updRow.implicitWidth + 24)
                 Layout.preferredHeight: 32
                 radius: 10
@@ -323,7 +284,7 @@ ColumnLayout {
 
                 Text {
                     anchors.centerIn: parent
-                    text: page.sys.updBusy ? page.sys.tr("Идёт…") : page.sys.tr("Обновить")
+                    text: page.sys.updBusy ? page.sys.tr("Working…") : page.sys.tr("Refresh")
                     color: page.sys.colFg
                     font { family: page.sys.fontBody; pixelSize: page.sys.fontSize - 3; bold: true }
                 }
@@ -338,12 +299,7 @@ ColumnLayout {
             }
         }
 
-        // Ход обновления: полоса и этапы.
         //
-        // Байты не считаем — update.sh их не знает. Зато знает свои этапы, и их
-        // ровно столько, сколько есть: полоса идёт по ним, а не по времени.
-        // Ползти вслепую по таймеру было бы враньём — на медленной сети она
-        // добралась бы до конца задолго до самого обновления.
         ColumnLayout {
             Layout.fillWidth: true
             Layout.topMargin: 4
@@ -367,8 +323,6 @@ ColumnLayout {
                 }
             }
 
-            // Этапы подписью, а не только процентом: «скачивание» и «установка»
-            // объясняют паузу, а «73%» — нет.
             RowLayout {
                     id: updRow
                 Layout.fillWidth: true
@@ -390,7 +344,7 @@ ColumnLayout {
 
         Text {
             Layout.fillWidth: true
-            text: page.sys.tr("Настройки, сочетания клавиш и обои остаются на месте: перед установкой они уносятся в сторону и возвращаются после.")
+            text: page.sys.tr("Settings, key bindings and wallpapers stay put: they are moved aside before the install and put back after.")
             color: page.sys.colMuted
             wrapMode: Text.WordWrap
             font { family: page.sys.fontBody; pixelSize: page.sys.fontSize - 4 }
@@ -398,11 +352,10 @@ ColumnLayout {
     }
 
 
-    // ------------------------------------------------------------- нагрузка
     SetCard {
         sys: page.sys
 
-        SetLabel { sys: page.sys; text: page.sys.tr("Сейчас") }
+        SetLabel { sys: page.sys; text: page.sys.tr("Now") }
 
         component Meter: ColumnLayout {
             property string label: ""
@@ -442,40 +395,36 @@ ColumnLayout {
             }
         }
 
-        // Показания системные, а не оболочкины: в них попадают браузер,
-        // мессенджеры и всё остальное. Сколько занимает сама Panacea —
-        // отдельной строкой ниже, иначе шесть гигабайт читаются как её вина.
         Meter {
-            label: page.sys.tr("Оперативная память системы")
+            label: page.sys.tr("System memory")
             value: page.memUsed.toFixed(1) + " / " + page.memTotal.toFixed(1) + " GiB"
             frac: page.memTotal > 0 ? page.memUsed / page.memTotal : 0
         }
 
         Meter {
             visible: page.swapTotal > 0
-            label: page.sys.tr("Подкачка")
+            label: page.sys.tr("Swap")
             value: page.swapUsed.toFixed(1) + " / " + page.swapTotal.toFixed(1) + " GiB"
             frac: page.swapTotal > 0 ? page.swapUsed / page.swapTotal : 0
         }
 
         Meter {
-            label: page.sys.tr("Диск /")
+            label: page.sys.tr("Disk /")
             value: page.diskUsed.toFixed(0) + " / " + page.diskTotal.toFixed(0) + " GiB"
             frac: page.diskTotal > 0 ? page.diskUsed / page.diskTotal : 0
         }
 
         Meter {
             visible: page.tempCpu >= 0
-            label: page.sys.tr("Температура процессора")
+            label: page.sys.tr("CPU temperature")
             value: page.tempCpu.toFixed(0) + " °C"
-            // шкала до 100 °C: выше 80 столбик становится тревожным
             frac: page.tempCpu / 100
             tint: page.tempCpu >= 80 ? page.sys.colCrit : page.sys.colOn
         }
 
         Meter {
             visible: page.tempGpu >= 0
-            label: page.sys.tr("Температура видео")
+            label: page.sys.tr("GPU temperature")
             value: page.tempGpu.toFixed(0) + " °C"
             frac: page.tempGpu / 100
             tint: page.tempGpu >= 85 ? page.sys.colCrit : page.sys.colOn
@@ -486,7 +435,7 @@ ColumnLayout {
             spacing: 18
 
             Text {
-                text: page.sys.tr("Нагрузка") + ": " + page.load1.toFixed(2)
+                text: page.sys.tr("Load") + ": " + page.load1.toFixed(2)
                 color: page.sys.colMuted
                 font { family: page.sys.fontBody; pixelSize: page.sys.fontSize - 3 }
             }
@@ -496,7 +445,7 @@ ColumnLayout {
                 font { family: page.sys.fontBody; pixelSize: page.sys.fontSize - 3 }
             }
             Text {
-                text: page.sys.tr("Процессов") + ": " + page.procs
+                text: page.sys.tr("Processes") + ": " + page.procs
                 color: page.sys.colMuted
                 font { family: page.sys.fontBody; pixelSize: page.sys.fontSize - 3 }
             }
@@ -504,9 +453,6 @@ ColumnLayout {
         }
     }
 
-    // ------------------------------------------------- браузер по умолчанию
-    // Раньше менялся только правкой mimeapps.list руками. Список — всё, что
-    // объявляет себя браузером; выбор применяется сразу через xdg-settings.
     property var    browsers: []
     property string browserCur: ""
     Process {
@@ -534,10 +480,10 @@ ColumnLayout {
         sys: page.sys
         visible: page.browsers.length > 0
 
-        SetLabel { sys: page.sys; text: page.sys.tr("Браузер по умолчанию") }
+        SetLabel { sys: page.sys; text: page.sys.tr("Default browser") }
         SetPick {
             sys: page.sys
-            label: page.sys.tr("Открывать ссылки в")
+            label: page.sys.tr("Open links in")
             options: page.browsers
             value: page.browserCur
             onPicked: id => {
@@ -548,11 +494,10 @@ ColumnLayout {
         }
     }
 
-    // ------------------------------------------------------------- машина
     SetCard {
         sys: page.sys
 
-        SetLabel { sys: page.sys; text: page.sys.tr("Машина") }
+        SetLabel { sys: page.sys; text: page.sys.tr("Machine") }
 
         component Fact: RowLayout {
             id: rowlays
@@ -578,21 +523,20 @@ ColumnLayout {
             }
         }
 
-        Fact { k: page.sys.tr("Система");    v: page.osName }
-        Fact { k: page.sys.tr("Ядро");       v: page.kernel }
-        Fact { k: page.sys.tr("Композитор"); v: page.wm }
-        Fact { k: page.sys.tr("Процессор");  v: page.cpuName }
-        Fact { k: page.sys.tr("Видео");      v: page.gpuName }
-        Fact { k: page.sys.tr("Имя машины"); v: page.host }
-        Fact { k: page.sys.tr("Аптайм");     v: page.uptime }
-        Fact { k: page.sys.tr("Оболочка");   v: "Panacea " + page.sys.version }
+        Fact { k: page.sys.tr("System");    v: page.osName }
+        Fact { k: page.sys.tr("Kernel");       v: page.kernel }
+        Fact { k: page.sys.tr("Compositor"); v: page.wm }
+        Fact { k: page.sys.tr("CPU");  v: page.cpuName }
+        Fact { k: page.sys.tr("Videos");      v: page.gpuName }
+        Fact { k: page.sys.tr("Hostname"); v: page.host }
+        Fact { k: page.sys.tr("Uptime");     v: page.uptime }
+        Fact { k: page.sys.tr("Shell");   v: "Panacea " + page.sys.version }
     }
 
-    // ------------------------------------------------------------- сброс
     SetCard {
         sys: page.sys
 
-        SetLabel { sys: page.sys; text: page.sys.tr("Сброс") }
+        SetLabel { sys: page.sys; text: page.sys.tr("Reset") }
 
         RowLayout {
             Layout.fillWidth: true
@@ -601,17 +545,14 @@ ColumnLayout {
             Text {
                 Layout.fillWidth: true
                 text: page.armed
-                      ? page.sys.tr("Нажмите ещё раз — все настройки вернутся к заводским.")
-                      : page.sys.tr("Вернуть все настройки к заводским. Сочетания клавиш останутся как есть.")
+                      ? page.sys.tr("Press again and every setting returns to its factory value.")
+                      : page.sys.tr("Return every setting to its factory value. Key bindings stay as they are.")
                 color: page.armed ? page.sys.colCrit : page.sys.colMuted
                 wrapMode: Text.WordWrap
                 font { family: page.sys.fontBody; pixelSize: page.sys.fontSize - 4 }
             }
 
             Rectangle {
-                // Ширина по надписи, но не уже прежней: «Точно сбросить» и
-                // «Сбросить всё» разной длины, а по-английски обе длиннее —
-                // на глаз подобранные 140 их уже не вмещали.
                 Layout.preferredWidth: Math.max(140, resetLabel.implicitWidth + 24)
                 Layout.preferredHeight: 32
                 radius: 10
@@ -628,7 +569,7 @@ ColumnLayout {
                 Text {
                     id: resetLabel
                     anchors.centerIn: parent
-                    text: page.armed ? page.sys.tr("Точно сбросить") : page.sys.tr("Сбросить всё")
+                    text: page.armed ? page.sys.tr("Yes, reset") : page.sys.tr("Reset everything")
                     color: page.armed ? page.sys.colFg : page.sys.colMuted
                     font { family: page.sys.fontBody; pixelSize: page.sys.fontSize - 3 }
                 }
@@ -638,8 +579,6 @@ ColumnLayout {
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
-                    // Сброс в два нажатия: одно случайное движение мышью не
-                    // должно стирать всю настроенную оболочку.
                     onClicked: {
                         if (page.armed) { page.sys.resetCfg(); page.armed = false; }
                         else { page.armed = true; disarm.restart(); }

@@ -15,11 +15,11 @@ if agent == "Codex":
     details = event.get("tool_input") or {}
     if not isinstance(details, dict):
         details = {}
-    body = str(details.get("description") or details.get("command") or tool or "Требуется подтверждение")
-    title = "Codex: требуется подтверждение"
+    body = str(details.get("description") or details.get("command") or tool or "Confirmation required")
+    title = "Codex: confirmation required"
 else:
-    title = "Claude Code: требуется внимание"
-    body = str(event.get("message") or "Откройте Claude Code, чтобы ответить")
+    title = "Claude Code: needs attention"
+    body = str(event.get("message") or "Open Claude Code to respond")
 body = " ".join(body.split())[:300]
 try:
     subprocess.run(["notify-send", "--app-name", agent, "--icon", "dialog-question",

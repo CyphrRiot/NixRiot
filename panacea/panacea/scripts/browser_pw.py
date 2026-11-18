@@ -1,20 +1,19 @@
 #!/usr/bin/env python3
-"""Сбор сохранённых паролей из установленных браузеров.
+"""Collect saved passwords from installed browsers.
 
-Выводит в stdout JSON-массив вида
+Prints to stdout a JSON array of the form
     [{"url": ..., "login": ..., "pw": ..., "browser": ...}, ...]
 
-Ничего никуда не отправляет и не пишет: только читает профили браузеров
-текущего пользователя и печатает найденное. Дальше пилюля показывает
-список и по кнопке кладёт выбранное в своё зашифрованное хранилище.
+Sends and writes nothing anywhere: it only reads the current user's browser
+profiles and prints what it finds. The pill then shows the list and, on a
+button press, stores the selection in its own encrypted vault.
 
-Поддерживаются:
-  * семейство Firefox (Firefox, Librewolf, Floorp) — через libnss3;
-  * семейство Chromium (Chromium, Chrome, Brave, Vivaldi, Edge) —
-    ключ из GNOME Keyring / KWallet через Secret Service.
+Supported:
+  * Firefox family (Firefox, Librewolf, Floorp) via libnss3;
+  * Chromium family (Chromium, Chrome, Brave, Vivaldi, Edge) with the key
+    from GNOME Keyring / KWallet via Secret Service.
 
-Отсутствие какого-то браузера или библиотеки — не ошибка: он просто
-пропускается.
+A missing browser or library is not an error: it is simply skipped.
 """
 
 import base64
@@ -31,10 +30,6 @@ def log(*a):
 
 
 # --------------------------------------------------------------------------
-# Firefox и его форки: пароли в logins.json, зашифрованы ключом из key4.db.
-# Расшифровка — штатной библиотекой libnss3, той же, что использует сам
-# браузер; мастер-пароль (если задан) libnss спросит сам, поэтому здесь
-# поддержан только пустой мастер-пароль (обычный случай).
 # --------------------------------------------------------------------------
 import ctypes as C
 
@@ -79,9 +74,6 @@ class NSS:
 
 
 def firefox_profiles():
-    # Профиль Firefox по умолчанию лежит в ~/.mozilla/firefox, но сборки с
-    # $HOME/.config-раскладкой (и часть дистрибутивных пакетов) держат его в
-    # ~/.config/mozilla/firefox — без этого пути свои же пароли не находились.
     xdg = os.environ.get("XDG_CONFIG_HOME", os.path.join(HOME, ".config"))
     roots = [
         os.path.join(HOME, ".mozilla", "firefox"),
@@ -125,17 +117,11 @@ def collect_firefox():
         name = os.path.basename(prof)
         for item in data.get("logins", []):
             host = item.get("hostname", "") or ""
-            # Firefox держит в том же logins.json служебную запись — ключ
-            # синхронизации аккаунта (chrome://FirefoxAccounts). Её «пароль» —
-            # это JSON со scopedKeys, а не пароль от сайта. Берём только
-            # обычные веб-логины, остальное (chrome://, moz-proxy: и пр.)
-            # пропускаем, иначе в хранилище утекал этот ключ.
             if not host.startswith(("http://", "https://")):
                 continue
             user = nss.decrypt(item.get("encryptedUsername", ""))
             pw = nss.decrypt(item.get("encryptedPassword", ""))
             if pw is None:
-                # обычно значит мастер-пароль — молча пропускаем
                 continue
             out.append({
                 "url": item.get("hostname", ""),
@@ -148,9 +134,6 @@ def collect_firefox():
 
 
 # --------------------------------------------------------------------------
-# Chromium и форки: пароли в Login Data (SQLite), зашифрованы AES-GCM,
-# ключ ("peanuts"/browser key) лежит в GNOME Keyring / KWallet и достаётся
-# через Secret Service.
 # --------------------------------------------------------------------------
 def chromium_key(secret_label_app):
     try:
@@ -175,7 +158,6 @@ def chromium_key(secret_label_app):
             if password is not None:
                 break
         if password is None:
-            # браузеры без keyring используют фиксированный ключ "peanuts"
             password = b"peanuts"
         return pbkdf2_hmac("sha1", password, b"saltysalt", 1, 16)
     except Exception as e:
@@ -220,7 +202,6 @@ def collect_chromium():
         if key is None:
             continue
         for db in glob.glob(os.path.join(root, "*", "Login Data")):
-            # копия: браузер держит файл открытым
             tmp = tempfile.mktemp(suffix=".db")
             try:
                 shutil.copyfile(db, tmp)
@@ -264,7 +245,6 @@ def main():
     except Exception as e:
         log("chromium failed:", e)
 
-    # уникализируем по (url, login, pw)
     seen = set()
     uniq = []
     for e in found:

@@ -3,8 +3,6 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Layouts
 
-// Календарь: сетка месяца, сегодняшний день подсвечен.
-// Неделя начинается с понедельника.
 Item {
     id: view
     property var sys
@@ -22,7 +20,7 @@ Item {
     property int viewMonth: today.getMonth()          // 0..11
 
     readonly property string language: String(view.sys.cfg.lang || "en").split(/[_-]/)[0].toLowerCase()
-    readonly property var calendarLocale: Qt.locale(language === "ru" ? "ru_RU" : language === "tr" ? "tr_TR" : "en_US")
+    readonly property var calendarLocale: Qt.locale(language === "tr" ? "tr_TR" : "en_US")
 
     function shift(delta) {
         var m = viewMonth + delta;
@@ -43,10 +41,8 @@ Item {
         return days;
     }
 
-    // 42 ячейки: шесть недель, чтобы сетка не прыгала между месяцами
     readonly property var cells: {
         var first = new Date(viewYear, viewMonth, 1);
-        // getDay(): 0 — воскресенье; нам нужен понедельник первым
         var lead = (first.getDay() + 6) % 7;
         var start = new Date(viewYear, viewMonth, 1 - lead);
         var out = [];
@@ -122,7 +118,6 @@ Item {
             NavBtn { width: 32; height: 32; anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter; sym: "›"; onPressedAction: view.shift(1) }
         }
 
-        // дни недели
         RowLayout {
             Layout.fillWidth: true
             spacing: 4
@@ -140,7 +135,6 @@ Item {
             }
         }
 
-        // сетка месяца
         GridLayout {
             Layout.fillWidth: true
             columns: 7
@@ -189,7 +183,6 @@ Item {
             }
         }
 
-        // возврат к текущему месяцу
         Rectangle {
             Layout.alignment: Qt.AlignHCenter
             Layout.preferredWidth: 118
@@ -201,7 +194,7 @@ Item {
             Behavior on color { ColorAnimation { duration: 150 } }
             Text {
                 anchors.centerIn: parent
-                text: view.sys.tr("Сегодня")
+                text: view.sys.tr("Today")
                 color: view.sys.colMuted
                 font { family: view.sys.fontFam; pixelSize: view.sys.fontSize - 4 }
             }

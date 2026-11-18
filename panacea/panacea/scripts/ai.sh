@@ -1,11 +1,5 @@
 #!/bin/bash
-# Короткий ответ ИИ для лаунчера.
-#   ai.sh "вопрос"  -> текст ответа; ошибка — строкой «ERROR …»
 #
-# Провайдер не зашит: в Настройки → Лаунчер указывается адрес любого
-# OpenAI-совместимого API (/chat/completions) — OpenAI, OpenRouter, Groq,
-# локальные Ollama или LM Studio, — модель и ключ. Пока адрес пуст,
-# функция выключена.
 cfg="$HOME/.config/panacea/settings.json"
 q="$1"
 [ -n "$q" ] || exit 1
@@ -14,7 +8,6 @@ key=$(jq -r '.aiKey // ""' "$cfg" 2>/dev/null)
 model=$(jq -r '.aiModel // ""' "$cfg" 2>/dev/null)
 [ -n "$url" ] || { echo "ERROR not-configured"; exit 1; }
 [ -n "$model" ] || { echo "ERROR no-model"; exit 1; }
-# принимаем и базовый адрес (…/v1), и полный (…/chat/completions)
 case "$url" in */chat/completions) ;; *) url="${url%/}/chat/completions" ;; esac
 
 body=$(jq -n --arg m "$model" --arg q "$q" '{

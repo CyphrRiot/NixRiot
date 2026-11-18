@@ -16,7 +16,7 @@ Item {
     property string payload: ""
     property bool pickerOpen: sys.chatFilePickerOpen
     readonly property var visibleEvents: sys.islandAgentEvents.filter(e =>
-        !/требуется подтверждение|permission|approval|подтверждение/i.test(e.title)
+        !/permission|approval/i.test(e.title)
         && (sys.cfg.agentEventFilter === "all" || (e.app + " " + e.title).toLowerCase().indexOf(sys.cfg.agentEventFilter) >= 0))
     function goBack() { if (sys.chatFilePickerOpen) { sys.chatFilePickerOpen = false; return true; } return false; }
     Connections { target: view.sys; function onChatFilesPicked(paths) { view.attachments = view.attachments.concat(paths); } }
@@ -39,11 +39,11 @@ Item {
                 try {
                     var result = JSON.parse(text);
                     var arr = view.sys.islandChatMessages.slice();
-                    arr.push({role: "assistant", content: result.answer || ("Ошибка: " + result.error)});
+                    arr.push({role: "assistant", content: result.answer || ("Error: " + result.error)});
                     view.sys.islandChatMessages = arr;
                 } catch (e) {
                     var arr2 = view.sys.islandChatMessages.slice();
-                    arr2.push({role:"assistant", content:"Не удалось получить ответ."});
+                    arr2.push({role:"assistant", content:"Could not get a response."});
                     view.sys.islandChatMessages = arr2;
                 }
                 view.busy = false;
@@ -67,7 +67,7 @@ Item {
             Layout.alignment: Qt.AlignLeft
             spacing: 4
             Repeater {
-                model: [{id:"chat", name:view.sys.tr("Остров"), glyph:0xF0642},{id:"gemini", name:"Gemini", glyph:0xF059F},{id:"chatgpt", name:"ChatGPT", glyph:0xF059F},{id:"deepseek", name:"DeepSeek", glyph:0xF059F}]
+                model: [{id:"chat", name:view.sys.tr("Island"), glyph:0xF0642},{id:"gemini", name:"Gemini", glyph:0xF059F},{id:"chatgpt", name:"ChatGPT", glyph:0xF059F},{id:"deepseek", name:"DeepSeek", glyph:0xF059F}]
                 delegate: Rectangle {
                     required property var modelData
                     width: serviceName.implicitWidth + 35
@@ -98,8 +98,8 @@ Item {
             Column {
                 anchors.centerIn: parent; width: parent.width - 30; spacing: 12
                 visible: !webLoader.active || webLoader.status === Loader.Error
-                Text { width: parent.width; wrapMode: Text.WordWrap; horizontalAlignment: Text.AlignHCenter; color: view.sys.colMuted; text: view.sys.tr("Встроенный браузер недоступен. Откройте сервис в обычном браузере.") }
-                Button { anchors.horizontalCenter: parent.horizontalCenter; text: view.sys.tr("Открыть") + " " + view.service; onClicked: Qt.openUrlExternally(view.services[view.service]) }
+                Text { width: parent.width; wrapMode: Text.WordWrap; horizontalAlignment: Text.AlignHCenter; color: view.sys.colMuted; text: view.sys.tr("The embedded browser is unavailable. Open the service in your browser.") }
+                Button { anchors.horizontalCenter: parent.horizontalCenter; text: view.sys.tr("Open") + " " + view.service; onClicked: Qt.openUrlExternally(view.services[view.service]) }
             }
         }
         ScrollView {
@@ -128,14 +128,14 @@ Item {
                         Text { id: message; x: 10; y: 10; width: parent.width - 20; text: modelData.content; color: view.sys.colFg; wrapMode: Text.Wrap; textFormat: Text.PlainText; font.pixelSize: 13 }
                     }
                 }
-                Text { visible: view.busy; text: view.sys.tr("Думаю…"); color: view.sys.colMuted }
+                Text { visible: view.busy; text: view.sys.tr("Thinking…"); color: view.sys.colMuted }
             }
             onContentHeightChanged: if (contentItem) contentItem.contentY = Math.max(0, contentHeight - availableHeight)
         }
         RowLayout {
             visible: view.service === "chat" && view.attachments.length > 0
             Layout.fillWidth: true
-            Text { Layout.fillWidth: true; text: view.sys.tr("Прикреплено файлов:") + " " + view.attachments.length; color: view.sys.colMuted }
+            Text { Layout.fillWidth: true; text: view.sys.tr("Files attached:") + " " + view.attachments.length; color: view.sys.colMuted }
             Text { text: "×"; color: view.sys.colMuted; font.pixelSize: 18; MouseArea { anchors.fill: parent; anchors.margins: -5; onClicked: view.attachments = [] } }
         }
         Rectangle {
@@ -173,7 +173,7 @@ Item {
                                 else if ((event.modifiers & Qt.ControlModifier) && (event.key === Qt.Key_Return || event.key === Qt.Key_Enter)) { view.send(); event.accepted = true; }
                             }
                         }
-                        Text { anchors.verticalCenter: parent.verticalCenter; visible: !input.text; text: view.sys.tr("Сообщение…"); color: view.sys.colMuted; font { family: view.sys.fontBody; pixelSize: 13 } }
+                        Text { anchors.verticalCenter: parent.verticalCenter; visible: !input.text; text: view.sys.tr("Message…"); color: view.sys.colMuted; font { family: view.sys.fontBody; pixelSize: 13 } }
                     }
                 }
                 Rectangle {
@@ -191,7 +191,7 @@ Item {
         spacing: 8
         visible: view.service === "chat" && view.sys.islandChatMessages.length === 0 && view.visibleEvents.length === 0 && !view.busy && !view.pickerOpen
         Text { anchors.horizontalCenter: parent.horizontalCenter; text: "✦"; color: view.sys.colFg; font.pixelSize: 28 }
-        Text { width: parent.width; horizontalAlignment: Text.AlignHCenter; text: view.sys.tr("Спросите что угодно"); color: view.sys.colFg; font { family: view.sys.fontDisplay; pixelSize: 19; bold: true } }
-        Text { width: parent.width; horizontalAlignment: Text.AlignHCenter; wrapMode: Text.WordWrap; text: view.sys.tr("Добавьте адрес API, модель и ключ в настройках лаунчера."); color: view.sys.colMuted; font.pixelSize: 12 }
+        Text { width: parent.width; horizontalAlignment: Text.AlignHCenter; text: view.sys.tr("Ask anything"); color: view.sys.colFg; font { family: view.sys.fontDisplay; pixelSize: 19; bold: true } }
+        Text { width: parent.width; horizontalAlignment: Text.AlignHCenter; wrapMode: Text.WordWrap; text: view.sys.tr("Add the API address, model and key in launcher settings."); color: view.sys.colMuted; font.pixelSize: 12 }
     }
 }

@@ -6,22 +6,7 @@ import QtQuick.Effects
 import Quickshell
 import Quickshell.Io
 
-// Настольные виджеты темы Nothing — карточки поверх обоев.
 //
-// Дизайн в стиле Nothing OS:
-// - Дата: день недели (красный в выходные), точечное число и месяц
-// - Часы Nothing OS: 12-точечный циферблат с двойной точкой на 12, чётко различимые
-//   стрелки (короткая часовая капсула 0.38*r и длинная минутная стрелка 0.78*r),
-//   фирменная втулка-пончик Nothing, орбитальная красная точка colCrit и цифровая подсказка.
-//   Клик переключает между аналоговыми и точечными цифровыми часами.
-// - Главная карточка погоды (слева): температура, точечная иконка, город.
-//   Клик открывает детальное окно прогноза погоды.
-// - Вспомогательная карточка (справа): по клику переключается между подробностями
-//   погоды (описание + влажность/ветер) и монитором системы (концентрические дуги RAM и SSD).
-// - Шкала прогресса (Life Bar, снизу): 24-сегментный прогресс дня с пульсирующим
-//   текущим часом. Клик переключает между прогрессом дня (24H) и года (365D).
-// - Nothing Music: стилизованный плеер с крутящимся винилом и управлением треком.
-// - ScratchPad: быстрые заметки на рабочем столе с автосохранением в файл.
 Item {
     id: view
 
@@ -32,7 +17,6 @@ Item {
         scratchpadActive = false;
     }
 
-    // Ширина колонки и просвет между карточками
     readonly property real col: 144
     readonly property real gap: 12
     readonly property real fullW: view.col * 2 + view.gap
@@ -40,15 +24,12 @@ Item {
     implicitWidth: view.fullW
     implicitHeight: stack.implicitHeight
 
-    // Режимы карточек
     readonly property string clockMode: (view.sys && view.sys.cfg && view.sys.cfg.widgetClockMode) || "analog"
     readonly property string rightMode: (view.sys && view.sys.cfg && view.sys.cfg.widgetRightMode) || "weather"
     readonly property string progressMode: (view.sys && view.sys.cfg && view.sys.cfg.widgetProgressMode) || "day"
 
-    // Формат часов: 12-часовой или 24-часовой (из системных настроек)
     readonly property bool is12: view.sys && view.sys.cfg ? Boolean(view.sys.cfg.clock12) : false
 
-    // Синхронизация с системным временем через view.sys
     readonly property int curHour: (view.sys && view.sys.timeHour !== undefined) ? view.sys.timeHour : (new Date()).getHours()
     readonly property int curMin: (view.sys && view.sys.timeMinute !== undefined) ? view.sys.timeMinute : (new Date()).getMinutes()
     readonly property int curMonth: { var _ = (view.sys && view.sys.dayNum); return (new Date()).getMonth(); }
@@ -71,10 +52,9 @@ Item {
     readonly property int yearPct: Math.min(100, Math.max(0, Math.floor(curDayOfYear / totalDaysInYear * 100)))
 
     readonly property int remainDayMins: Math.max(0, 1440 - (curHour * 60 + curMin))
-    readonly property string remainDayText: Math.floor(remainDayMins / 60) + (view.sys && view.sys.isEn ? "h " : "ч ") + (remainDayMins % 60) + (view.sys && view.sys.isEn ? "m" : "м")
+    readonly property string remainDayText: Math.floor(remainDayMins / 60) + "h " + (remainDayMins % 60) + "m"
     readonly property int remainYearDays: Math.max(0, totalDaysInYear - curDayOfYear)
 
-    // Пульсация текущего сегмента времени в стиле глифов Nothing
     property real pulseOpacity: 1.0
     SequentialAnimation on pulseOpacity {
         loops: Animation.Infinite
@@ -83,7 +63,6 @@ Item {
         NumberAnimation { to: 1.0; duration: 750; easing.type: Easing.InOutQuad }
     }
 
-    // Общий вид карточки: тёмная плашка со скруглением
     component Card: Rectangle {
         radius: 22
         color: Qt.rgba(0.09, 0.09, 0.09, 0.96)
@@ -91,7 +70,6 @@ Item {
         border.width: 1
     }
 
-    // Точечное число
     component Num: Item {
         id: num
         property string value: ""
@@ -111,7 +89,6 @@ Item {
         }
     }
 
-    // Значок погоды: точечный DotIcon
     component WIcon: Item {
         id: wico
         property real size: 20
@@ -128,7 +105,6 @@ Item {
         }
     }
 
-    // Мелкая подпись заглавными вразрядку
     component Caption: Text {
         color: view.sys ? view.sys.colMuted : "#888888"
         elide: Text.ElideRight
@@ -145,12 +121,10 @@ Item {
         width: view.fullW
         spacing: view.gap
 
-        // ------------------------------------------------------ Ряд 1: Дата и Часы
         RowLayout {
             Layout.preferredWidth: view.fullW
             spacing: view.gap
 
-            // Карточка даты (144x140)
             Card {
                 id: dateCard
                 Layout.preferredWidth: view.col
@@ -200,7 +174,6 @@ Item {
                 }
             }
 
-            // Карточка часов Nothing OS (144x140) — переключает аналоговые / цифровые
             Card {
                 id: clockCard
                 Layout.preferredWidth: view.col
@@ -210,7 +183,6 @@ Item {
                 Behavior on color { ColorAnimation { duration: 120 } }
                 Behavior on border.color { ColorAnimation { duration: 120 } }
 
-                // Режим аналоговых часов Nothing
                 Item {
                     anchors.fill: parent
                     visible: view.clockMode === "analog"
@@ -249,40 +221,33 @@ Item {
                             var is12 = view.is12;
 
                             if (is12) {
-                                // 12-часовой циферблат: 12 точечных меток (шаг 30°)
                                 for (var i = 0; i < 12; i++) {
                                     var ang = i * (Math.PI / 6) - Math.PI / 2;
                                     var x = cx + Math.cos(ang) * r;
                                     var y = cy + Math.sin(ang) * r;
                                     ctx.beginPath();
                                     if (i % 3 === 0) {
-                                        // 12, 3, 6, 9 часов: акцентные белые точки
                                         ctx.arc(x, y, 2.0, 0, Math.PI * 2);
                                         ctx.fillStyle = "#ffffff";
                                     } else {
-                                        // Промежуточные часы: полупрозрачные точки
                                         ctx.arc(x, y, 1.3, 0, Math.PI * 2);
                                         ctx.fillStyle = "rgba(255, 255, 255, 0.35)";
                                     }
                                     ctx.fill();
                                 }
                             } else {
-                                // 24-часовой циферблат: 24 точечные метки (шаг 15°)
                                 for (var j = 0; j < 24; j++) {
                                     var ang24 = j * (Math.PI / 12) - Math.PI / 2;
                                     var x24 = cx + Math.cos(ang24) * r;
                                     var y24 = cy + Math.sin(ang24) * r;
                                     ctx.beginPath();
                                     if (j % 6 === 0) {
-                                        // 00 (полночь/верх), 06 (утро/право), 12 (полдень/низ), 18 (вечер/лево)
                                         ctx.arc(x24, y24, 2.0, 0, Math.PI * 2);
                                         ctx.fillStyle = "#ffffff";
                                     } else if (j % 2 === 0) {
-                                        // Четные часы: средние белые точки
                                         ctx.arc(x24, y24, 1.4, 0, Math.PI * 2);
                                         ctx.fillStyle = "rgba(255, 255, 255, 0.50)";
                                     } else {
-                                        // Нечетные часы: тонкие деликатные точки
                                         ctx.arc(x24, y24, 1.0, 0, Math.PI * 2);
                                         ctx.fillStyle = "rgba(255, 255, 255, 0.25)";
                                     }
@@ -290,13 +255,10 @@ Item {
                                 }
                             }
 
-                            // Синхронизация с системным временем через view.sys
                             var h = (view.sys && view.sys.timeHour !== undefined) ? view.sys.timeHour : (new Date()).getHours();
                             var m = (view.sys && view.sys.timeMinute !== undefined) ? view.sys.timeMinute : (new Date()).getMinutes();
                             var s = (view.sys && view.sys.timeSecond !== undefined) ? view.sys.timeSecond : (new Date()).getSeconds();
 
-                            // 1. Часовая стрелка: элегантная белая капсула
-                            // В 12-часовом формате оборот 12 часов (PI/6), в 24-часовом — 24 часа (PI/12)
                             var hAng = is12
                                 ? (((h % 12) + m / 60 + s / 3600) * (Math.PI / 6) - Math.PI / 2)
                                 : ((h + m / 60 + s / 3600) * (Math.PI / 12) - Math.PI / 2);
@@ -309,7 +271,6 @@ Item {
                             ctx.lineTo(cx + Math.cos(hAng) * (r * 0.50), cy + Math.sin(hAng) * (r * 0.50));
                             ctx.stroke();
 
-                            // 2. Минутная стрелка: тонкая изящная белая игла (1 оборот = 60 минут)
                             var mAng = (m + s / 60) * (Math.PI / 30) - Math.PI / 2;
                             ctx.beginPath();
                             ctx.lineWidth = 2.0;
@@ -319,7 +280,6 @@ Item {
                             ctx.lineTo(cx + Math.cos(mAng) * (r * 0.78), cy + Math.sin(mAng) * (r * 0.78));
                             ctx.stroke();
 
-                            // 3. Секундная стрелка Nothing Red: тонкая стрелка с противовесом (1 оборот = 60 секунд)
                             var sAng = s * (Math.PI / 30) - Math.PI / 2;
                             ctx.beginPath();
                             ctx.lineWidth = 1.2;
@@ -329,7 +289,6 @@ Item {
                             ctx.lineTo(cx + Math.cos(sAng) * (r * 0.82), cy + Math.sin(sAng) * (r * 0.82));
                             ctx.stroke();
 
-                            // 4. Фирменная центральная втулка Nothing OS
                             ctx.beginPath();
                             ctx.arc(cx, cy, 3.8, 0, Math.PI * 2);
                             ctx.fillStyle = "#141414";
@@ -338,7 +297,6 @@ Item {
                             ctx.strokeStyle = "rgba(255, 255, 255, 0.25)";
                             ctx.stroke();
 
-                            // Красная точка в самом центре
                             ctx.beginPath();
                             ctx.arc(cx, cy, 1.8, 0, Math.PI * 2);
                             ctx.fillStyle = view.sys ? String(view.sys.colCrit) : "#d71921";
@@ -347,7 +305,6 @@ Item {
                     }
                 }
 
-                // Режим цифровых часов
                 ColumnLayout {
                     anchors.centerIn: parent
                     visible: view.clockMode !== "analog"
@@ -402,12 +359,10 @@ Item {
             }
         }
 
-        // ------------------------------------------------------ Ряд 2: Погода / Система
         RowLayout {
             Layout.preferredWidth: view.fullW
             spacing: view.gap
 
-            // Главная карточка погоды (144x140) — клик открывает полное окно прогноза
             Card {
                 id: mainWeatherCard
                 Layout.preferredWidth: view.col
@@ -439,7 +394,7 @@ Item {
                         Layout.alignment: Qt.AlignHCenter
                         Layout.maximumWidth: view.col - 20
                         text: (view.sys && view.sys.weatherReady)
-                              ? view.sys.weatherPlace : (view.sys ? view.sys.tr("Нет данных") : "--")
+                              ? view.sys.weatherPlace : (view.sys ? view.sys.tr("No data") : "--")
                         color: view.sys ? view.sys.colMuted : "#888888"
                         horizontalAlignment: Text.AlignHCenter
                         elide: Text.ElideRight
@@ -456,7 +411,6 @@ Item {
                 }
             }
 
-            // Правая карточка (144x140) — КЛИК ПЕРЕКЛЮЧАЕТ МЕЖДУ ПОГОДОЙ И СИСТЕМОЙ
             Card {
                 id: rightToggleCard
                 Layout.preferredWidth: view.col
@@ -467,7 +421,6 @@ Item {
                 Behavior on color { ColorAnimation { duration: 120 } }
                 Behavior on border.color { ColorAnimation { duration: 120 } }
 
-                // Режим: ПОДРОБНОСТИ ПОГОДЫ
                 Item {
                     anchors.fill: parent
                     visible: view.rightMode === "weather"
@@ -477,7 +430,6 @@ Item {
                         anchors.margins: 10
                         spacing: 8
 
-                        // Верхняя плашка с описанием погоды
                         Rectangle {
                             Layout.fillWidth: true
                             Layout.preferredHeight: 52
@@ -509,7 +461,6 @@ Item {
                                     font { family: view.sys ? view.sys.fontFam : "sans-serif"; pixelSize: 11 }
                                 }
 
-                                // Иконка-подсказка: клик переключит на монитор системы
                                 Text {
                                     text: "󰍛"
                                     color: view.sys ? view.sys.colMuted : "#888888"
@@ -518,7 +469,6 @@ Item {
                             }
                         }
 
-                        // Нижние кружки (Влажность и Ветер)
                         RowLayout {
                             Layout.fillWidth: true
                             spacing: 8
@@ -544,7 +494,7 @@ Item {
 
                                     Caption {
                                         Layout.alignment: Qt.AlignHCenter
-                                        text: view.sys ? view.sys.tr("Влажность") : "HUMIDITY"
+                                        text: view.sys ? view.sys.tr("Humidity") : "HUMIDITY"
                                         font.pixelSize: 7
                                         font.letterSpacing: 0.2
                                     }
@@ -572,7 +522,7 @@ Item {
 
                                     Caption {
                                         Layout.alignment: Qt.AlignHCenter
-                                        text: (view.sys ? view.sys.tr("Ветер") : "WIND") + " " + (view.sys ? view.sys.weatherWindUnit : "")
+                                        text: (view.sys ? view.sys.tr("Wind") : "WIND") + " " + (view.sys ? view.sys.weatherWindUnit : "")
                                         font.pixelSize: 7
                                         font.letterSpacing: 0.2
                                     }
@@ -582,12 +532,10 @@ Item {
                     }
                 }
 
-                // Режим: СИСТЕМНЫЙ МОНИТОР (Концентрические дуги RAM и SSD)
                 Item {
                     anchors.fill: parent
                     visible: view.rightMode === "system"
 
-                    // Верхняя строка заголовка
                     RowLayout {
                         anchors.top: parent.top
                         anchors.left: parent.left
@@ -597,11 +545,10 @@ Item {
 
                         Caption {
                             Layout.fillWidth: true
-                            text: view.sys ? view.sys.tr("СИСТЕМА") : "SYSTEM"
+                            text: view.sys ? view.sys.tr("SYSTEM") : "SYSTEM"
                             color: view.sys ? view.sys.colMuted : "#888888"
                         }
 
-                        // Иконка-подсказка: клик переключит на погоду
                         Text {
                             text: "󰖐"
                             font { family: view.sys ? view.sys.fontFam : "sans-serif"; pixelSize: 12 }
@@ -609,7 +556,6 @@ Item {
                         }
                     }
 
-                    // Концентрические кольца: внешнее RAM, внутреннее SSD
                     Item {
                         anchors.centerIn: parent
                         anchors.verticalCenterOffset: -2
@@ -635,7 +581,6 @@ Item {
                                 var ram = (view.sys && view.sys.loadMem >= 0) ? view.sys.loadMem : 0;
                                 var disk = (view.sys && view.sys.loadDisk >= 0) ? view.sys.loadDisk : 0;
 
-                                // Внешнее кольцо: RAM (radius 31, lineWidth 4)
                                 var r1 = 31;
                                 ctx.lineWidth = 4;
                                 ctx.lineCap = "round";
@@ -654,7 +599,6 @@ Item {
                                     ctx.stroke();
                                 }
 
-                                // Внутреннее кольцо: SSD (radius 21, lineWidth 4)
                                 var r2 = 21;
                                 ctx.beginPath();
                                 ctx.arc(cx, cy, r2, 0, Math.PI * 2);
@@ -681,7 +625,6 @@ Item {
                         }
                     }
 
-                    // Нижняя строка: показатели RAM и SSD
                     RowLayout {
                         anchors.bottom: parent.bottom
                         anchors.left: parent.left
@@ -715,7 +658,6 @@ Item {
                     }
                 }
 
-                // ЕДИНЫЙ клик по всей правой карточке: переключает Погода <-> Система
                 MouseArea {
                     id: rightCardMa
                     anchors.fill: parent
@@ -731,7 +673,6 @@ Item {
             }
         }
 
-        // ------------------------------------------------------ Ряд 3: Life Bar / Day & Year Progress (300x72)
         Card {
             id: progressCard
             Layout.preferredWidth: view.fullW
@@ -754,8 +695,8 @@ Item {
                     Caption {
                         Layout.fillWidth: true
                         text: view.progressMode === "day"
-                              ? (view.sys ? view.sys.tr("ПРОГРЕСС ДНЯ") : "DAY PROGRESS")
-                              : (view.sys ? view.sys.tr("ПРОГРЕСС ГОДА") : "YEAR PROGRESS")
+                              ? (view.sys ? view.sys.tr("DAY PROGRESS") : "DAY PROGRESS")
+                              : (view.sys ? view.sys.tr("YEAR PROGRESS") : "YEAR PROGRESS")
                         font.bold: true
                         font.pixelSize: 9
                         font.letterSpacing: 1.2
@@ -770,7 +711,6 @@ Item {
                     }
                 }
 
-                // 24 сегмента для 24 часов
                 RowLayout {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 6
@@ -794,7 +734,6 @@ Item {
                     }
                 }
 
-                // 12 сегментов для 12 месяцев года
                 RowLayout {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 6
@@ -823,10 +762,10 @@ Item {
 
                     Text {
                         Layout.fillWidth: true
-                        text: (view.sys ? view.sys.tr("Осталось ") : "Remaining ") +
+                        text: (view.sys ? view.sys.tr("Remaining ") : "Remaining ") +
                               (view.progressMode === "day"
                                ? view.remainDayText
-                               : (view.remainYearDays + " " + (view.sys ? view.sys.tr("дн.") : "days")))
+                               : (view.remainYearDays + " " + (view.sys ? view.sys.tr("d") : "days")))
                         color: view.sys ? view.sys.colMuted : "#888888"
                         font {
                             family: view.sys ? view.sys.fontFam : "sans-serif"
@@ -863,7 +802,6 @@ Item {
             sys: view.sys
         }
 
-        // ------------------------------------------------------ Ряд 5: ScratchPad Widget (300x140)
         Card {
             id: scratchCard
             visible: (view.sys && view.sys.cfg && view.sys.cfg.widgetScratchpad !== false)
@@ -917,7 +855,6 @@ Item {
                 anchors.margins: 12
                 spacing: 6
 
-                // Верхний ряд: заголовок и счетчик символов / кнопки
                 RowLayout {
                     Layout.fillWidth: true
                     Layout.minimumHeight: 20
@@ -941,7 +878,6 @@ Item {
 
                     Item { Layout.fillWidth: true }
 
-                    // Копировать всё
                     Text {
                         visible: scratchEdit.text.length > 0
                         text: "󰆏"
@@ -962,7 +898,6 @@ Item {
                         }
                     }
 
-                    // Очистить
                     Text {
                         visible: scratchEdit.text.length > 0
                         text: "×"
@@ -982,12 +917,11 @@ Item {
                     }
 
                     Caption {
-                        text: scratchEdit.text.length + " " + (view.sys ? view.sys.tr("симв.") : "chars")
+                        text: scratchEdit.text.length + " " + (view.sys ? view.sys.tr("chars") : "chars")
                         font.pixelSize: 8
                     }
                 }
 
-                // Область ввода заметок
                 Item {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
@@ -1038,11 +972,10 @@ Item {
                         }
                     }
 
-                    // Подсказка (placeholder)
                     Text {
                         anchors.left: parent.left
                         anchors.top: parent.top
-                        text: view.sys ? view.sys.tr("Нажмите, чтобы записать…") : "Tap to write notes…"
+                        text: view.sys ? view.sys.tr("Tap to write notes…") : "Tap to write notes…"
                         color: view.sys ? Qt.rgba(view.sys.colMuted.r, view.sys.colMuted.g, view.sys.colMuted.b, 0.6) : "#666666"
                         visible: scratchEdit.text.length === 0 && !scratchEdit.activeFocus
                         font {

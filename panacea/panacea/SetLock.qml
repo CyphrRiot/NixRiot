@@ -1,9 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
 
-// Lock Screen. Экран блокировки видит любой, кто подойдёт к машине, поэтому
-// показ медиа и уведомлений на нём — отдельные переключатели, а не часть
-// общих настроек этих разделов.
 ColumnLayout {
     id: page
 
@@ -17,15 +14,15 @@ ColumnLayout {
 
         SetToggle {
             sys: page.sys
-            label: page.sys.tr("Экран блокировки")
-            sub: page.sys.tr("Выключить, если блокировкой занимается другая программа.")
+            label: page.sys.tr("Lock screen")
+            sub: page.sys.tr("Turn off if another program handles locking.")
             on: page.sys.cfg.featLock
             onToggled: v => { page.sys.cfg.featLock = v; page.sys.saveCfg(); }
         }
 
         SetSlider {
             sys: page.sys
-            label: page.sys.tr("Размытие обоев")
+            label: page.sys.tr("Wallpaper blur")
             from: 0; to: 96; step: 2
             value: page.sys.cfg.lockBlur
             suffix: "px"
@@ -38,7 +35,7 @@ ColumnLayout {
     SetCard {
         sys: page.sys
 
-        SetLabel { sys: page.sys; text: page.sys.tr("Подпись") }
+        SetLabel { sys: page.sys; text: page.sys.tr("Caption") }
 
         Rectangle {
             Layout.fillWidth: true
@@ -63,7 +60,7 @@ ColumnLayout {
                     anchors.fill: parent
                     verticalAlignment: Text.AlignVCenter
                     visible: hintInput.text.length === 0
-                    text: page.sys.tr("Строка под полем пароля — например, чей это компьютер")
+                    text: page.sys.tr("A line under the password field — whose computer this is, for example")
                     color: page.sys.colMuted
                     elide: Text.ElideRight
                     font: hintInput.font

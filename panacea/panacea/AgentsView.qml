@@ -5,14 +5,8 @@ import QtQuick.Layouts
 import Quickshell
 import Quickshell.Io
 
-// Агенты: тарифы и загрузка лимитов установленных ИИ-агентов.
 //
-// Данные приезжают из scripts/agents.sh — он и решает, кто установлен и что
-// про него известно. Вид ничего не знает про формат чужих конфигов и рисует
-// то, что дали.
 //
-// Полоски здесь НЕ ползунки: у них нет ни MouseArea, ни обработчика колеса.
-// Это индикаторы, и тащить их некуда — лимит задаётся тарифом, а не окном.
 Item {
     id: view
     property var sys
@@ -23,9 +17,6 @@ Item {
     property real serverNow: 0
     property bool loaded: false
 
-    // Часы для обратного отсчёта. Отдельно от опроса скрипта: до сброса лимита
-    // бывают часы, и гонять из-за подписи «через 2 ч 14 мин» целый процесс раз
-    // в секунду незачем. Тик раз в 30 с — подпись в минутах точнее не станет.
     property real clockNow: Date.now()
     Timer {
         interval: 30000; repeat: true; running: true
@@ -53,25 +44,16 @@ Item {
 
     function refresh() { pAgents.running = false; pAgents.running = true; }
 
-    // Опрос пореже, чем кажется нужным: сам файл с нагрузкой обновляет агент,
-    // когда работает, а не оболочка. Чаще спрашивать — значит чаще перечитывать
-    // то же самое.
     Timer {
         interval: 20000; repeat: true; running: true
         onTriggered: view.refresh()
     }
 
-    // Открыли окно — перечитали. Одного создания вида мало: пока страница не
-    // сброшена на главную, повторное открытие переиспользует тот же вид, и
-    // цифры остались бы теми, что приехали в прошлый раз. Счётчик в оболочке
-    // растёт на каждое открытие, и этого достаточно.
     Connections {
         target: view.sys
         function onAgentsEpochChanged() { view.refresh(); }
     }
 
-    // Смена аккаунта или свежие цифры — это правка одного файла, и ждать до
-    // следующего тика незачем: перечитываем сразу, как он изменился.
     FileView {
         path: Quickshell.env("HOME") + "/.claude.json"
         watchChanges: true
@@ -79,45 +61,38 @@ Item {
         onFileChanged: view.refresh()
     }
 
-    // ------------------------------------------------------------- подписи
-    // Ключ приходит устойчивый (kind), человеческое имя подставляем здесь:
-    // иначе смена языка интерфейса до этого окна бы не дошла.
     function limitLabel(kind) {
         switch (String(kind)) {
-        case "session":       return view.sys.tr("5 часов");
-        case "weekly_all":    return view.sys.tr("Неделя");
-        case "weekly_opus":   return view.sys.tr("Opus, неделя");
-        case "weekly_sonnet": return view.sys.tr("Sonnet, неделя");
+        case "session":       return view.sys.tr("5 hours");
+        case "weekly_all":    return view.sys.tr("Week");
+        case "weekly_opus":   return view.sys.tr("Opus, week");
+        case "weekly_sonnet": return view.sys.tr("Sonnet, week");
         }
         return String(kind).replace(/_/g, " ");
     }
 
-    // «через 2 ч 14 мин». Окно, которое давно должно было обновиться, так и
-    // говорим: данные лежат в кэше агента, и пока он не запускался, там висит
-    // старое. Соврать «0%» было бы хуже — это выглядело бы как факт.
     function untilText(ms) {
         if (!ms || ms <= 0) return "";
         var left = ms - view.clockNow;
-        if (left <= 0) return view.sys.tr("окно уже обновилось");
+        if (left <= 0) return view.sys.tr("window has already reset");
         var mins = Math.floor(left / 60000);
         var h = Math.floor(mins / 60), m = mins % 60;
-        var pre = view.sys.tr("обновится через") + " ";
-        if (h >= 24) return pre + Math.floor(h / 24) + " " + view.sys.tr("д") + " " + (h % 24) + " " + view.sys.tr("ч");
-        if (h > 0)   return pre + h + " " + view.sys.tr("ч") + " " + m + " " + view.sys.tr("мин");
-        return pre + Math.max(1, m) + " " + view.sys.tr("мин");
+        var pre = view.sys.tr("resets in") + " ";
+        if (h >= 24) return pre + Math.floor(h / 24) + " " + view.sys.tr("d") + " " + (h % 24) + " " + view.sys.tr("h");
+        if (h > 0)   return pre + h + " " + view.sys.tr("h") + " " + m + " " + view.sys.tr("min");
+        return pre + Math.max(1, m) + " " + view.sys.tr("min");
     }
 
     function agoText(ms) {
         if (!ms || ms <= 0) return "";
         var mins = Math.floor((view.clockNow - ms) / 60000);
-        if (mins < 1)  return view.sys.tr("только что");
-        if (mins < 60) return mins + " " + view.sys.tr("мин назад");
+        if (mins < 1)  return view.sys.tr("just now");
+        if (mins < 60) return mins + " " + view.sys.tr("min ago");
         var h = Math.floor(mins / 60);
-        if (h < 24) return h + " " + view.sys.tr("ч назад");
-        return Math.floor(h / 24) + " " + view.sys.tr("д назад");
+        if (h < 24) return h + " " + view.sys.tr("h ago");
+        return Math.floor(h / 24) + " " + view.sys.tr("d ago");
     }
 
-    // Цвет по нагрузке, а не по названию лимита: важно, сколько осталось.
     function barColor(pct, severity) {
         if (String(severity) === "critical" || pct >= 90) return view.sys.colCrit;
         if (pct >= 70) return view.sys.colWarn;
@@ -129,7 +104,6 @@ Item {
         width: parent.width
         spacing: 14
 
-        // -------------------------------------------------------- заголовок
         RowLayout {
             Layout.fillWidth: true
             spacing: 10
@@ -141,7 +115,7 @@ Item {
                 size: 19
             }
             Text {
-                text: view.sys.tr("Агенты")
+                text: view.sys.tr("Agents")
                 color: view.sys.colFg
                 font { family: view.sys.fontDisplay; pixelSize: view.sys.fontSize + 1; bold: true }
             }
@@ -154,7 +128,6 @@ Item {
             }
         }
 
-        // ------------------------------------------------------- карточки
         Repeater {
             model: view.agents
 
@@ -178,7 +151,6 @@ Item {
                     }
                     spacing: 10
 
-                    // имя агента, версия и тариф
                     RowLayout {
                         Layout.fillWidth: true
                         spacing: 8
@@ -196,8 +168,6 @@ Item {
                         }
                         Item { Layout.fillWidth: true }
 
-                        // Тариф плашкой: это не подпись к чему-то, а сам факт,
-                        // и его ищут глазами первым.
                         Rectangle {
                             visible: String(card.modelData.plan || "").length > 0
                             implicitWidth: planText.implicitWidth + 18
@@ -214,7 +184,6 @@ Item {
                         }
                     }
 
-                    // ------------------------------------------- лимиты
                     Repeater {
                         model: card.modelData.limits || []
 
@@ -241,8 +210,6 @@ Item {
                                 }
                             }
 
-                            // Полоска. Ни MouseArea, ни WheelHandler: показывает,
-                            // но не даёт себя тянуть.
                             Rectangle {
                                 Layout.fillWidth: true
                                 implicitHeight: 7
@@ -269,44 +236,25 @@ Item {
                         }
                     }
 
-                    // Лимитов нет — говорим, почему именно. «Агент их не
-                    // отдаёт» и «данных ещё не приехало» выглядят одинаково, а
-                    // значат противоположное: первое навсегда, второе пройдёт
-                    // само. После смены аккаунта видно как раз второе, и
-                    // сообщать про «не отдаёт» было бы прямой неправдой.
                     //
-                    // Пустая полоска на нуле не годится ни в том, ни в другом
-                    // случае: она читается как «ничего не израсходовано», а мы
-                    // просто не знаем.
                     Text {
                         Layout.fillWidth: true
                         visible: (card.modelData.limits || []).length === 0
-                        // Для Claude подсказка конкретная. Он записывает
-                        // нагрузку в свой файл, только когда сам сходит за ней
-                        // на сервер, а делает это редко и по своему
-                        // расписанию: после смены аккаунта ключа может не быть
-                        // часами, и перезапуск ничего не меняет. Команда
-                        // /usage идёт за ней принудительно — это и есть способ
-                        // получить цифры сейчас, а не ждать.
                         text: String(card.modelData.note) !== "nodata"
-                              ? view.sys.tr("Лимиты этот агент наружу не отдаёт")
+                              ? view.sys.tr("This agent does not expose its limits")
                               : String(card.modelData.id) === "claude"
-                              ? view.sys.tr("Данных пока нет — выполните /usage в Claude Code")
-                              : view.sys.tr("Данных пока нет — появятся, когда агент поработает")
+                              ? view.sys.tr("No data yet — run /usage in Claude Code")
+                              : view.sys.tr("No data yet — it will appear once the agent has run")
                         color: view.sys.colMuted
                         wrapMode: Text.WordWrap
                         font { family: view.sys.fontFam; pixelSize: view.sys.fontSize - 5 }
                     }
 
-                    // Когда цифры в последний раз обновлял сам агент. Важно:
-                    // остров их не запрашивает, он читает то, что агент оставил
-                    // у себя, — и без этой строки свежесть выглядела бы
-                    // сегодняшней всегда.
                     Text {
                         Layout.fillWidth: true
                         visible: (card.modelData.limits || []).length > 0
                                  && String(view.agoText(card.modelData.fetchedAt)).length > 0
-                        text: view.sys.tr("данные агента от") + " " + view.agoText(card.modelData.fetchedAt)
+                        text: view.sys.tr("agent data from") + " " + view.agoText(card.modelData.fetchedAt)
                         color: view.sys.colMuted
                         font { family: view.sys.fontFam; pixelSize: view.sys.fontSize - 6 }
                     }
@@ -314,11 +262,10 @@ Item {
             }
         }
 
-        // ---------------------------------------------------------- пусто
         Text {
             Layout.fillWidth: true
             visible: view.loaded && view.agents.length === 0
-            text: view.sys.tr("Ни одного агента не найдено")
+            text: view.sys.tr("No agents found")
             color: view.sys.colMuted
             horizontalAlignment: Text.AlignHCenter
             font { family: view.sys.fontFam; pixelSize: view.sys.fontSize - 4 }

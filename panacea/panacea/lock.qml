@@ -8,35 +8,23 @@ import Quickshell.Wayland
 import Quickshell.Services.Pam
 import "Themes.js" as Themes
 
-// Экран блокировки в стиле динамического острова.
 //
-// Два состояния:
-//   покой  — текущие обои резко, часы и замок по центру
-//   ввод   — фон уходит в размытие, снизу выезжает капсула с точками пароля
 //
-// Запускается как отдельный процесс:  quickshell --path ~/.config/panacea/lock.qml
-// Пока процесс жив, ext-session-lock держит сессию закрытой.
 ShellRoot {
     id: root
 
-    // ------------------------------------------------------------- состояние
-    // Пароль живёт здесь, а не в TextInput: поле лежит внутри компонента
-    // поверхности (своя на каждый экран) и снаружи по id не видно.
     property string password: ""
-    property bool authMode: false          // показана капсула ввода
-    property bool checking: false          // PAM проверяет пароль
+    property bool authMode: false
+    property bool checking: false
     property string errorText: ""
     property int attempts: 0
 
     readonly property string user: Quickshell.env("USER") || "user"
-    // Ник для приветствия: Ensi вместо системного ensi
     readonly property string nick:
         user.charAt(0).toUpperCase() + user.slice(1)
 
     readonly property string fontFam: "JetBrainsMono Nerd Font"
 
-    // Экран блокировки — отдельная программа, у неё нет доступа к состоянию
-    // оболочки. Настройки читаем из того же файла: только те, что нужны здесь.
     FileView {
         id: cfgFile
         path: Quickshell.env("HOME") + "/.config/panacea/settings.json"
@@ -51,49 +39,24 @@ ShellRoot {
     }
     readonly property var cfg: cfgFile.adapter
 
-    // Аварийная разблокировка для отладки: включается только тем,
-    // кто запустил процесс с PANACEA_LOCK_TEST=1. В боевом запуске
-    // такого канала нет.
     readonly property bool testMode: Quickshell.env("PANACEA_LOCK_TEST") === "1"
 
-    // ------------------------------------------------- обои и акцент из темы
     property string wallpaper: ""
 
-    // Палитра берётся из той же темы, что и оболочка. Раньше экран
-    // блокировки жил своей жизнью: акцент он читал из hypr/palette.conf, и
-    // при чёрно-белой теме оболочки встречал терракотовым кружком ввода.
     //
-    // Тема читается из settings.json тем же разбором, что и язык, а таблица
-    // цветов общая — Themes.js. Держать здесь свою копию нельзя: она
-    // разошлась бы с оболочкой на первой же правке палитры.
     property string themeId: "nothing"
     readonly property var theme: Themes.of(root.themeId)
     property color cfgOn: "#ffffff"
     readonly property color accent: root.theme.on
     readonly property color colFg:   root.theme.fg
     readonly property color colCrit: root.theme.crit
-    // Фон нужен для надписей поверх залитого акцентом: на светлом акценте
-    // белым по белому не видно ничего, а у темы Nothing он как раз белый.
     readonly property color colBg:   root.theme.bg
     function fgOn(c) {
         return (0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b) > 0.6
                ? root.colBg : "#ffffff";
     }
 
-    // ------------------------------------------------------------------ язык
-    // Экран блокировки — отдельный процесс и до настроек пилюли не дотягивается,
-    // поэтому читает тот же settings.json сам. Без этого он оставался
-    // русскоязычным даже при английском интерфейсе.
-    property bool isEn: true
-    function tr(k) { return root.isEn && root.dictEn[k] !== undefined ? root.dictEn[k] : k; }
-    readonly property var dictEn: ({
-        "Слишком много попыток": "Too many attempts",
-        "Неверный пароль": "Wrong password",
-        "Ошибка проверки": "Verification error",
-        "PAM недоступен": "PAM unavailable",
-        "Нажмите Enter": "Press Enter",
-        "Пароль": "Password"
-    })
+    function tr(k) { return k; }
 
     FileView {
         id: settingsFile
@@ -104,20 +67,16 @@ ShellRoot {
     FileView {
         id: wallFile
         path: Quickshell.env("HOME") + "/.config/hypr/wallpaper.conf"
-        // читаем синхронно: обои нужны в первом же кадре, иначе на долю
-        // секунды мелькает чёрный экран
         blockLoading: true
     }
 
     Component.onCompleted: {
         try {
             let cfg = JSON.parse(settingsFile.text() || "{}");
-            if (cfg && typeof cfg.lang === "string") root.isEn = cfg.lang !== "ru";
             if (cfg && typeof cfg.themeId === "string") root.themeId = cfg.themeId;
             if (cfg && typeof cfg.colOn === "string") root.cfgOn = cfg.colOn;
-        } catch (e) { /* настроек нет — остаёмся на английском и на теме по умолчанию */ }
+        } catch (e) { /* no settings; stay on English and the default theme */ }
 
-        // scripts/lock.sh отдаёт уже ужатую под экран копию обоев
         var cached = Quickshell.env("PANACEA_LOCK_BG") || "";
         if (cached.length) { root.wallpaper = cached; }
 
@@ -129,7 +88,6 @@ ShellRoot {
         }
     }
 
-    // ------------------------------------------------------------------ часы
     property string timeText: "--:--"
     property string dateText: ""
     function tick() {
@@ -145,7 +103,6 @@ ShellRoot {
     // ------------------------------------------------------------------- PAM
     PamContext {
         id: pam
-        // /etc/pam.d/swaylock — штатный профиль для экранов блокировки
         config: "swaylock"
         user: root.user
 
@@ -161,19 +118,18 @@ ShellRoot {
             } else {
                 root.attempts++;
                 root.errorText = result === PamResult.MaxTries
-                                 ? root.tr("Слишком много попыток")
-                                 : root.tr("Неверный пароль");
+                                 ? root.tr("Too many attempts")
+                                 : root.tr("Wrong password");
                 root.password = "";
             }
         }
         onError: {
             root.checking = false;
-            root.errorText = root.tr("Ошибка проверки");
+            root.errorText = root.tr("Verification error");
             root.password = "";
         }
     }
 
-    // даём композитору кадр на снятие блокировки, потом выходим
     Timer { id: quitTimer; interval: 220; onTriggered: Qt.quit() }
 
     function submit() {
@@ -183,26 +139,23 @@ ShellRoot {
         root.checking = true;
         if (!pam.start()) {
             root.checking = false;
-            root.errorText = root.tr("PAM недоступен");
+            root.errorText = root.tr("PAM is unavailable");
         }
     }
 
     IpcHandler {
         target: "lock"
-        // работает только в тестовом запуске, см. testMode
         function unlock(): void {
             if (!root.testMode) return;
             lock.locked = false;
             quitTimer.start();
         }
-        // тоже только для отладки: посмотреть режим ввода без клавиатуры
         function auth(): void {
             if (!root.testMode) return;
             root.authMode = true;
         }
     }
 
-    // ---------------------------------------------------------------- экраны
     WlSessionLock {
         id: lock
         locked: true
@@ -214,7 +167,6 @@ ShellRoot {
             Item {
                 anchors.fill: parent
 
-                // ---------------------------------------------------- фон
                 Image {
                     id: bg
                     anchors.fill: parent
@@ -222,22 +174,16 @@ ShellRoot {
                     fillMode: Image.PreserveAspectCrop
                     cache: true
                     asynchronous: false
-                    // Обои бывают на десятки мегапикселей (ember_stripes.jpg — 10667x7111),
-                    // и Qt отказывается их декодировать: лимит 256 МБ на картинку.
-                    // sourceSize заставляет JPEG декодироваться сразу уменьшенным;
-                    // двойной запас по размеру экрана — чтобы кроп не мылил.
                     sourceSize: Qt.size(surface.width * 2, surface.height * 2)
                     layer.enabled: true
                     layer.smooth: true
                 }
 
-                // размытие включается только в режиме ввода
                 MultiEffect {
                     anchors.fill: parent
                     source: bg
                     visible: bg.status === Image.Ready
                     blurEnabled: true
-                    // сила размытия задаётся во вкладке Lock Screen
                     blurMax: root.cfg ? root.cfg.lockBlur : 32
                     blurMultiplier: 0.85
                     blur: root.authMode ? 1.0 : 0.0
@@ -246,7 +192,6 @@ ShellRoot {
                     }
                 }
 
-                // затемнение: в покое лёгкое, при вводе заметнее
                 Rectangle {
                     anchors.fill: parent
                     color: "#000000"
@@ -254,18 +199,15 @@ ShellRoot {
                     Behavior on opacity { NumberAnimation { duration: 420 } }
                 }
 
-                // ------------------------------------------------ часы и замок
                 Column {
                     id: idleBlock
                     anchors.centerIn: parent
                     spacing: 18
-                    // при вводе блок уезжает вверх и бледнеет
                     y: parent.height / 2 - height / 2 - (root.authMode ? 60 : 0)
                     Behavior on y {
                         NumberAnimation { duration: 420; easing.type: Easing.OutCubic }
                     }
 
-                    // замок в матовом круге
                     Rectangle {
                         anchors.horizontalCenter: parent.horizontalCenter
                         width: 96; height: 96; radius: 48
@@ -299,8 +241,6 @@ ShellRoot {
                         font { family: root.fontFam; pixelSize: 17 }
                     }
 
-                    // Своя строка хозяина машины: чей это компьютер, куда
-                    // звонить, если нашли. Пустая — её просто нет.
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
                         visible: text.length > 0
@@ -309,10 +249,9 @@ ShellRoot {
                         font { family: root.fontFam; pixelSize: 14 }
                     }
 
-                    // подсказка мигает, пока не начали вводить
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
-                        text: root.tr("Нажмите Enter")
+                        text: root.tr("Press Enter")
                         color: Qt.rgba(1, 1, 1, 0.40)
                         opacity: root.authMode ? 0 : 1
                         visible: opacity > 0.01
@@ -327,7 +266,6 @@ ShellRoot {
                     }
                 }
 
-                // ------------------------------------------------- капсула ввода
                 Item {
                     id: island
                     width: root.authMode ? 420 : 150
@@ -346,8 +284,6 @@ ShellRoot {
                         NumberAnimation { duration: 380; easing.type: Easing.OutBack }
                     }
 
-                    // тряска при неверном пароле: двигаем трансформ, чтобы
-                    // не воевать с anchors.horizontalCenter
                     transform: Translate { id: shakeT }
                     SequentialAnimation {
                         id: shake
@@ -378,7 +314,6 @@ ShellRoot {
                             anchors.centerIn: parent
                             spacing: 14
 
-                            // замок / галочка / спиннер
                             Item {
                                 width: 26; height: 26
                                 anchors.verticalCenter: parent.verticalCenter
@@ -406,7 +341,6 @@ ShellRoot {
                                 }
                             }
 
-                            // точки по числу введённых символов
                             Row {
                                 anchors.verticalCenter: parent.verticalCenter
                                 spacing: 7
@@ -416,7 +350,6 @@ ShellRoot {
                                         width: 9; height: 9; radius: 5
                                         color: "#ffffff"
                                         opacity: 0.9
-                                        // каждая точка появляется с отскоком
                                         scale: 0
                                         Component.onCompleted: scale = 1
                                         Behavior on scale {
@@ -426,10 +359,9 @@ ShellRoot {
                                         }
                                     }
                                 }
-                                // пустое поле — подсказка вместо точек
                                 Text {
                                     visible: root.password.length === 0
-                                    text: root.errorText.length ? root.errorText : root.tr("Пароль")
+                                    text: root.errorText.length ? root.errorText : root.tr("Password")
                                     color: root.errorText.length
                                            ? root.colCrit : Qt.rgba(1, 1, 1, 0.35)
                                     font { family: root.fontFam; pixelSize: 14 }
@@ -439,7 +371,6 @@ ShellRoot {
                     }
                 }
 
-                // имя пользователя под капсулой
                 Text {
                     anchors.horizontalCenter: parent.horizontalCenter
                     y: island.y + island.height + 16
@@ -451,9 +382,6 @@ ShellRoot {
                     Behavior on opacity { NumberAnimation { duration: 300 } }
                 }
 
-                // ------------------------------------------------------- ввод
-                // Настоящее поле спрятано: рисуем точки сами, а раскладки,
-                // Backspace и вставку пусть обрабатывает TextInput.
                 TextInput {
                     id: pwInput
                     focus: true
@@ -469,7 +397,6 @@ ShellRoot {
                     }
                     onAccepted: root.submit()
 
-                    // очистку инициирует корень (после проверки пароля)
                     Connections {
                         target: root
                         function onPasswordChanged() {
@@ -488,7 +415,6 @@ ShellRoot {
                         if (root.checking) { event.accepted = true; return; }
                         if (!root.authMode) {
                             root.authMode = true;
-                            // Enter только раскрывает капсулу, печатать не должен
                             if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter
                                 || event.key === Qt.Key_Space)
                                 event.accepted = true;
@@ -496,7 +422,6 @@ ShellRoot {
                     }
                 }
 
-                // фокус не должен теряться ни при каких обстоятельствах
                 Timer {
                     interval: 400; running: true; repeat: true
                     onTriggered: if (!pwInput.activeFocus) pwInput.forceActiveFocus()

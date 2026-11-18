@@ -5,24 +5,13 @@ import Quickshell
 import Quickshell.Hyprland
 import Quickshell.Wayland
 
-// Обзор рабочих столов (Super+Tab).
 //
-// Превью не рисованные: каждое окно показывается живым кадром через
-// ScreencopyView, поэтому в карточках продолжают идти видео и анимации.
-// Геометрию окон берём из lastIpcObject — того же JSON, что отдаёт
-// hyprctl clients, — и просто ужимаем её до размера карточки.
 FocusScope {
     id: view
     property var sys
 
-    // Без focus: true клавиатура остаётся у корня окна, и Enter в оверлее
-    // просто никуда не приходил — стол не переключался.
     focus: true
 
-    // Выбор храним по номеру стола, а не по индексу в списке: список
-    // приходит асинхронно и на первом кадре ещё пустой, поэтому индекс,
-    // посчитанный в onCompleted, указывал не туда — оверлей открывался
-    // с выделенным вторым столом вместо текущего.
     property int currentWs: 0
     readonly property int current: {
         for (var i = 0; i < wsList.length; i++)
@@ -34,15 +23,13 @@ FocusScope {
     readonly property real monW: mon ? mon.width : 1920
     readonly property real monH: mon ? mon.height : 1080
 
-    // Столы по порядку номеров. Пустые тоже показываем: на них переходят
-    // не реже, чем на занятые.
     readonly property var wsList: {
         var out = [];
         if (Compositor.isNiri) return Compositor.workspaces;
         var all = Hyprland.workspaces ? Hyprland.workspaces.values : [];
         for (var i = 0; i < all.length; i++) {
             var w = all[i];
-            if (!w || w.id < 0) continue;      // спецстолы не показываем
+            if (!w || w.id < 0) continue;
             out.push(w);
         }
         out.sort(function (a, b) { return a.id - b.id; });
@@ -56,14 +43,11 @@ FocusScope {
             Hyprland.refreshWorkspaces();
             Hyprland.refreshToplevels();
         }
-        // Стол, с которого открыли: пилюля знает его точно и без опроса —
-        // она слушает события Hyprland постоянно.
         view.currentWs = view.sys.wsId;
         view.forceActiveFocus();
     }
     FocusGrabber { target: view }
 
-    // ------------------------------------------------------------ клавиши
     function move(d) {
         if (wsList.length === 0) return;
         var i = Math.max(0, Math.min(wsList.length - 1, view.current + d));
@@ -80,7 +64,6 @@ FocusScope {
     Keys.onTabPressed:    view.move(1)
     Keys.onBacktabPressed: view.move(-1)
     Keys.onPressed: event => {
-        // цифрой — сразу на нужный стол
         if (event.key >= Qt.Key_1 && event.key <= Qt.Key_9) {
             var n = event.key - Qt.Key_0;
             for (var i = 0; i < view.wsList.length; i++) {
@@ -92,9 +75,6 @@ FocusScope {
         }
     }
 
-    // ------------------------------------------------------------- выбор
-    // Своей анимации перехода тут нет: оверлей просто уходит, а стол
-    // сменяется штатной прокруткой Hyprland — той же, что по Super+1 и жестам.
     function pick(i) {
         if (i < 0 || i >= wsList.length) return;
         view.currentWs = wsList[i].id;
@@ -102,10 +82,7 @@ FocusScope {
         view.sys.closeOverview();
     }
 
-    // ------------------------------------------------------------ раскладка
     readonly property int columns: Math.min(3, Math.max(1, wsList.length))
-    // Карточка занимает столько, сколько влезает: и по ширине, и по высоте —
-    // иначе на трёх столбцах нижний ряд уезжал за экран.
     readonly property real cardW: Math.min(
         (view.width - 140) / columns - 20,
         ((view.height - 210) / Math.max(1, Math.ceil(wsList.length / columns)) - 20)
@@ -123,7 +100,7 @@ FocusScope {
 
         Text {
             Layout.alignment: Qt.AlignHCenter
-            text: view.sys.tr("Рабочие столы")
+            text: view.sys.tr("Workspaces")
             color: Qt.rgba(1, 1, 1, 0.55)
             font {
                 family: view.sys.fontFam; pixelSize: view.sys.fontSize - 2
@@ -165,9 +142,6 @@ FocusScope {
                         NumberAnimation { duration: 170; easing.type: Easing.OutBack }
                     }
 
-                    // ---------------------------------------- окна стола
-                    // Отдельный слой с отступом: у карточки скруглённые углы,
-                    // и окно, лежащее вплотную к краю, срезалось ими.
                     Item {
                         id: winLayer
                         anchors.fill: parent
@@ -182,9 +156,6 @@ FocusScope {
                             readonly property var geo: modelData.geo
 
                             visible: win.geo.ws === card.modelData.id
-                            // Координаты окна в системе монитора ужимаем до
-                            // карточки. Заголовок и рамки Hyprland сюда не
-                            // входят — берём чистую геометрию клиента.
                             x: (win.geo.x - (view.mon ? view.mon.x : 0)) * winLayer.width / view.monW
                             y: (win.geo.y - (view.mon ? view.mon.y : 0)) * winLayer.height / view.monH
                             width:  win.geo.w * winLayer.width / view.monW
@@ -198,9 +169,6 @@ FocusScope {
                                 border.width: 1
                                 clip: true
 
-                                // Живой кадр окна: видео и анимации в превью
-                                // продолжают идти, потому что это тот же
-                                // буфер, а не снимок.
                                 ScreencopyView {
                                     anchors.fill: parent
                                     anchors.margins: 1
@@ -208,9 +176,6 @@ FocusScope {
                                     live: true
                                     paintCursor: false
                                     visible: hasContent
-                                    // Кадр окна ужимается в разы, и без
-                                    // сглаживания края текста рассыпались
-                                    // в пиксельную кашу.
                                     smooth: true
                                     antialiasing: true
                                     layer.enabled: true
@@ -218,7 +183,6 @@ FocusScope {
                                     layer.mipmap: true
                                 }
 
-                                // пока кадра нет — класс приложения текстом
                                 Text {
                                     anchors.centerIn: parent
                                     visible: parent.children.length > 0
@@ -236,7 +200,6 @@ FocusScope {
 
                     }
 
-                    // ------------------------------------------ подпись
                     Rectangle {
                         anchors.left: parent.left
                         anchors.bottom: parent.bottom
@@ -262,7 +225,6 @@ FocusScope {
                         }
                     }
 
-                    // точка «здесь вы сейчас»
                     Rectangle {
                         anchors.right: parent.right
                         anchors.bottom: parent.bottom
@@ -285,7 +247,7 @@ FocusScope {
 
         Text {
             Layout.alignment: Qt.AlignHCenter
-            text: view.sys.tr("Стрелки — выбрать · Enter — перейти · Esc — закрыть")
+            text: view.sys.tr("Arrows to pick · Enter to switch · Esc to close")
             color: Qt.rgba(1, 1, 1, 0.30)
             font { family: view.sys.fontFam; pixelSize: view.sys.fontSize - 4 }
         }

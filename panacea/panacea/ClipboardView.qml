@@ -6,9 +6,6 @@ import QtQuick.Controls
 import Quickshell
 import Quickshell.Io
 
-// Буфер обмена (Super+V) — Smart Clipboard в стиле Nothing OS.
-// Определение типов (HEX-цвета с конвертацией в RGB/HSL, ссылки с открытием в браузере,
-// превью файлов и картинок) + закрепление сниппетов (Pin) вверху списка.
 FocusScope {
     id: view
     property var sys
@@ -20,7 +17,6 @@ FocusScope {
     property var pins: []
     property var pinnedLookup: ({})
 
-    // Чтение закреплённых записей (pins)
     Process {
         id: pLoadPins
         command: ["sh", "-c", "cat \"$HOME/.config/panacea/clipboard_pins.json\" 2>/dev/null || echo '[]'"]
@@ -37,7 +33,6 @@ FocusScope {
         }
     }
 
-    // Сохранение закреплённых записей
     Process { id: pSavePins }
 
     function savePins() {
@@ -62,7 +57,6 @@ FocusScope {
         view.reload();
     }
 
-    // Определение типа содержимого
     function detectType(text) {
         if (!text) return "text";
         var t = text.trim();
@@ -85,7 +79,6 @@ FocusScope {
         return p;
     }
 
-    // Конвертация цветов
     function hexToRgb(hex) {
         var c = hex.replace("#", "");
         if (c.length === 3) c = c[0]+c[0] + c[1]+c[1] + c[2]+c[2];
@@ -118,7 +111,6 @@ FocusScope {
         return "hsl(" + Math.round(h * 360) + ", " + Math.round(s * 100) + "%, " + Math.round(l * 100) + "%)";
     }
 
-    // строки cliphist: "<id>\t<превью>"
     Process {
         id: pList
         command: ["sh", "-c", "cliphist list"]
@@ -230,7 +222,7 @@ FocusScope {
                         id: input
                         focus: true
                         Layout.fillWidth: true
-                        placeholderText: view.sys.tr("Поиск в буфере")
+                        placeholderText: view.sys.tr("Search clipboard")
                         color: view.sys.colFg
                         placeholderTextColor: view.sys.colMuted
                         font { family: view.sys.fontFam; pixelSize: view.sys.fontSize - 2 }
@@ -245,7 +237,6 @@ FocusScope {
                             if (list.currentIndex > 0) list.currentIndex--
                     }
 
-                    // доступ к хранилищу паролей (Vault)
                     Text {
                         visible: view.sys.cfg.featVault
                         text: String.fromCodePoint(view.sys.vaultUnlocked ? 0xF0FC6 : 0xF033E)
@@ -262,7 +253,6 @@ FocusScope {
                         }
                     }
 
-                    // очистить историю
                     Text {
                         text: "󰩹"
                         color: wipeMa.containsMouse ? view.sys.colCrit : view.sys.colMuted
@@ -323,7 +313,6 @@ FocusScope {
                     anchors.rightMargin: 11
                     spacing: 9
 
-                    // Индикатор закрепления (Pin)
                     Text {
                         visible: isPinned
                         text: "󰤱"
@@ -331,7 +320,6 @@ FocusScope {
                         font { family: view.sys.fontFam; pixelSize: 13 }
                     }
 
-                    // Левая часть: превью цвета / миниатюра картинки / значок типа
                     Item {
                         Layout.preferredWidth: 20
                         Layout.preferredHeight: 20
@@ -356,7 +344,6 @@ FocusScope {
                             asynchronous: true
                         }
 
-                        // Иконка типа для остальных
                         Text {
                             anchors.centerIn: parent
                             visible: rowDelegate.cType !== "color" && rowDelegate.cType !== "image-file"
@@ -369,23 +356,20 @@ FocusScope {
                         }
                     }
 
-                    // Текст превью
                     Text {
                         Layout.fillWidth: true
                         Layout.alignment: Qt.AlignVCenter
-                        text: isImage ? view.sys.tr("Изображение (Binary)") : preview
+                        text: isImage ? view.sys.tr("Image (binary)") : preview
                         color: view.sys.colFg
                         elide: Text.ElideRight
                         font { family: view.sys.fontFam; pixelSize: view.sys.fontSize - 2 }
                     }
 
-                    // Правая часть: Smart Actions (кнопки конвертации и открытия)
                     RowLayout {
                         Layout.alignment: Qt.AlignVCenter
                         spacing: 6
                         visible: rowDelegate.isSelected
 
-                        // Конвертация цвета в RGB
                         Rectangle {
                             visible: rowDelegate.cType === "color"
                             Layout.preferredHeight: 22
@@ -407,7 +391,6 @@ FocusScope {
                             }
                         }
 
-                        // Конвертация цвета в HSL
                         Rectangle {
                             visible: rowDelegate.cType === "color"
                             Layout.preferredHeight: 22
@@ -429,7 +412,6 @@ FocusScope {
                             }
                         }
 
-                        // Кнопка открыть ссылку в браузере
                         Rectangle {
                             visible: rowDelegate.cType === "url"
                             Layout.preferredHeight: 22
@@ -451,7 +433,6 @@ FocusScope {
                             }
                         }
 
-                        // Кнопка открыть файл
                         Rectangle {
                             visible: rowDelegate.cType === "file" || rowDelegate.cType === "image-file"
                             Layout.preferredHeight: 22
@@ -473,7 +454,6 @@ FocusScope {
                             }
                         }
 
-                        // Кнопка закрепления (Pin/Unpin)
                         Rectangle {
                             Layout.preferredHeight: 22
                             Layout.preferredWidth: 26
@@ -511,7 +491,7 @@ FocusScope {
         Text {
             Layout.fillWidth: true
             visible: list.model.count === 0
-            text: view.query.length ? view.sys.tr("Ничего не найдено") : view.sys.tr("Буфер пуст")
+            text: view.query.length ? view.sys.tr("Nothing found") : view.sys.tr("Clipboard is empty")
             color: view.sys.colMuted
             horizontalAlignment: Text.AlignHCenter
             font { family: view.sys.fontFam; pixelSize: view.sys.fontSize - 2 }

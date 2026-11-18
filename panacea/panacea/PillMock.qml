@@ -2,21 +2,14 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Layouts
 
-// Остров для макетов настроек: тот же набор сегментов, те же правила
-// скругления и те же вогнутые уголки примыкания, что и на живом экране.
 //
-// Живёт отдельным компонентом, потому что макетов уже два — рабочий стол во
-// вкладке «Пилюля» и слайдер режимов проводника, — и остров в них должен
-// выглядеть одинаково, иначе один макет начинает врать.
 Item {
     id: mock
     property var sys
     property string pos: "top"          // top | bottom | left | right
     property color fgCol: "#ffffff"
     property color onCol: "#3b82f6"
-    // во сколько раз макет меньше настоящего экрана
     property real k: 0.4
-    // запас читаемости: 1:1 при таком масштабе даёт нечитаемые 8 px
     property real boost: 1.5
 
     readonly property bool side: mock.pos === "left" || mock.pos === "right"
@@ -35,11 +28,8 @@ Item {
 
         width:  mock.side ? mock.thick : pill.len
         height: mock.side ? pill.len : mock.thick
-        // Обводки нет: у настоящего острова border.width = 0, а с ней уголки
-        // читаются отдельными наклейками.
         color: mock.sys ? mock.sys.colBg : "#0a0a0a"
 
-        // углы у прижатой кромки срезаны — как у живого острова
         readonly property real freeR: mock.thick / 2
         topLeftRadius:     mock.pos === "top"    || mock.pos === "left"  ? 0 : pill.freeR
         topRightRadius:    mock.pos === "top"    || mock.pos === "right" ? 0 : pill.freeR
@@ -57,12 +47,9 @@ Item {
         Behavior on width  { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
         Behavior on height { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
 
-        // --- горизонтальный вид
         RowLayout {
             id: horizRow
             anchors.centerIn: parent
-            // Прозрачностью, а не visible: скрытая раскладка перестаёт считать
-            // ширину, и остров схлопывается в пустую капсулу.
             opacity: mock.side ? 0 : 1
             Behavior on opacity { NumberAnimation { duration: 160 } }
             spacing: mock.thick * 0.3
@@ -104,7 +91,6 @@ Item {
             }
         }
 
-        // --- вертикальный вид: столбиком, текст прямой
         ColumnLayout {
             id: vertRow
             anchors.centerIn: parent
@@ -112,7 +98,6 @@ Item {
             Behavior on opacity { NumberAnimation { duration: 160 } }
             spacing: mock.thick * 0.14
 
-            // день недели — буква под буквой
             Column {
                 Layout.alignment: Qt.AlignHCenter
                 spacing: -2
@@ -172,9 +157,6 @@ Item {
         }
     }
 
-    // Вогнутые уголки примыкания: стоят с двух сторон острова и цепляются к
-    // той же кромке. Сторона выбирается так, чтобы заливка прижималась к краю
-    // экрана, вертикальное отражение делает Scale.
     NotchShape {
         id: notchA
         side: mock.side ? (mock.pos === "left" ? "right" : "left") : "left"

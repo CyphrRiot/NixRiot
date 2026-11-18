@@ -1,14 +1,7 @@
 #!/bin/bash
-# Обслуга медиаплеера пилюли.
 #
-#   probe PATH                  -> длительность|ширина|высота  (длительность 0 у картинок)
 #   cut PATH START END [DIR] [X Y W H]
-#                               -> вырезать кусок видео (и, если заданы X Y W H,
-#                                  заодно обрезать кадр), печатает путь к файлу
-#   crop PATH X Y W H [DIR]     -> вырезать область картинки, печатает путь
 #
-# DIR по умолчанию — папка оригинала. Имя не затирается: к нему добавляется
-# «-cut»/«-crop» и, если такой уже есть, номер.
 
 out_name() {
     local src="$1" dir="$2" suffix="$3" ext="$4"
@@ -37,8 +30,6 @@ case "$1" in
 
     cut)
         P="${2:?}"; START="${3:?}"; END="${4:?}"
-        # Видео без звуковой дорожки мессенджеры показывают как «гифку»
-        # и жмут в кашу. Если звука нет — подкладываем тишину.
         HAS_AUDIO=$(ffprobe -v error -select_streams a -show_entries stream=index \
                             -of csv=p=0 "$P" 2>/dev/null | head -1)
         SILENCE=()
@@ -55,14 +46,11 @@ case "$1" in
         OUT=$(out_name "$P" "$DIR" "-cut" "$ext")
 
         if [ -n "$W" ] && [ "$W" != "0" ]; then
-            # обрезка кадра требует пережатия: скопировать поток нельзя
             ffmpeg -v error -y -ss "$START" -to "$END" -i "$P" "${SILENCE[@]}" \
                    -vf "crop=$W:$H:$X:$Y" \
                    -c:v libx264 -preset veryfast -crf 20 -pix_fmt yuv420p \
                    "${AENC[@]}" -movflags +faststart "$OUT" </dev/null || exit 1
         else
-            # -c copy режет по ключевым кадрам: быстро и без потери качества.
-            # Если контейнер так не умеет — пережимаем.
             if ! ffmpeg -v error -y -ss "$START" -to "$END" -i "$P" "${SILENCE[@]}" \
                         -c:v copy "${AENC[@]}" -avoid_negative_ts make_zero \
                         -movflags +faststart "$OUT" </dev/null; then
@@ -86,7 +74,6 @@ case "$1" in
         esac
         OUT=$(out_name "$P" "$DIR" "-crop" "$ext")
         args=(-v error -y -i "$P" -vf "crop=$W:$H:$X:$Y")
-        # анимацию гифки сохраняем целиком, просто обрезанной по кадру
         [ "${ext,,}" = "gif" ] && args+=(-loop 0)
         ffmpeg "${args[@]}" "$OUT" </dev/null || exit 1
         printf '%s\n' "$OUT"

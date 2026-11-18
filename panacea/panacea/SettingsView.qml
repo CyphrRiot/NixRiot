@@ -4,82 +4,71 @@ import QtQuick.Layouts
 import QtQuick.Controls
 import Quickshell
 
-// Окно настроек: слева поиск и список разделов, справа — сам раздел.
 //
-// Каждый раздел живёт отдельным файлом Set*.qml и получает только `sys`.
-// Шапку с иконкой и описанием рисует каркас, поэтому страницы состоят из
-// одних карточек и не повторяют друг за другом одну и ту же разметку.
 Item {
     id: view
 
     property var sys
-    // индекс раздела в view.sections
     property int tab: 0
 
     implicitWidth: 980
     implicitHeight: 620
 
-    // ------------------------------------------------------------- разделы
-    // keys — ключевые слова для поиска: по ним раздел находится, даже если
-    // в названии нужного слова нет («темы» → Appearance, «wifi» → Control
     // Center).
     readonly property var sections: [
-        { id: "bar",     title: view.sys.tr("Панель и остров"),   g: 0xF12E1, page: "SetBarIsland.qml",
-          sub: view.sys.tr("Как остров стоит на кромке и во что он разворачивается."),
-          keys: "notch island pill bar height width cpu gpu load temperature остров вырез капсула нагрузка температура" },
-        { id: "media",   title: view.sys.tr("Медиа"),          g: 0xF0387, page: "SetMedia.qml",
-          sub: view.sys.tr("Плеер, обложки и то, что видно в свёрнутом острове."),
-          keys: "player music cover звук плеер музыка обложка" },
-        { id: "clock",   title: view.sys.tr("Часы и дата"),   g: 0xF0150, page: "SetClock.qml",
-          sub: view.sys.tr("Формат времени, часовой пояс и подпись под ним."),
-          keys: "clock time date timezone часы дата время пояс регион" },
-        { id: "look",    title: view.sys.tr("Оформление"),     g: 0xF03D8, page: "SetAppearance.qml",
-          sub: view.sys.tr("Виджеты, шрифты и оформление системы."),
-          keys: "theme nothing font size sounds audio haptics виджеты звуки звук звуковые эффекты тема шрифт цвет" },
-        { id: "weather", title: view.sys.tr("Погода"),        g: 0xF0590, page: "SetWeather.qml",
-          sub: view.sys.tr("Ключ, город и шкала для виджета погоды."),
-          keys: "weather temperature city openweather api key celsius fahrenheit "
-                + "погода температура город ключ цельсий фаренгейт градусы" },
-        { id: "motion",  title: view.sys.tr("Анимация"),         g: 0xF15B6, page: "SetMotion.qml",
-          sub: view.sys.tr("Насколько быстро оболочка движется — и движется ли вообще."),
-          keys: "animation speed bounce mascot character eyes cursor анимация скорость движение персонаж глазки курсор" },
-        { id: "launch",  title: view.sys.tr("Лаунчер"),       g: 0xF0349, page: "SetLauncher.qml",
-          sub: view.sys.tr("Поиск приложений и то, что он ищет кроме них."),
-          keys: "launcher launchpad grid folders apps search запуск приложения поиск сетка папки" },
-        { id: "notif",   title: view.sys.tr("Уведомления"),  g: 0xF009A, page: "SetNotifications.qml",
-          sub: view.sys.tr("Сколько карточек висит на экране и как долго."),
-          keys: "notifications dnd toast уведомления не беспокоить" },
-        { id: "cc",      title: view.sys.tr("Быстрые настройки"), g: 0xF062E, page: "SetControlCenter.qml",
-          sub: view.sys.tr("Раскладка быстрых настроек — плитки переставляются мышью."),
-          keys: "quick settings tiles layout wifi bluetooth плитки быстрые" },
-        { id: "lock",    title: view.sys.tr("Экран блокировки"),    g: 0xF033E, page: "SetLock.qml",
-          sub: view.sys.tr("Экран блокировки: что на нём видно и когда он появляется."),
-          keys: "lock screen blur idle блокировка экран размытие" },
-        { id: "display", title: view.sys.tr("Экран"),        g: 0xF0379, page: "SetDisplay.qml",
-          sub: view.sys.tr("Разрешение, частота и масштаб подключённых экранов."),
-          keys: "display monitor resolution refresh scale layout placement detect island "
-                + "экран монитор разрешение герцовка раскладка расположение остров" },
-        { id: "input",   title: view.sys.tr("Ввод"),           g: 0xF037D, page: "SetInput.qml",
-          sub: view.sys.tr("Скорость указателя и разгон."),
-          keys: "mouse keyboard layouts xkb pointer cursor sensitivity speed accel acceleration raw input flat "
-                + "мышь клавиатура раскладки указатель курсор скорость сенса чувствительность разгон ввод vpn впн" },
+        { id: "bar",     title: view.sys.tr("Bar and island"),   g: 0xF12E1, page: "SetBarIsland.qml",
+          sub: view.sys.tr("How the island sits on the edge, and what it unfolds into."),
+          keys: "notch island pill bar height width cpu gpu load temperature" },
+        { id: "media",   title: view.sys.tr("Media"),          g: 0xF0387, page: "SetMedia.qml",
+          sub: view.sys.tr("The player, cover art, and what shows in the collapsed island."),
+          keys: "player music cover" },
+        { id: "clock",   title: view.sys.tr("Clock and date"),   g: 0xF0150, page: "SetClock.qml",
+          sub: view.sys.tr("Time format, time zone, and the line beneath it."),
+          keys: "clock time date timezone" },
+        { id: "look",    title: view.sys.tr("Appearance"),     g: 0xF03D8, page: "SetAppearance.qml",
+          sub: view.sys.tr("Widgets, fonts, and system appearance."),
+          keys: "theme nothing font size sounds audio haptics" },
+        { id: "weather", title: view.sys.tr("Weather"),        g: 0xF0590, page: "SetWeather.qml",
+          sub: view.sys.tr("Key, city, and scale for the weather widget."),
+          keys: "weather temperature city openweather api key celsius fahrenheit" },
+        { id: "motion",  title: view.sys.tr("Motion"),         g: 0xF15B6, page: "SetMotion.qml",
+          sub: view.sys.tr("How fast the shell animates, or whether it animates at all."),
+          keys: "animation speed bounce mascot character eyes cursor" },
+        { id: "launch",  title: view.sys.tr("Launcher"),       g: 0xF0349, page: "SetLauncher.qml",
+          sub: view.sys.tr("App search, and what else it looks through."),
+          keys: "launcher launchpad grid folders apps search" },
+        { id: "notif",   title: view.sys.tr("Notifications"),  g: 0xF009A, page: "SetNotifications.qml",
+          sub: view.sys.tr("How many cards stay on screen, and for how long."),
+          keys: "notifications dnd toast" },
+        { id: "cc",      title: view.sys.tr("Quick settings"), g: 0xF062E, page: "SetControlCenter.qml",
+          sub: view.sys.tr("The quick settings layout — blocks are rearranged by hand."),
+          keys: "quick settings tiles layout wifi bluetooth" },
+        { id: "lock",    title: view.sys.tr("Lock screen"),    g: 0xF033E, page: "SetLock.qml",
+          sub: view.sys.tr("The lock screen: what it shows, and when it appears."),
+          keys: "lock screen blur idle" },
+        { id: "display", title: view.sys.tr("Display"),        g: 0xF0379, page: "SetDisplay.qml",
+          sub: view.sys.tr("Resolution, refresh rate and scale of the connected screens."),
+          keys: "display monitor resolution refresh scale layout placement detect island" },
+        { id: "input",   title: view.sys.tr("Input"),           g: 0xF037D, page: "SetInput.qml",
+          sub: view.sys.tr("Pointer speed and acceleration."),
+          keys: "mouse keyboard layouts xkb pointer cursor sensitivity speed accel acceleration raw input flat" },
         { id: "vpn", title: "VPN", g: 0xF0582, page: "SetVpn.qml",
-          sub: view.sys.tr("Клиент и профиль для быстрого подключения."), keys: "vpn впн happ hiddify clash proxy прокси сеть клиент" },
-        { id: "system",  title: view.sys.tr("Система"),         g: 0xF0493, page: "SetSystem.qml",
-          sub: view.sys.tr("Из чего собрана машина и чем она сейчас занята."),
-          keys: "about system cpu ram temperature система озу температура процессы" }
+          sub: view.sys.tr("Client and profile for quick connection."), keys: "vpn happ hiddify clash proxy" },
+        { id: "system",  title: view.sys.tr("System"),         g: 0xF0493, page: "SetSystem.qml",
+          sub: view.sys.tr("What the machine is made of, and what it is busy with."),
+          keys: "about system cpu ram temperature" }
     ]
 
     // Each navigation entry contains a few related pages. Page ids stay stable
     // so links from notifications and IPC still open the intended page.
     readonly property var groups: [
-        { id: "island", title: view.sys.tr("Остров"), g: 0xF12E1, pages: ["bar", "media", "clock"] },
-        { id: "appearance", title: view.sys.tr("Оформление"), g: 0xF03D8, pages: ["look", "weather", "motion"] },
-        { id: "controls", title: view.sys.tr("Управление"), g: 0xF062E, pages: ["cc", "launch", "notif"] },
-        { id: "devices", title: view.sys.tr("Устройства"), g: 0xF0379, pages: ["display", "input"] },
+        { id: "island", title: view.sys.tr("Island"), g: 0xF12E1, pages: ["bar", "media", "clock"] },
+        { id: "appearance", title: view.sys.tr("Appearance"), g: 0xF03D8, pages: ["look", "weather", "motion"] },
+        { id: "controls", title: view.sys.tr("Controls"), g: 0xF062E, pages: ["cc", "launch", "notif"] },
+        { id: "devices", title: view.sys.tr("Devices"), g: 0xF0379, pages: ["display", "input"] },
         { id: "vpn", title: "VPN", g: 0xF0582, pages: ["vpn"] },
-        { id: "security", title: view.sys.tr("Безопасность"), g: 0xF033E, pages: ["lock"] },
-        { id: "system", title: view.sys.tr("Система"), g: 0xF0493, pages: ["system"] }
+        { id: "security", title: view.sys.tr("Security"), g: 0xF033E, pages: ["lock"] },
+        { id: "system", title: view.sys.tr("System"), g: 0xF0493, pages: ["system"] }
     ]
 
     function groupForPage(pageId) {
@@ -113,16 +102,11 @@ Item {
     readonly property var activeGroup: groupForPage(section.id)
     readonly property var groupPages: pagesForGroup(activeGroup)
 
-    // Раздел могли попросить по имени — например уведомление об обновлении
-    // ведёт прямо в System. Имя ищем здесь: список разделов живёт тут же, и
-    // никому снаружи не нужно знать, какой у раздела номер.
     function goToSection(id) {
         if (!id) return;
         for (var i = 0; i < view.sections.length; i++) {
             if (view.sections[i].id === id) { view.go(i); break; }
         }
-        // просьбу выполнили — иначе повторное открытие настроек снова
-        // уводило бы в тот же раздел
         view.sys.settingsSection = "";
     }
     Component.onCompleted: view.goToSection(view.sys.settingsSection)
@@ -131,9 +115,6 @@ Item {
         function onSettingsSectionChanged() { view.goToSection(view.sys.settingsSection); }
     }
 
-    // ------------------------------------------------------------- история
-    // Стрелки над разделом ходят по уже открытым, как в браузере: список
-    // разделов длинный, и возврат к предыдущему руками сбивает с мысли.
     property var hist: [0]
     property int histAt: 0
     function go(i) {
@@ -149,7 +130,6 @@ Item {
     readonly property bool canBack:    histAt > 0
     readonly property bool canForward: histAt < hist.length - 1
 
-    // ------------------------------------------------------------- поиск
     property string query: ""
     function matches(s) {
         if (view.query.length === 0) return true;
@@ -157,25 +137,15 @@ Item {
         return s.title.toLowerCase().indexOf(q) >= 0 || s.keys.toLowerCase().indexOf(q) >= 0;
     }
 
-    // ========================================================== само окно
     RowLayout {
         anchors.fill: parent
         spacing: 0
 
-        // ----------------------------------------------------- сайдбар
         ColumnLayout {
-            // Ширина по самой длинной подписи, а не «на глаз»: список
-            // разделов известен заранее, и лишний воздух справа от него
-            // только отъедал место у самих настроек.
             readonly property real navW: {
                 var m = 0;
                 for (var i = 0; i < view.groups.length; i++)
                     m = Math.max(m, navMetric.advanceWidth(view.groups[i].title));
-                // 7 отступ + 28 значок + 10 зазор + текст + 14 запас.
-                // Метрики шрифта по семейству дают чуть меньше, чем меряет
-                // сам Text (начертание подбирается позже), поэтому к тексту
-                // добавлена десятая часть: без неё длинные названия резались
-                // многоточием ровно там, где места на самом деле хватало.
                 return Math.max(196, Math.min(300, Math.ceil(m * 1.25) + 64));
             }
             FontMetrics {
@@ -184,9 +154,6 @@ Item {
                 font.pixelSize: view.sys.fontSize - 1
             }
 
-            // Вложенный в RowLayout слой по умолчанию растягивается сам —
-            // без явного отказа ширина по тексту ничего не решала, и сайдбар
-            // забирал всё свободное место.
             Layout.fillWidth: false
             Layout.preferredWidth: navW
             Layout.minimumWidth: navW
@@ -194,7 +161,6 @@ Item {
             Layout.fillHeight: true
             spacing: 10
 
-            // поиск по разделам
             Rectangle {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 36
@@ -226,7 +192,6 @@ Item {
                     selectionColor: Qt.rgba(view.sys.colOn.r, view.sys.colOn.g, view.sys.colOn.b, 0.4)
                     font { family: view.sys.fontBody; pixelSize: view.sys.fontSize - 2 }
                     onTextChanged: view.query = text
-                    // Enter открывает первый подошедший раздел
                     onAccepted: {
                         for (var i = 0; i < view.sections.length; i++)
                             if (view.matches(view.sections[i])) { view.go(i); break; }
@@ -237,14 +202,13 @@ Item {
                         anchors.fill: parent
                         verticalAlignment: Text.AlignVCenter
                         visible: searchInput.text.length === 0
-                        text: view.sys.tr("Поиск настроек")
+                        text: view.sys.tr("Search Settings")
                         color: view.sys.colMuted
                         font: searchInput.font
                     }
                 }
             }
 
-            // список разделов
             ListView {
                 id: nav
                 Layout.fillWidth: true
@@ -255,8 +219,6 @@ Item {
                 boundsBehavior: Flickable.StopAtBounds
                 ScrollBar.vertical: SetScroll { sys: view.sys }
 
-                // то же колесо, что и у страницы: список разделов длиннее
-                // окна, когда шрифт крупный
                 WheelHandler {
                     acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
                     onWheel: event => {
@@ -329,14 +291,12 @@ Item {
             }
         }
 
-        // ----------------------------------------------------- раздел
         ColumnLayout {
             Layout.fillWidth: true
             Layout.fillHeight: true
             Layout.leftMargin: 18
             spacing: 12
 
-            // стрелки истории
             RowLayout {
                 Layout.fillWidth: true
                 spacing: 8
@@ -411,7 +371,6 @@ Item {
                 Item { Layout.fillWidth: true }
             }
 
-            // шапка и карточки раздела в общей прокрутке
             Flickable {
                 id: scroll
                 Layout.fillWidth: true
@@ -423,10 +382,6 @@ Item {
                 flickDeceleration: 3000
                 ScrollBar.vertical: SetScroll { sys: view.sys }
 
-                // Колесо крутим сами. Собственная обработка Flickable зависит
-                // от того, кому достанется событие: остров ловит наведение
-                // своим HoverHandler'ом и в части положений забирал колесо
-                // себе — прокрутка работала только у верхней кромки.
                 WheelHandler {
                     acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
                     onWheel: event => {
@@ -438,7 +393,7 @@ Item {
 
                 ColumnLayout {
                     id: pageCol
-                    width: scroll.width - 12   // место под полосу прокрутки
+                    width: scroll.width - 12
                     spacing: 12
 
                     SetHeader {
@@ -448,9 +403,6 @@ Item {
                         sub: view.section.sub
                     }
 
-                    // Страницу поднимаем через setSource с готовым `sys`:
-                    // при простом source страница успевает построиться с
-                    // пустой ссылкой, и все её привязки к палитре падают.
                     Loader {
                         id: pageLoader
                         Layout.fillWidth: true
@@ -470,7 +422,5 @@ Item {
         }
     }
 
-    // раздел сменился — прокрутка начинается сверху, а не там, где кончился
-    // предыдущий
     onTabChanged: scroll.contentY = 0
 }

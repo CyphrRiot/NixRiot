@@ -1,11 +1,8 @@
 { config, lib, pkgs, ... }:
 {
-  config = lib.mkIf config.nixriot.enable {
+  config = lib.mkIf (config.nixriot.enable && config.nixriot.apps) {
     environment.systemPackages = with pkgs; [
       helix
-      neovim
-      zed-editor
-      kdePackages.kate
       gnome-text-editor
       crush
       git

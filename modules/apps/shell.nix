@@ -7,7 +7,6 @@
     environment.systemPackages = with pkgs; [
       fish
       starship
-      eza
       zoxide
       ripgrep
       fd
@@ -17,9 +16,7 @@
       lsd
       bat
       pv
-      tree
       jq
-      yq
       gurk-rs
     ];
   };

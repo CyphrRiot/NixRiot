@@ -1,7 +1,6 @@
 pragma ComponentBehavior: Bound
 import QtQuick
 
-// Живой эквалайзер голоса для голосового ввода voxtype.
 Item {
     id: wave
 
@@ -42,7 +41,6 @@ Item {
         if (MicCavaSource.hasCava) resample(MicCavaSource.levels);
     }
 
-    // Мягкая анимация волны, если тишина или cava ещё инициализируется
     Timer {
         interval: 33
         running: wave.active && !MicCavaSource.hasCava
@@ -58,7 +56,6 @@ Item {
         }
     }
 
-    // Плавное затухание при остановке
     Timer {
         interval: 33
         running: !wave.active

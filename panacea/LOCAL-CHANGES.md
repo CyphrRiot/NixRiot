@@ -8,7 +8,7 @@ tooling; `UPSTREAM` and `LICENSE` stay for attribution.
 
 ## What is carried
 
-`panacea/`, `hypr/`, `foot/`, `fish/`, `fastfetch/`, `nano/`,
+`panacea/`, `hypr/`, `foot/`, `fastfetch/`, `nano/`,
 `applications/`, `bin/`, `sddm/`, `LICENSE`, `VERSION`.
 
 ## What is not carried
@@ -26,9 +26,9 @@ tooling; `UPSTREAM` and `LICENSE` stay for attribution.
 ## Changes made
 
 1. `hypr/wallpaper/` is replaced with the NixRiot wallpaper set, `00.webp`
-   through `12.webp`, generated for the project.
+   through `25.webp`, generated for the project.
 2. `hypr/wallpaper.conf` and `hypr/hyprpaper.conf` point at
-   `~/.config/hypr/wallpaper/00.webp`.
+   `~/.config/hypr/wallpaper/16.webp`.
 3. Upstream `assets/logo*.png` moved to `panacea/assets/` so the shell
    finds them after the config tree is copied.
 4. `hypr/scripts/switch_theme.sh` fallback now includes `*.webp`.
@@ -46,6 +46,16 @@ tooling; `UPSTREAM` and `LICENSE` stay for attribution.
    OpenRiot-compatible keybinding overlay: the launcher, browser, file manager,
    process viewer, editor, Crush, music player, clipboard, power menu, and
    screenshot move back to OpenRiot's keys.
+10. `hypr/lua/binds_data.lua`, `hypr/lua/monitors_data.lua` and
+    `hypr/lua/input_data.lua` ship as empty defaults. Upstream lets them be
+    absent and relies on `pcall`; shipping them keeps Hyprland's Lua loader
+    from logging a missing-module error before the settings panel generates
+    them. `genbinds.sh`, `genmonitors.sh` and `geninput.sh` overwrite them.
+11. `hypr/lua/keybindings.lua` used `pcall(require("lua.binds_data"))`, which
+    runs `require` before `pcall` and so is not guarded at all: a missing
+    `binds_data.lua` aborts the whole config with a dump of every search path.
+    Changed to `pcall(require, "lua.binds_data")`, matching `monitors.lua`,
+    `input.lua` and `windowrules.lua`.
 
 ## Not yet changed
 

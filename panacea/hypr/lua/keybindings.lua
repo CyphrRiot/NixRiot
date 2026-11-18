@@ -4,7 +4,7 @@ local mainMod = "SUPER"
 -- Overrides of the combinations from the settings panel (Super+I).
 -- The file is generated automatically; if it is absent the defaults below
 -- apply.
-local ok, ov = pcall(require("lua.binds_data"))
+local ok, ov = pcall(require, "lua.binds_data")
 if not ok or type(ov) ~= "table" then ov = {} end
 
 -- B(id, default combination, action [, options])

@@ -6,11 +6,7 @@ import QtQuick.Controls
 import QtMultimedia
 import Quickshell.Io
 
-// Медиаплеер пилюли: видео, гифки и картинки в одном окне.
 //
-// Видео можно обрезать по началу и концу и сохранить кусок,
-// картинку — выделить область и сохранить кроп. Всё режет ffmpeg
-// через scripts/media.sh, интерфейс только собирает параметры.
 FocusScope {
     id: view
     property var sys
@@ -24,19 +20,15 @@ FocusScope {
                                      "mpg", "mpeg", "ts"].indexOf(ext) >= 0
     readonly property bool isAnimated: ["gif", "webp", "apng"].indexOf(ext) >= 0
 
-    // натуральный размер и длительность — от ffprobe
     property real srcW: 0
     property real srcH: 0
     property real srcDur: 0
 
-    // режим выделения области; общий с пилюлей, чтобы им можно было
-    // управлять и снаружи
     property bool cropMode: sys.mediaCrop
-    property string saveDir: ""        // "" — рядом с оригиналом
+    property string saveDir: ""
     property string savedPath: ""
     property string busyText: ""
 
-    // границы обрезки видео, секунды
     property real trimIn: 0
     property real trimOut: 0
 
@@ -93,11 +85,10 @@ FocusScope {
         return m + ":" + (x < 10 ? "0" : "") + x;
     }
 
-    // ------------------------------------------------------------- сохранение
     function saveCut() {
         if (!view.isVideo) return;
         if (view.trimOut - view.trimIn < 0.2) return;
-        view.busyText = view.sys.tr("Режу…");
+        view.busyText = view.sys.tr("Cutting…");
         var r = view.cropRegion();
         pSave.command = r
             ? ["sh", "-c",
@@ -110,8 +101,6 @@ FocusScope {
         pSave.running = true;
     }
 
-    // Выделение на экране -> пиксели оригинала. Возвращает null, если
-    // выделять нечего: числа для ffmpeg должны быть целыми и в пределах кадра.
     function cropRegion() {
         if (!view.cropMode || !cropRect.valid) return null;
         if (shot.paintedWidth <= 0 || view.srcW <= 0) return null;
@@ -126,7 +115,6 @@ FocusScope {
         y = Math.max(0, Math.min(y, view.srcH - 2));
         if (x + w > view.srcW) w = view.srcW - x;
         if (y + h > view.srcH) h = view.srcH - y;
-        // h264 не любит нечётные размеры
         w = w - (w % 2); h = h - (h % 2);
         if (w < 8 || h < 8) return null;
         return { x: x, y: y, w: w, h: h };
@@ -137,7 +125,7 @@ FocusScope {
         var r = view.cropRegion();
         if (!r) return;
 
-        view.busyText = view.sys.tr("Режу…");
+        view.busyText = view.sys.tr("Cutting…");
         pSave.command = ["sh", "-c",
             view.script + " crop \"$1\" \"$2\" \"$3\" \"$4\" \"$5\" \"$6\"", "_",
             view.path, String(r.x), String(r.y), String(r.w), String(r.h), view.saveDir];
@@ -153,9 +141,9 @@ FocusScope {
                 view.ocrRunning = false;
                 var txt = (text || "").trim();
                 if (txt.indexOf("ERROR_NOT_INSTALLED") === 0) {
-                    view.busyText = view.sys.tr("Установите tesseract");
+                    view.busyText = view.sys.tr("Install tesseract");
                 } else if (txt.length === 0) {
-                    view.busyText = view.sys.tr("Текст не найден");
+                    view.busyText = view.sys.tr("No text found");
                 } else {
                     view.recognizedText = txt;
                     view.busyText = "";
@@ -173,7 +161,7 @@ FocusScope {
     function copyOcrText() {
         if (view.isVideo || view.ocrRunning) return;
         view.ocrRunning = true;
-        view.busyText = view.sys.tr("Распознаю текст…");
+        view.busyText = view.sys.tr("Recognizing text…");
 
         var r = (view.cropMode && cropRect.valid) ? view.cropRegion() : null;
         if (r) {
@@ -186,7 +174,6 @@ FocusScope {
         pMediaOcr.running = true;
     }
 
-    // ---------------------------------------------------------------- клавиши
     Keys.onEscapePressed: {
         if (view.cropMode) { view.sys.mediaCrop = false; return; }
         view.sys.collapse();
@@ -210,7 +197,6 @@ FocusScope {
         }
     }
 
-    // ------------------------------------------------------------- кусочки UI
     component Chip: Rectangle {
         property string label: ""
         property bool active: false
@@ -276,13 +262,11 @@ FocusScope {
         }
     }
 
-    // ------------------------------------------------------------------- вид
     ColumnLayout {
         id: col
         width: parent.width
         spacing: 12
 
-        // ------------------------------------------------------------ шапка
         RowLayout {
             Layout.fillWidth: true
             spacing: 12
@@ -310,7 +294,7 @@ FocusScope {
                 Text {
                     Layout.fillWidth: true
                     text: view.busyText.length ? view.busyText
-                        : view.savedPath.length ? view.sys.tr("Сохранено: ") + view.savedPath
+                        : view.savedPath.length ? view.sys.tr("Saved: ") + view.savedPath
                         : (view.srcW > 0 ? view.srcW + "×" + view.srcH : "")
                           + (view.isVideo && view.srcDur > 0 ? "  ·  " + view.fmt(view.srcDur) : "")
                     color: view.savedPath.length ? view.sys.colOk : view.sys.colMuted
@@ -319,7 +303,6 @@ FocusScope {
                 }
             }
 
-            // выделение области — и для картинок, и для видео
             Rectangle {
                 Layout.preferredWidth: cropText.implicitWidth + 46
                 Layout.preferredHeight: 40
@@ -346,7 +329,7 @@ FocusScope {
                     }
                     Text {
                         id: cropText
-                        text: view.sys.tr("Кроп")
+                        text: view.sys.tr("Crop")
                         color: view.sys.colFg
                         font { family: view.sys.fontFam; pixelSize: view.sys.fontSize - 2; bold: true }
                     }
@@ -372,7 +355,6 @@ FocusScope {
             }
         }
 
-        // --------------------------------------------------------- полотно
         Rectangle {
             id: stage
             Layout.fillWidth: true
@@ -381,7 +363,6 @@ FocusScope {
             color: "#000000"
             clip: true
 
-            // ---- картинка или гифка
             AnimatedImage {
                 id: shotAnim
                 anchors.fill: parent
@@ -400,14 +381,9 @@ FocusScope {
                 asynchronous: true
                 cache: true
                 smooth: true
-                // Декодируем ровно под размер полотна: двойной запас на
-                // четырёхтысячных снимках стоил двух секунд чёрного экрана,
-                // а на качество кропа не влияет — ffmpeg режет оригинал.
                 sourceSize: Qt.size(stage.width, stage.height)
             }
 
-            // Прямоугольник, в котором реально нарисован кадр: у картинки
-            // это painted-размер, у видео — contentRect самого VideoOutput.
             QtObject {
                 id: shot
                 readonly property real paintedWidth:
@@ -426,7 +402,6 @@ FocusScope {
                                  : (stage.height - paintedHeight) / 2
             }
 
-            // ---- видео
             VideoOutput {
                 id: vout
                 anchors.fill: parent
@@ -445,7 +420,6 @@ FocusScope {
                 Component.onCompleted: if (view.isVideo) play()
             }
 
-            // клик по видео — пауза/продолжить
             MouseArea {
                 anchors.fill: parent
                 visible: view.isVideo && !view.cropMode
@@ -453,7 +427,6 @@ FocusScope {
                            ? player.pause() : player.play()
             }
 
-            // ---- выделение области на картинке
             Item {
                 id: cropRect
                 anchors.fill: parent
@@ -465,7 +438,6 @@ FocusScope {
                 property real selH: 0
                 readonly property bool valid: selW > 8 && selH > 8
 
-                // затемняем всё, кроме выделенного
                 Rectangle {
                     anchors.fill: parent
                     color: Qt.rgba(0, 0, 0, 0.55)
@@ -498,7 +470,6 @@ FocusScope {
                     border.color: view.sys.colOn
                     border.width: 2
 
-                    // уголки: тонкие уголки читаются лучше рамки
                     Repeater {
                         model: 4
                         Rectangle {
@@ -512,8 +483,6 @@ FocusScope {
                     }
                 }
 
-                // Выделение живёт до тех пор, пока его не сбросят: по нему
-                // можно таскать и тянуть за углы, а не рисовать заново.
                 MouseArea {
                     anchors.fill: parent
                     hoverEnabled: true
@@ -532,7 +501,6 @@ FocusScope {
                     property real ox: 0
                     property real oy: 0
 
-                    // за что взялись в точке (x, y)
                     function hitTest(x, y) {
                         if (!cropRect.valid) return "new";
                         var r = 22;
@@ -553,7 +521,6 @@ FocusScope {
                         if (mode === "new") { cropRect.selW = 0; cropRect.selH = 0; }
                     }
                     onDoubleClicked: {
-                        // двойной щелчок — начать выделение заново
                         cropRect.selW = 0; cropRect.selH = 0;
                         mode = "";
                     }
@@ -579,7 +546,6 @@ FocusScope {
                             return;
                         }
 
-                        // тянем за угол: противоположный остаётся на месте
                         var l = cropRect.selX, t = cropRect.selY;
                         var r = l + cropRect.selW, b = t + cropRect.selH;
                         var mx = Math.max(0, Math.min(maxW, mouse.x));
@@ -597,7 +563,6 @@ FocusScope {
                 }
             }
 
-            // подсказка в режиме выделения
             Rectangle {
                 visible: view.cropMode && !cropRect.valid
                 z: 5
@@ -613,7 +578,7 @@ FocusScope {
                 Text {
                     id: hintText
                     anchors.centerIn: parent
-                    text: view.sys.tr("Выделите область мышью")
+                    text: view.sys.tr("Drag to select an area")
                     color: view.sys.colFg
                     font { family: view.sys.fontFam; pixelSize: view.sys.fontSize - 3 }
                 }
@@ -644,13 +609,11 @@ FocusScope {
             }
         }
 
-        // ------------------------------------------------- управление видео
         ColumnLayout {
             Layout.fillWidth: true
             visible: view.isVideo
             spacing: 8
 
-            // дорожка с областью обрезки
             Item {
                 id: track
                 Layout.fillWidth: true
@@ -667,7 +630,6 @@ FocusScope {
                     radius: 3
                     color: Qt.rgba(1, 1, 1, 0.12)
                 }
-                // выбранный кусок
                 Rectangle {
                     anchors.verticalCenter: parent.verticalCenter
                     x: track.xOf(view.trimIn)
@@ -676,7 +638,6 @@ FocusScope {
                     radius: 3
                     color: Qt.rgba(view.sys.colOn.r, view.sys.colOn.g, view.sys.colOn.b, 0.55)
                 }
-                // проигранное
                 Rectangle {
                     anchors.verticalCenter: parent.verticalCenter
                     width: track.xOf(player.position / 1000)
@@ -684,7 +645,6 @@ FocusScope {
                     radius: 3
                     color: Qt.rgba(1, 1, 1, 0.35)
                 }
-                // головка
                 Rectangle {
                     width: 4; height: 20; radius: 2
                     x: track.xOf(player.position / 1000) - 2
@@ -692,9 +652,6 @@ FocusScope {
                     color: "#ffffff"
                 }
 
-                // Маркеры обрезки и головка: одной областью, чтобы понимать,
-                // за что именно взялись. Ползунок ведём за курсором, видео
-                // перематывается прямо во время перетаскивания.
                 Repeater {
                     model: 2
                     Rectangle {
@@ -713,7 +670,6 @@ FocusScope {
                         scale: held ? 1.15 : 1.0
                         Behavior on scale { NumberAnimation { duration: 120 } }
 
-                        // две насечки — сразу видно, что это ручка
                         Column {
                             anchors.centerIn: parent
                             spacing: 3
@@ -735,7 +691,6 @@ FocusScope {
                     hoverEnabled: true
                     cursorShape: grab.length ? Qt.SizeHorCursor : Qt.PointingHandCursor
 
-                    // за что взялись: "in" | "out" | "seek"
                     property string grab: ""
 
                     function localX(mx) { return Math.max(0, Math.min(track.width, mx - 8)); }
@@ -744,7 +699,6 @@ FocusScope {
                         var x = localX(mouse.x);
                         var dIn = Math.abs(x - track.xOf(view.trimIn));
                         var dOut = Math.abs(x - track.xOf(view.trimOut));
-                        // ближняя ручка в пределах 14 px перетягивает, иначе перемотка
                         if (dIn <= 14 && dIn <= dOut) grab = "in";
                         else if (dOut <= 14) grab = "out";
                         else { grab = "seek"; player.position = track.secOf(x) * 1000; }
@@ -786,11 +740,11 @@ FocusScope {
                 Item { Layout.fillWidth: true }
 
                 Chip {
-                    label: view.sys.tr("Начало здесь")
+                    label: view.sys.tr("Start here")
                     onPicked: view.trimIn = Math.min(player.position / 1000, view.trimOut - 0.2)
                 }
                 Chip {
-                    label: view.sys.tr("Конец здесь")
+                    label: view.sys.tr("End here")
                     onPicked: view.trimOut = Math.max(player.position / 1000, view.trimIn + 0.2)
                 }
                 Text {
@@ -801,13 +755,12 @@ FocusScope {
             }
         }
 
-        // ------------------------------------------------------ сохранение
         RowLayout {
             Layout.fillWidth: true
             spacing: 8
 
             Text {
-                text: view.sys.tr("Куда")
+                text: view.sys.tr("Where")
                 color: view.sys.colMuted
                 font {
                     family: view.sys.fontFam; pixelSize: view.sys.fontSize - 4
@@ -815,7 +768,7 @@ FocusScope {
                 }
             }
             Chip {
-                label: view.sys.tr("Рядом")
+                label: view.sys.tr("Next to original")
                 active: view.saveDir === ""
                 onPicked: view.saveDir = ""
             }
@@ -831,7 +784,6 @@ FocusScope {
 
             Item { Layout.fillWidth: true }
 
-            // Кнопка распознавания и копирования текста (OCR)
             Rectangle {
                 Layout.preferredWidth: ocrText.implicitWidth + 34
                 Layout.preferredHeight: 40
@@ -857,10 +809,10 @@ FocusScope {
                     Text {
                         id: ocrText
                         text: view.ocrRunning
-                              ? view.sys.tr("Распознаю…")
+                              ? view.sys.tr("Recognizing…")
                               : (view.cropMode && cropRect.valid
-                                 ? view.sys.tr("Текст из области")
-                                 : view.sys.tr("Распознать текст"))
+                                 ? view.sys.tr("Text from selection")
+                                 : view.sys.tr("Recognize text"))
                         color: view.sys.colFg
                         font { family: view.sys.fontFam; pixelSize: view.sys.fontSize - 2; bold: true }
                     }
@@ -905,9 +857,9 @@ FocusScope {
                         id: saveText
                         text: view.isVideo
                               ? (view.cropMode && cropRect.valid
-                                 ? view.sys.tr("Сохранить кусок с кропом")
-                                 : view.sys.tr("Сохранить кусок"))
-                              : view.sys.tr("Сохранить область")
+                                 ? view.sys.tr("Save the crop")
+                                 : view.sys.tr("Save clip"))
+                              : view.sys.tr("Save selection")
                         color: view.sys.colFg
                         font { family: view.sys.fontFam; pixelSize: view.sys.fontSize - 2; bold: true }
                     }

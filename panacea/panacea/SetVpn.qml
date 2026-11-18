@@ -4,7 +4,7 @@ ColumnLayout {
     id: page
     property var sys
     Layout.fillWidth: true
-    Text { Layout.fillWidth: true; wrapMode: Text.WordWrap; color: page.sys.colMuted; text: page.sys.tr("Выберите клиент или профиль. Выбор сохраняется без подключения.") }
-    Text { Layout.fillWidth: true; wrapMode: Text.WordWrap; color: page.sys.colMuted; text: page.sys.tr("Happ и профили NetworkManager переключаются прямо в острове. Для остальных клиентов открывается их приложение.") }
+    Text { Layout.fillWidth: true; wrapMode: Text.WordWrap; color: page.sys.colMuted; text: page.sys.tr("Choose a client or profile. Your selection is saved without connecting.") }
+    Text { Layout.fillWidth: true; wrapMode: Text.WordWrap; color: page.sys.colMuted; text: page.sys.tr("Happ and NetworkManager profiles can be toggled in the island. Other clients open their own application.") }
     VpnView { sys: page.sys; settingsMode: true; Layout.fillWidth: true; Layout.preferredHeight: implicitHeight }
 }

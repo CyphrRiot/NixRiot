@@ -4,14 +4,12 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell.Io
 
-// Appearance. Оформление в стиле Nothing OS: минималистичная монохромная
-// палитра, фирменные точечные шрифты, виджеты рабочего стола и системные звуки.
 ColumnLayout {
     id: page
 
     property var sys
     property bool detailsOpen: false
-    property var localeOptions: [{ id: "en", text: "English" }, { id: "ru", text: "Русский" }, { id: "tr", text: "Türkçe" }]
+    property var localeOptions: [{ id: "en", text: "English" }, { id: "tr", text: "Türkçe" }]
 
     Process {
         command: [page.sys.scriptDir + "/locale.sh", "list"]
@@ -34,16 +32,14 @@ ColumnLayout {
     Layout.fillWidth: true
     spacing: 12
 
-    // ------------------------------------------------------------- язык
-    // Стоит первым: с языка начинают, а не заканчивают им.
     SetCard {
         sys: page.sys
 
-        SetLabel { sys: page.sys; text: page.sys.tr("Язык") }
+        SetLabel { sys: page.sys; text: page.sys.tr("Language") }
 
         SetPick {
             sys: page.sys
-            label: page.sys.tr("Язык системы")
+            label: page.sys.tr("System language")
             options: page.localeOptions
             searchable: true
             value: page.sys.cfg.lang
@@ -53,34 +49,33 @@ ColumnLayout {
         Text {
             Layout.fillWidth: true
             text: page.sys.sysLangPending
-                  ? page.sys.tr("Меняем язык системы…")
+                  ? page.sys.tr("Changing the system language…")
                   : (!page.sys.systemLocaleMatches
-                     ? page.sys.tr("Оболочка уже на новом языке. Приложения и меню читают язык при входе — они переключатся после перезахода.")
-                     : page.sys.tr("Оболочка переключается сразу. Приложения и меню — после перезахода: язык они читают при входе."))
+                     ? page.sys.tr("The shell is already on the new language. Apps and menus read the language at login; they switch after you log back in.")
+                     : page.sys.tr("The shell switches right away. Apps and menus after you log back in: they read the language at login."))
             color: page.sys.colMuted
             wrapMode: Text.WordWrap
             font { family: page.sys.fontBody; pixelSize: page.sys.fontSize - 4 }
         }
         Text {
             Layout.fillWidth: true
-            visible: ["en", "ru", "tr"].indexOf(page.sys.languageCode) < 0
-            text: page.sys.tr("Для этого языка нет перевода интерфейса Panacea. Пока используется английский; запросите перевод через issue на GitHub.")
+            visible: ["en", "tr"].indexOf(page.sys.languageCode) < 0
+            text: page.sys.tr("There is no Panacea interface translation for this language. English is used for now; request a translation in a GitHub issue.")
             color: page.sys.colMuted
             wrapMode: Text.WordWrap
             font { family: page.sys.fontBody; pixelSize: page.sys.fontSize - 4 }
         }
     }
 
-    // ------------------------------------------------------------- виджеты
     SetCard {
         sys: page.sys
 
-        SetLabel { sys: page.sys; text: page.sys.tr("Настольные виджеты") }
+        SetLabel { sys: page.sys; text: page.sys.tr("Desktop widgets") }
 
         SetToggle {
             sys: page.sys
-            label: page.sys.tr("Виджеты на рабочем столе")
-            sub: page.sys.tr("Карточки Nothing OS на обоях: дата, часы, погода, системный монитор и шкала прогресса. Клик по карточкам переключает режимы.")
+            label: page.sys.tr("Desktop widgets")
+            sub: page.sys.tr("Nothing OS cards on the wallpaper: date, clock, weather, system monitor, and a progress bar. Click the cards to switch modes.")
             on: page.sys.cfg.featWidgets
             onToggled: v => { page.sys.cfg.featWidgets = v; page.sys.saveCfg(); }
         }
@@ -88,10 +83,10 @@ ColumnLayout {
         SetSelect {
             visible: page.sys.cfg.featWidgets && page.detailsOpen
             sys: page.sys
-            label: page.sys.tr("Стиль часов")
+            label: page.sys.tr("Clock style")
             options: [
-                { id: "analog", text: page.sys.tr("Аналоговые Nothing") },
-                { id: "digital", text: page.sys.tr("Цифровые точечные") }
+                { id: "analog", text: page.sys.tr("Nothing Analog") },
+                { id: "digital", text: page.sys.tr("Digital Dot") }
             ]
             value: page.sys.cfg.widgetClockMode || "analog"
             onPicked: id => { page.sys.cfg.widgetClockMode = id; page.sys.saveCfg(); }
@@ -100,10 +95,10 @@ ColumnLayout {
         SetSelect {
             visible: page.sys.cfg.featWidgets && page.detailsOpen
             sys: page.sys
-            label: page.sys.tr("Информационный блок")
+            label: page.sys.tr("Info card")
             options: [
-                { id: "weather", text: page.sys.tr("Погода (ветер и влажность)") },
-                { id: "system", text: page.sys.tr("Система (RAM и SSD)") }
+                { id: "weather", text: page.sys.tr("Weather (wind & humidity)") },
+                { id: "system", text: page.sys.tr("System (RAM & SSD)") }
             ]
             value: page.sys.cfg.widgetRightMode || "weather"
             onPicked: id => { page.sys.cfg.widgetRightMode = id; page.sys.saveCfg(); }
@@ -112,10 +107,10 @@ ColumnLayout {
         SetSelect {
             visible: page.sys.cfg.featWidgets && page.detailsOpen
             sys: page.sys
-            label: page.sys.tr("Шкала прогресса")
+            label: page.sys.tr("Progress bar")
             options: [
-                { id: "day", text: page.sys.tr("Прогресс дня (24 часа)") },
-                { id: "year", text: page.sys.tr("Прогресс года (365 дней)") }
+                { id: "day", text: page.sys.tr("Day progress (24 hours)") },
+                { id: "year", text: page.sys.tr("Year progress (365 days)") }
             ]
             value: page.sys.cfg.widgetProgressMode || "day"
             onPicked: id => { page.sys.cfg.widgetProgressMode = id; page.sys.saveCfg(); }
@@ -124,8 +119,8 @@ ColumnLayout {
         SetToggle {
             visible: page.sys.cfg.featWidgets && page.detailsOpen
             sys: page.sys
-            label: page.sys.tr("Виджет Nothing Music")
-            sub: page.sys.tr("Плеер в стиле Nothing с крутящимся винилом и управлением воспроизведением прямо на рабочем столе.")
+            label: page.sys.tr("Nothing Music widget")
+            sub: page.sys.tr("A Nothing-style player with a spinning vinyl and playback controls right on the desktop.")
             on: page.sys.cfg.widgetMusic !== false
             onToggled: v => { page.sys.cfg.widgetMusic = v; page.sys.saveCfg(); }
         }
@@ -133,8 +128,8 @@ ColumnLayout {
         SetToggle {
             visible: page.sys.cfg.featWidgets && page.detailsOpen
             sys: page.sys
-            label: page.sys.tr("Виджет ScratchPad")
-            sub: page.sys.tr("Быстрые заметки прямо на рабочем столе с автоматическим сохранением.")
+            label: page.sys.tr("ScratchPad widget")
+            sub: page.sys.tr("Quick notes right on the desktop with automatic saving.")
             on: page.sys.cfg.widgetScratchpad !== false
             onToggled: v => { page.sys.cfg.widgetScratchpad = v; page.sys.saveCfg(); }
         }
@@ -143,7 +138,7 @@ ColumnLayout {
             Layout.fillWidth: true
             visible: page.sys.cfg.featWidgets
                      && page.sys.cfg.weatherKey.length === 0
-            text: page.sys.tr("Впишите ключ и город во вкладке Weather, иначе карточка погоды останется пустой.")
+            text: page.sys.tr("Enter a key and city in the Weather tab, or the weather card stays empty.")
             color: page.sys.colMuted
             wrapMode: Text.WordWrap
             font { family: page.sys.fontBody; pixelSize: page.sys.fontSize - 4 }
@@ -152,30 +147,28 @@ ColumnLayout {
 
     SetButton {
         sys: page.sys
-        text: page.detailsOpen ? page.sys.tr("Скрыть подробности") : page.sys.tr("Подробные настройки")
+        text: page.detailsOpen ? page.sys.tr("Hide details") : page.sys.tr("Detailed settings")
         onClicked: page.detailsOpen = !page.detailsOpen
     }
 
-    // ------------------------------------------------------------- оформление
     SetCard {
         sys: page.sys
         visible: page.detailsOpen
 
-        SetLabel { sys: page.sys; text: page.sys.tr("Оформление") }
+        SetLabel { sys: page.sys; text: page.sys.tr("Appearance") }
 
         SetSlider {
             sys: page.sys
-            label: page.sys.tr("Приглушённый текст")
+            label: page.sys.tr("Muted text")
             from: 0.2; to: 1.0; step: 0.05
             decimals: 2
             value: page.sys.cfg.mutedAlpha
             onMoved: v => { page.sys.cfg.mutedAlpha = v; page.sys.saveCfg(); }
         }
 
-        // Прозрачность терминала
         SetSlider {
             sys: page.sys
-            label: page.sys.tr("Прозрачность терминала")
+            label: page.sys.tr("Terminal transparency")
             from: 0.5; to: 1.0; step: 0.01
             decimals: 2
             value: page.sys.cfg.termAlpha
@@ -188,7 +181,7 @@ ColumnLayout {
 
         Text {
             Layout.fillWidth: true
-            text: page.sys.tr("1.00 — сплошной фон. Действует сразу; если нет — терминал держит свои настройки с прошлого входа, и его серверу нужен перезапуск.")
+            text: page.sys.tr("1.00 is a solid background. It applies right away; if not, the terminal is holding settings from a previous login and its server needs a restart.")
             color: page.sys.colMuted
             wrapMode: Text.WordWrap
             font { family: page.sys.fontBody; pixelSize: page.sys.fontSize - 4 }
@@ -202,29 +195,28 @@ ColumnLayout {
 
             SetButton {
                 sys: page.sys
-                text: page.sys.tr("Перезапустить терминал")
+                text: page.sys.tr("Restart the terminal")
                 onClicked: page.sys.restartTerminalServer()
             }
         }
 
         Text {
             Layout.fillWidth: true
-            text: page.sys.tr("Открытые окна терминала при этом закроются: они работают от того же сервера.")
+            text: page.sys.tr("Open terminal windows will close: they run from the same server.")
             color: page.sys.colMuted
             wrapMode: Text.WordWrap
             font { family: page.sys.fontBody; pixelSize: page.sys.fontSize - 4 }
         }
     }
 
-    // ------------------------------------------------------------- шрифты
     SetCard {
         sys: page.sys
 
-        SetLabel { sys: page.sys; text: page.sys.tr("Шрифты") }
+        SetLabel { sys: page.sys; text: page.sys.tr("Fonts") }
 
         SetSlider {
             sys: page.sys
-            label: page.sys.tr("Размер текста")
+            label: page.sys.tr("Text size")
             from: 10; to: 24; step: 1
             value: page.sys.cfg.fontSize
             suffix: "px"
@@ -233,7 +225,7 @@ ColumnLayout {
 
         SetSlider {
             sys: page.sys
-            label: page.sys.tr("Размер иконок")
+            label: page.sys.tr("Icon size")
             visible: page.detailsOpen
             from: 12; to: 28; step: 1
             value: page.sys.cfg.iconSize
@@ -243,7 +235,7 @@ ColumnLayout {
 
         SetPick {
             sys: page.sys
-            label: page.sys.tr("Шрифт текста")
+            label: page.sys.tr("Body font")
             visible: page.detailsOpen
             options: page.sys.fontList
             value: page.sys.cfg.fontBody || page.sys.cfg.fontFam
@@ -252,18 +244,16 @@ ColumnLayout {
 
         SetPick {
             sys: page.sys
-            label: page.sys.tr("Шрифт заголовков")
+            label: page.sys.tr("Display font")
             visible: page.detailsOpen
             options: page.sys.fontList
             value: page.sys.cfg.fontDisplay || page.sys.cfg.fontFam
             onPicked: id => { page.sys.cfg.fontDisplay = id; page.sys.saveCfg(); }
         }
 
-        // Значковый шрифт отдельно: подписи можно поставить любые, но иконки
-        // рисует только Nerd Font, и менять его вместе с текстовым нельзя.
         SetPick {
             sys: page.sys
-            label: page.sys.tr("Шрифт значков")
+            label: page.sys.tr("Icon font")
             visible: page.detailsOpen
             options: page.sys.fontList
             value: page.sys.cfg.fontFam
@@ -271,16 +261,15 @@ ColumnLayout {
         }
     }
 
-    // ------------------------------------------------------------- звуки
     SetCard {
         sys: page.sys
 
-        SetLabel { sys: page.sys; text: page.sys.tr("Звуки") }
+        SetLabel { sys: page.sys; text: page.sys.tr("Sounds") }
 
         SetToggle {
             sys: page.sys
-            label: page.sys.tr("Звуковые эффекты системы")
-            sub: page.sys.tr("Зарядка, подключение Bluetooth, скриншоты, голосовой ввод")
+            label: page.sys.tr("System sound effects")
+            sub: page.sys.tr("Charging, Bluetooth, screenshots, voice input")
             on: page.sys.cfg.uiSounds !== false
             onToggled: value => {
                 page.sys.cfg.uiSounds = value;
@@ -289,7 +278,6 @@ ColumnLayout {
             }
         }
 
-        // Кнопки предпрослушивания звуков
         RowLayout {
             Layout.fillWidth: true
             Layout.topMargin: 4
@@ -298,11 +286,11 @@ ColumnLayout {
 
             Repeater {
                 model: [
-                    { id: "charge",      label: page.sys.tr("Зарядка"),     icon: "󰂄" },
+                    { id: "charge",      label: page.sys.tr("Charging"),     icon: "󰂄" },
                     { id: "connect",     label: "Bluetooth",               icon: "󰂯" },
-                    { id: "disconnect",  label: page.sys.tr("Отключение"),  icon: "󰂲" },
-                    { id: "screenshot",  label: page.sys.tr("Скриншот"),    icon: "󰄀" },
-                    { id: "voice_start", label: page.sys.tr("Голос"),       icon: "󰍬" }
+                    { id: "disconnect",  label: page.sys.tr("Disconnect"),  icon: "󰂲" },
+                    { id: "screenshot",  label: page.sys.tr("Screenshot"),    icon: "󰄀" },
+                    { id: "voice_start", label: page.sys.tr("Voice"),       icon: "󰍬" }
                 ]
 
                 Rectangle {

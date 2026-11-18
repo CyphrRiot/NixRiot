@@ -85,11 +85,11 @@ max_duration_secs = 60
 model = "medium"
 
 # Language for transcription
-# Use "ru" for Russian, "en" for English, "auto" for auto-detection
-language = "auto"
+# Use "en" for English, "auto" for auto-detection
+language = "en"
 
-# Initial prompt to provide context and support bilingual English/Russian transcription
-initial_prompt = "Привет, hello."
+# Initial prompt to provide context for transcription
+initial_prompt = "Hello, hello."
 
 # Translate non-English speech to English
 translate = false

@@ -6,30 +6,12 @@ import Quickshell.Io
 import Quickshell.Hyprland
 import Quickshell.Wayland
 
-// Одна точка, через которую вся оболочка разговаривает с компоновщиком.
 //
-// Panacea выросла на Hyprland, и до этого файла shell.qml звал `Hyprland.*`
-// напрямую — а вместе с ним и OverviewView. Под niri ни один из этих
-// вызовов не работает: у Quickshell модуля для niri нет вовсе (есть только
-// Hyprland и I3), и весь IPC приходится вести самим.
 //
-// Поэтому: наружу торчит один набор свойств и функций, одинаковый для обоих
-// компоновщиков, а внутри — две ветки. Точки сцепления собраны здесь, и
-// добавить третий компоновщик значит дописать ветку сюда, а не искать
-// `Hyprland.` по шести тысячам строк.
 //
-// С niri говорим через `niri msg --json`, а не через сырой сокет $NIRI_SOCKET.
-// Кадрирование сокета — деталь реализации niri и менялось между версиями, а
-// CLI — её публичный договор: та же JSON-структура, но разбирать поток
-// вручную не нужно и обновление niri не ломает оболочку молча.
 Singleton {
     id: comp
 
-    // ------------------------------------------------------------ кто под нами
-    // По переменным окружения сеанса, а не по наличию процесса: под niri
-    // может быть запущен и hyprctl (например, вложенный Hyprland), и проверка
-    // «есть ли бинарь» отвечала бы не на тот вопрос. Переменную выставляет
-    // сам компоновщик своим потомкам, и врать ей незачем.
     readonly property bool isNiri:
         String(Quickshell.env("NIRI_SOCKET") || "").length > 0 ||
         /niri/i.test(String(Quickshell.env("XDG_CURRENT_DESKTOP") || ""))
@@ -43,27 +25,14 @@ Singleton {
     readonly property string kind:
         comp.isNiri ? "niri" : (comp.isHyprland ? "hyprland" : "unknown")
 
-    // Lua-конфиг есть только у Hyprland, и только он меняет форму диспетчеров.
     readonly property bool usingLua: comp.isHyprland && Hyprland.usingLua
 
-    // Чего у niri нет и не будет: блюра слоёв и своего шейдера насыщенности
-    // (screen_shader — расширение Hyprland). Вкладки настроек прячут эти
-    // ползунки по этим флагам, а не по имени компоновщика: так новая ветка
-    // не потребует править ещё и UI.
     readonly property bool hasBlur: comp.isHyprland
     readonly property bool hasVibrance: comp.isHyprland
-    // Прокручиваемая раскладка: у niri столы бесконечны вправо, и «обзор
-    // столов» у него свой, встроенный.
     readonly property bool hasNativeOverview: comp.isNiri
 
-    // --------------------------------------------------------------- столы
     // [{ id, idx, name, output, focused }]
     //
-    // id — то, чем стол называют снаружи: у Hyprland это его номер, у niri —
-    // idx, порядковый номер стола на своём мониторе. Именно idx, а не
-    // niri'шный внутренний id: он растёт бесконечно и в точках свёрнутого
-    // острова выглядел бы случайными числами, да и `focus-workspace` в CLI
-    // ждёт как раз индекс.
     readonly property var workspaces:
         comp.isNiri ? comp._niriWorkspaces : comp._hyprWorkspaces
 
@@ -71,29 +40,17 @@ Singleton {
         comp.isNiri ? comp._niriFocusedWs
                     : (Hyprland.focusedWorkspace ? Hyprland.focusedWorkspace.id : 1)
 
-    // ------------------------------------------------------------- монитор
-    // { name, x, y, width, height, screen } или null, пока компоновщик не
-    // ответил. Null здесь осмыслен: Quickshell в этом случае выбирает экран
-    // сам, и остров появляется хоть где-то, а не нигде.
     readonly property var focusedMonitor:
         comp.isNiri ? comp._niriMonitor : comp._hyprMonitor
 
-    // ---------------------------------------------------------------- окна
-    // [{ wayland, geo: { x, y, w, h, ws, cls } }] — ровно то, что нужно
-    // обзору столов: wayland-хэндл для живого кадра и геометрия в координатах
-    // монитора.
     readonly property var toplevels:
         comp.isNiri ? comp._niriToplevels : comp._hyprToplevels
 
-    // Активное окно и полноэкранный режим
     readonly property bool isFullscreen:
         comp.isNiri ? comp._niriFullscreen : comp._hyprFullscreen
     readonly property string activeClass:
         comp.isNiri ? comp._niriActiveClass : comp._hyprActiveClass
 
-    // ---------------------------------------------------- раскладка клавиатуры
-    // Короткая подпись раскладки. Держим строкой, а не индексом: индекс без списка раскладок
-    // ничего не значит, а показать нужно именно буквы.
     property string keyboardLayoutName: "English (US)"
     readonly property string keyboardLayout: comp.layoutLabel(comp.keyboardLayoutName)
     property string keyboardLayoutMap: ""
@@ -116,36 +73,23 @@ Singleton {
     }
 
     // ==================================================================
-    //                             действия
     // ==================================================================
 
-    // Перейти на стол. Аргумент — тот же id, что лежит в workspaces.
     function focusWorkspace(id) {
         if (comp.isNiri) {
             comp._niri(["action", "focus-workspace", String(id)]);
             return;
         }
-        // С Lua-конфигом Hyprland разбирает строку запроса как Lua-код, и
-        // привычное "workspace 2" валится синтаксической ошибкой — нужен
-        // настоящий диспетчер. На обычном конфиге работает старая форма.
         if (comp.usingLua) Hyprland.dispatch("hl.dsp.focus({ workspace = " + id + " })");
         else               Hyprland.dispatch("workspace " + id);
     }
 
-    // Запустить программу потомком компоновщика.
     //
-    // Именно им, а не потомком оболочки: процессы, порождённые Quickshell,
-    // умирают вместе с ним при перезапуске оболочки, и открытый редактор
-    // закрывался бы на ровном месте. У обоих компоновщиков для этого есть
-    // свой диспетчер.
     Process { id: pCompFallback }
 
     function exec(cmd) {
         var s = String(cmd);
         if (comp.isNiri) {
-            // Через sh -c, а не голым spawn: в биндингах и лаунчере команды
-            // приходят строкой с кавычками, пайпами и переменными, и spawn,
-            // который ждёт argv, разобрал бы их как имя файла.
             comp._niri(["action", "spawn", "--", "sh", "-c", s]);
             return;
         }
@@ -161,14 +105,12 @@ Singleton {
         }
     }
 
-    // Закрыть активное окно.
     function closeActive() {
         if (comp.isNiri) { comp._niri(["action", "close-window"]); return; }
         pHyprClose.running = false;
         pHyprClose.running = true;
     }
 
-    // Переключить раскладку клавиатуры на следующую.
     function switchLayout() {
         if (comp.isNiri) {
             comp._niri(["action", "switch-layout", "next"]);
@@ -178,7 +120,6 @@ Singleton {
         pSwitchLayout.running = true;
     }
 
-    // Завершить сеанс графического интерфейса.
     function exit() {
         if (comp.isNiri) {
             comp._niri(["action", "quit", "--skip-confirmation"]);
@@ -188,8 +129,6 @@ Singleton {
         pHyprExit.running = true;
     }
 
-    // Перечитать состояние. Под niri это ничего не стоит: поток событий и так
-    // держит картину свежей, и функция оставлена только ради единого вызова.
     function refresh() {
         if (comp.isNiri) {
             pNiriOutputs.running = false;
@@ -201,7 +140,6 @@ Singleton {
     }
 
     // ==================================================================
-    //                          ветка Hyprland
     // ==================================================================
 
     property int _hyprRevision: 0
@@ -331,21 +269,17 @@ Singleton {
     }
 
     // ==================================================================
-    //                            ветка niri
     // ==================================================================
 
-    // Сырые данные, как их отдаёт niri. Держим отдельно от общего вида,
-    // чтобы разбор события не зависел от того, как оболочка это покажет.
-    property var _niriWs: []          // список Workspace, как в IPC
-    property var _niriWins: ({})      // id окна -> Window
-    property var _niriOutputs: ({})   // имя выхода -> Output
+    property var _niriWs: []
+    property var _niriWins: ({})
+    property var _niriOutputs: ({})
     property string _niriFocusedOut: ""
     property var _niriKbNames: []
     property int _niriKbIdx: 0
     property bool _niriFullscreen: false
     property string _niriActiveClass: ""
 
-    // Разовая команда к niri, ответ которой нам не нужен.
     function _niri(args) {
         niriAction.createObject(comp, { args: args });
     }
@@ -360,7 +294,6 @@ Singleton {
         }
     }
 
-    // ------------------------------------------------------- поток событий
     Process {
         id: pNiriEvents
         command: ["niri", "msg", "--json", "event-stream"]
@@ -483,7 +416,6 @@ Singleton {
         }
     }
 
-    // ---------------------------------------------------------- запросы niri
     Process {
         id: pNiriOutputs
         command: ["niri", "msg", "--json", "outputs"]
@@ -548,7 +480,6 @@ Singleton {
         };
     }
 
-    // ------------------------------------------------------------- столы niri
     readonly property var _niriWorkspaces: {
         var out = [];
         if (!comp.isNiri) return out;
@@ -583,7 +514,6 @@ Singleton {
         return 1;
     }
 
-    // -------------------------------------------------------------- окна niri
     readonly property var _niriToplevels: {
         var out = [];
         if (!comp.isNiri) return out;

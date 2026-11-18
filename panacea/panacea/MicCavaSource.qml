@@ -4,7 +4,6 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 
-// Общий поток спектра с микрофона для визуализации голосового ввода (voxtype).
 Singleton {
     id: src
 

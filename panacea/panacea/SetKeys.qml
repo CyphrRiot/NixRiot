@@ -4,21 +4,14 @@ import QtQuick.Layouts
 import QtQuick.Controls
 import Quickshell.Io
 
-// Быстрые клавиши. Открывается отдельным окном по Super + /, а не разделом
-// настроек: это справочник, к которому обращаются посреди работы, и сайдбар
-// со списком разделов ему только мешал бы.
 //
-// Правки копятся в черновике и уезжают в Hyprland по «Применить». Сразу не
-// применяем нарочно: полупустое сочетание, записанное по ходу набора, могло
-// бы отобрать клавишу у того, чем её же и правят.
 ColumnLayout {
     id: page
 
     property var sys
 
-    // ---------------------------------------------------- черновик сочетаний
     property var bindDraft: ({})
-    property int bindRev: 0          // счётчик, чтобы привязки перечитались
+    property int bindRev: 0
     readonly property bool dirty: {
         bindRev;
         for (var id in page.bindDraft) return true;
@@ -26,7 +19,7 @@ ColumnLayout {
     }
 
     function bindCombo(id) {
-        bindRev;                     // зависимость для пересчёта
+        bindRev;
         var raw = page.bindDraft[id] !== undefined
                   ? String(page.bindDraft[id]) : String(page.sys.cfg["bind_" + id] || "");
         return page.prettyCombo(raw);
@@ -37,8 +30,6 @@ ColumnLayout {
                ? String(page.bindDraft[id]) : String(page.sys.cfg["bind_" + id] || "");
     }
 
-    // Hyprland знает клавиши по именам (slash, comma, period…), а человеку
-    // привычнее сам знак. Показываем знак, в настройках лежит имя.
     readonly property var keySigns: ({
         slash: "/", backslash: "\\", comma: ",", period: ".",
         semicolon: ";", apostrophe: "'", grave: "`", minus: "-", equal: "=",
@@ -71,11 +62,8 @@ ColumnLayout {
             touched = true;
         }
         page.discardBinds();
-        // applyBinds сам сохраняет настройки и пересобирает binds_data.lua
         if (touched) page.sys.applyBinds();
     }
-    // «Сбросить» возвращает заводские сочетания, а не просто отменяет правки:
-    // в черновик кладём всё, что сейчас отличается от значений по умолчанию.
     function resetBinds() {
         var o = {};
         var def = page.sys.defaultBinds;
@@ -86,10 +74,8 @@ ColumnLayout {
         page.bindRev++;
     }
 
-    // ------------------------------------------------------------- захват
     property string capturingKey: ""
 
-    // Что уже нажато прямо сейчас — показывается в строке по мере набора.
     property bool  mMeta:  false
     property bool  mCtrl:  false
     property bool  mAlt:   false
@@ -106,12 +92,8 @@ ColumnLayout {
         return m.join(" + ");
     }
 
-    // Пока идёт захват, Hyprland уводится в пустой submap: иначе нажатие
-    // срабатывало как уже существующее сочетание и до панели не доходило.
     Process { id: pCapture }
     function grabKeys(on) {
-        // Перезапускаем явно: присвоение command работающему Process
-        // не вступает в силу, и следующий вход в submap молча пропадал.
         pCapture.running = false;
         pCapture.command = ["sh", "-c",
             page.sys.scriptDir + "/capture.sh " + (on ? "on" : "off")];
@@ -131,14 +113,13 @@ ColumnLayout {
         captureTimeout.restart();
     }
     function stopCapture() {
-        if (page.capturingKey.length === 0) return;   // уже остановлен
+        if (page.capturingKey.length === 0) return;
         page.capturingKey = "";
         page.clearHeld();
         captureTimeout.stop();
         page.grabKeys(false);
     }
 
-    // страховка: не оставлять систему без горячих клавиш
     Timer {
         id: captureTimeout
         interval: 8000
@@ -147,7 +128,6 @@ ColumnLayout {
 
     Connections {
         target: page.sys
-        // приходит из capture.sh off; если захват уже снят — ничего не делаем
         function onCancelCaptureRequested() {
             if (page.capturingKey.length) page.stopCapture();
         }
@@ -163,7 +143,6 @@ ColumnLayout {
     function isAlt(k)   { return k === Qt.Key_Alt || k === Qt.Key_AltGr; }
     function isShift(k) { return k === Qt.Key_Shift; }
 
-    // Имя обычной клавиши в терминах Hyprland
     function keyName(k) {
         if (k >= Qt.Key_A && k <= Qt.Key_Z) return String.fromCharCode(k);
         if (k >= Qt.Key_0 && k <= Qt.Key_9) return String.fromCharCode(k);
@@ -210,10 +189,6 @@ ColumnLayout {
                 event.accepted = true;
                 return;
             }
-            // Super + / закрывает окно тем же сочетанием, что открыло. До
-            // Hyprland оно не доходит: пока окно на экране, слой держит
-            // клавиатуру эксклюзивно, и биндинг компоситора не срабатывает —
-            // поэтому ловим сочетание здесь.
             if (event.key === Qt.Key_Slash && (event.modifiers & Qt.MetaModifier)) {
                 page.sys.keysWindowOpen = false;
                 event.accepted = true;
@@ -225,21 +200,17 @@ ColumnLayout {
 
         if (event.key === Qt.Key_Escape) { page.stopCapture(); return; }
 
-        // Модификаторы отмечаем сразу — они появляются в строке по мере нажатия.
-        // Qt в событии самого модификатора его ещё не показывает, поэтому
-        // смотрим и на код клавиши, и на маску.
         page.mMeta  = page.mMeta  || page.isMeta(event.key)  || (event.modifiers & Qt.MetaModifier)    !== 0;
         page.mCtrl  = page.mCtrl  || page.isCtrl(event.key)  || (event.modifiers & Qt.ControlModifier) !== 0;
         page.mAlt   = page.mAlt   || page.isAlt(event.key)   || (event.modifiers & Qt.AltModifier)     !== 0;
         page.mShift = page.mShift || page.isShift(event.key) || (event.modifiers & Qt.ShiftModifier)   !== 0;
 
-        if (page.modKeys.indexOf(event.key) >= 0) return;   // ждём настоящую клавишу
+        if (page.modKeys.indexOf(event.key) >= 0) return;
 
         var n = page.keyName(event.key);
         if (n.length === 0) return;
         page.pendingName = n;
 
-        // сочетание собрано — запоминаем в черновик, применится по «Применить»
         var target = page.capturingKey;
         var combo = page.capturePreview;
         page.stopCapture();
@@ -257,11 +228,9 @@ ColumnLayout {
 
     Component.onCompleted: page.forceActiveFocus()
     Component.onDestruction: {
-        // не оставляем систему без горячих клавиш
         if (page.capturingKey.length) page.grabKeys(false);
     }
 
-    // ------------------------------------------------------------ строки
     component BindRow: RowLayout {
         id: brow
         property string bindId: ""
@@ -301,10 +270,9 @@ ColumnLayout {
             Text {
                 visible: !brow.manual
                 anchors.centerIn: parent
-                // во время захвата показываем то, что уже нажато
                 text: brow.capturing
                       ? (page.capturePreview.length ? page.capturePreview
-                                                    : page.sys.tr("Нажмите сочетание…"))
+                                                    : page.sys.tr("Press a shortcut…"))
                       : (brow.combo.length ? brow.combo : "—")
                 color: brow.combo.length || brow.capturing ? page.sys.colFg : page.sys.colMuted
                 font { family: page.sys.fontFam; pixelSize: page.sys.fontSize - 4; bold: true }
@@ -330,7 +298,6 @@ ColumnLayout {
                 function onBindRevChanged() { if (brow.manual) manualCombo.text = page.bindRaw(brow.bindId); }
             }
 
-            // точка-отметка: сочетание изменено, но ещё не применено
             Rectangle {
                 width: 6; height: 6; radius: 3
                 anchors.right: parent.right
@@ -376,8 +343,6 @@ ColumnLayout {
     }
 
 
-    // Заголовок группы. Не SetLabel: тот рассчитан на карточку настроек, а
-    // здесь колонки идут сплошным списком, и ему нужен отступ сверху.
     component Head: Text {
         Layout.fillWidth: true
         Layout.topMargin: 8
@@ -388,17 +353,13 @@ ColumnLayout {
         }
     }
 
-    // =========================================================== раскладка
-    // Только то, что можно переназначить: несменяемые сочетания Hyprland
-    // (столы по цифрам, фокус стрелками, мышь) отсюда убраны — в окне, где
-    // каждая строка кликается, нечего показывать строки, которые не кликаются.
     //
     Layout.fillWidth: true
     spacing: 10
 
     Text {
         Layout.fillWidth: true
-        text: page.sys.tr("Нажмите на сочетание, чтобы изменить. × убирает клавишу.")
+        text: page.sys.tr("Click a binding to change it. × removes the key.")
         color: Qt.rgba(1, 1, 1, 0.32)
         font { family: page.sys.fontBody; pixelSize: page.sys.fontSize - 4 }
     }
@@ -428,61 +389,61 @@ ColumnLayout {
 
         ColumnLayout {
             Layout.fillWidth: true
-            Layout.preferredWidth: 1     // делим поровну, а не по содержимому
+            Layout.preferredWidth: 1
             spacing: 9
 
-            Head { text: page.sys.tr("Пилюля") }
-            BindRow { bindId: "pillLauncher";  label: page.sys.tr("Лаунчер приложений") }
-            BindRow { bindId: "launchpad";     label: page.sys.tr("Launchpad (сетка приложений)") }
-            BindRow { bindId: "overview";      label: page.sys.tr("Обзор столов") }
-            BindRow { bindId: "pillControls";  label: page.sys.tr("Wi-Fi, Bluetooth, питание") }
-            BindRow { bindId: "pillSettings";  label: page.sys.tr("Эти настройки") }
-            BindRow { bindId: "pillShortcuts"; label: page.sys.tr("Быстрые клавиши") }
-            BindRow { bindId: "pillWifi";      label: page.sys.tr("Список сетей") }
-            BindRow { bindId: "pillBt";        label: page.sys.tr("Устройства Bluetooth") }
-            BindRow { bindId: "pillClip";      label: page.sys.tr("Буфер обмена") }
-            BindRow { bindId: "pillPower";     label: page.sys.tr("Меню питания") }
-            BindRow { bindId: "pillRecord";    label: page.sys.tr("Запись экрана") }
-            BindRow { bindId: "voxDictate";    label: page.sys.tr("Голос в текст"); manual: true }
-            BindRow { bindId: "pillNotif";     label: page.sys.tr("Уведомления") }
-            BindRow { bindId: "fileManager";   label: page.sys.tr("Проводник") }
-            BindRow { bindId: "pillVault";     label: page.sys.tr("Менеджер паролей") }
+            Head { text: page.sys.tr("Pill") }
+            BindRow { bindId: "pillLauncher";  label: page.sys.tr("App launcher") }
+            BindRow { bindId: "launchpad";     label: page.sys.tr("Launchpad (app grid)") }
+            BindRow { bindId: "overview";      label: page.sys.tr("Workspace overview") }
+            BindRow { bindId: "pillControls";  label: page.sys.tr("Quick settings") }
+            BindRow { bindId: "pillSettings";  label: page.sys.tr("These settings") }
+            BindRow { bindId: "pillShortcuts"; label: page.sys.tr("Shortcuts cheat sheet") }
+            BindRow { bindId: "pillWifi";      label: page.sys.tr("Network list") }
+            BindRow { bindId: "pillBt";        label: page.sys.tr("Bluetooth") }
+            BindRow { bindId: "pillClip";      label: page.sys.tr("Clipboard") }
+            BindRow { bindId: "pillPower";     label: page.sys.tr("Power menu") }
+            BindRow { bindId: "pillRecord";    label: page.sys.tr("Screen recording") }
+            BindRow { bindId: "voxDictate";    label: page.sys.tr("Voice to text"); manual: true }
+            BindRow { bindId: "pillNotif";     label: page.sys.tr("Notifications") }
+            BindRow { bindId: "fileManager";   label: page.sys.tr("File manager") }
+            BindRow { bindId: "pillVault";     label: page.sys.tr("Password manager") }
 
-            Head { text: page.sys.tr("Система") }
-            BindRow { bindId: "lockScreen"; label: page.sys.tr("Заблокировать экран") }
-            BindRow { bindId: "screenOff";  label: page.sys.tr("Погасить экран") }
-            BindRow { bindId: "exitHypr";   label: page.sys.tr("Выйти из Hyprland") }
-            BindRow { bindId: "themeSwitch"; label: page.sys.tr("Смена темы") }
+            Head { text: page.sys.tr("System") }
+            BindRow { bindId: "lockScreen"; label: page.sys.tr("Lock screen") }
+            BindRow { bindId: "screenOff";  label: page.sys.tr("Turn screen off") }
+            BindRow { bindId: "exitHypr";   label: page.sys.tr("Exit Hyprland") }
+            BindRow { bindId: "themeSwitch"; label: page.sys.tr("Switch theme") }
 
-            Head { text: page.sys.tr("Рабочие столы") }
+            Head { text: page.sys.tr("Workspaces") }
             Repeater {
                 model: 10
                 BindRow {
                     required property int index
                     bindId: "workspace" + (index + 1)
-                    label: page.sys.tr("Перейти на стол") + " " + (index + 1)
+                    label: page.sys.tr("Switch to workspace") + " " + (index + 1)
                 }
             }
-            BindRow { bindId: "workspaceNext"; label: page.sys.tr("Следующий рабочий стол"); manual: true }
-            BindRow { bindId: "workspacePrevious"; label: page.sys.tr("Предыдущий рабочий стол"); manual: true }
+            BindRow { bindId: "workspaceNext"; label: page.sys.tr("Next workspace"); manual: true }
+            BindRow { bindId: "workspacePrevious"; label: page.sys.tr("Previous workspace"); manual: true }
 
-            Head { text: page.sys.tr("Мультимедиа-клавиши") }
-            BindRow { bindId: "volumeUp"; label: page.sys.tr("Увеличить громкость"); manual: true }
-            BindRow { bindId: "volumeDown"; label: page.sys.tr("Уменьшить громкость"); manual: true }
-            BindRow { bindId: "volumeMute"; label: page.sys.tr("Выключить звук"); manual: true }
-            BindRow { bindId: "micMute"; label: page.sys.tr("Выключить микрофон"); manual: true }
-            BindRow { bindId: "brightnessUp"; label: page.sys.tr("Увеличить яркость"); manual: true }
-            BindRow { bindId: "brightnessDown"; label: page.sys.tr("Уменьшить яркость"); manual: true }
-            BindRow { bindId: "mediaNext"; label: page.sys.tr("Следующий трек"); manual: true }
-            BindRow { bindId: "mediaPrevious"; label: page.sys.tr("Предыдущий трек"); manual: true }
-            BindRow { bindId: "mediaPlay"; label: page.sys.tr("Воспроизвести"); manual: true }
-            BindRow { bindId: "mediaPause"; label: page.sys.tr("Пауза"); manual: true }
-            BindRow { bindId: "mediaNextAlt"; label: page.sys.tr("Следующий трек (запасная)"); manual: true }
-            BindRow { bindId: "mediaPreviousAlt"; label: page.sys.tr("Предыдущий трек (запасная)"); manual: true }
+            Head { text: page.sys.tr("Media keys") }
+            BindRow { bindId: "volumeUp"; label: page.sys.tr("Volume up"); manual: true }
+            BindRow { bindId: "volumeDown"; label: page.sys.tr("Volume down"); manual: true }
+            BindRow { bindId: "volumeMute"; label: page.sys.tr("Mute audio"); manual: true }
+            BindRow { bindId: "micMute"; label: page.sys.tr("Mute microphone"); manual: true }
+            BindRow { bindId: "brightnessUp"; label: page.sys.tr("Brightness up"); manual: true }
+            BindRow { bindId: "brightnessDown"; label: page.sys.tr("Brightness down"); manual: true }
+            BindRow { bindId: "mediaNext"; label: page.sys.tr("Next track"); manual: true }
+            BindRow { bindId: "mediaPrevious"; label: page.sys.tr("Previous track"); manual: true }
+            BindRow { bindId: "mediaPlay"; label: page.sys.tr("Play"); manual: true }
+            BindRow { bindId: "mediaPause"; label: page.sys.tr("Pause"); manual: true }
+            BindRow { bindId: "mediaNextAlt"; label: page.sys.tr("Next track (alternate)"); manual: true }
+            BindRow { bindId: "mediaPreviousAlt"; label: page.sys.tr("Previous track (alternate)"); manual: true }
 
-            Head { text: page.sys.tr("Крышка ноутбука") }
-            BindRow { bindId: "lidOn"; label: page.sys.tr("Закрытие крышки"); manual: true }
-            BindRow { bindId: "lidOff"; label: page.sys.tr("Открытие крышки"); manual: true }
+            Head { text: page.sys.tr("Laptop lid") }
+            BindRow { bindId: "lidOn"; label: page.sys.tr("Lid closed"); manual: true }
+            BindRow { bindId: "lidOff"; label: page.sys.tr("Lid opened"); manual: true }
         }
 
         ColumnLayout {
@@ -490,55 +451,54 @@ ColumnLayout {
             Layout.preferredWidth: 1
             spacing: 9
 
-            Head { text: page.sys.tr("Приложения") }
-            BindRow { bindId: "terminal";       label: page.sys.tr("Терминал") }
-            BindRow { bindId: "terminalAlt";    label: page.sys.tr("Терминал (запасная)") }
-            BindRow { bindId: "browser";        label: page.sys.tr("Браузер") }
-            BindRow { bindId: "fileManagerTui"; label: page.sys.tr("Файлы в терминале") }
-            BindRow { bindId: "notes";          label: page.sys.tr("Заметки") }
-            BindRow { bindId: "screenshot";     label: page.sys.tr("Скриншот области") }
+            Head { text: page.sys.tr("Applications") }
+            BindRow { bindId: "terminal";       label: page.sys.tr("Terminal") }
+            BindRow { bindId: "terminalAlt";    label: page.sys.tr("Terminal (alt)") }
+            BindRow { bindId: "browser";        label: page.sys.tr("Browser") }
+            BindRow { bindId: "fileManagerTui"; label: page.sys.tr("Files (TUI)") }
+            BindRow { bindId: "notes";          label: page.sys.tr("Notes") }
+            BindRow { bindId: "screenshot";     label: page.sys.tr("Screenshot") }
 
-            Head { text: page.sys.tr("Окна") }
-            BindRow { bindId: "closeWindow"; label: page.sys.tr("Закрыть окно") }
-            BindRow { bindId: "fullscreen";  label: page.sys.tr("Во весь экран") }
-            BindRow { bindId: "floatToggle"; label: page.sys.tr("Плавающее окно") }
-            BindRow { bindId: "floatCenter"; label: page.sys.tr("Плавающее по центру") }
-            BindRow { bindId: "toggleSplit"; label: page.sys.tr("Сменить направление сплита") }
-            BindRow { bindId: "closeMouse"; label: page.sys.tr("Закрыть средней кнопкой"); manual: true }
-            BindRow { bindId: "dragWindow"; label: page.sys.tr("Перетащить окно"); manual: true }
-            BindRow { bindId: "resizeWindowMouse"; label: page.sys.tr("Размер окна мышью"); manual: true }
+            Head { text: page.sys.tr("Windows") }
+            BindRow { bindId: "closeWindow"; label: page.sys.tr("Close window") }
+            BindRow { bindId: "fullscreen";  label: page.sys.tr("Fullscreen") }
+            BindRow { bindId: "floatToggle"; label: page.sys.tr("Floating window") }
+            BindRow { bindId: "floatCenter"; label: page.sys.tr("Float \\u0026 centre") }
+            BindRow { bindId: "toggleSplit"; label: page.sys.tr("Toggle split") }
+            BindRow { bindId: "closeMouse"; label: page.sys.tr("Close with middle click"); manual: true }
+            BindRow { bindId: "dragWindow"; label: page.sys.tr("Drag window"); manual: true }
+            BindRow { bindId: "resizeWindowMouse"; label: page.sys.tr("Resize window with mouse"); manual: true }
 
-            Head { text: page.sys.tr("Навигация по окнам") }
-            BindRow { bindId: "focusLeft"; label: page.sys.tr("Фокус влево") }
-            BindRow { bindId: "focusRight"; label: page.sys.tr("Фокус вправо") }
-            BindRow { bindId: "focusUp"; label: page.sys.tr("Фокус вверх") }
-            BindRow { bindId: "focusDown"; label: page.sys.tr("Фокус вниз") }
-            BindRow { bindId: "moveLeft"; label: page.sys.tr("Переместить окно влево") }
-            BindRow { bindId: "moveRight"; label: page.sys.tr("Переместить окно вправо") }
-            BindRow { bindId: "moveUp"; label: page.sys.tr("Переместить окно вверх") }
-            BindRow { bindId: "moveDown"; label: page.sys.tr("Переместить окно вниз") }
-            BindRow { bindId: "resizeLeft"; label: page.sys.tr("Уменьшить ширину") }
-            BindRow { bindId: "resizeRight"; label: page.sys.tr("Увеличить ширину") }
-            BindRow { bindId: "resizeUp"; label: page.sys.tr("Уменьшить высоту") }
-            BindRow { bindId: "resizeDown"; label: page.sys.tr("Увеличить высоту") }
+            Head { text: page.sys.tr("Window navigation") }
+            BindRow { bindId: "focusLeft"; label: page.sys.tr("Focus left") }
+            BindRow { bindId: "focusRight"; label: page.sys.tr("Focus right") }
+            BindRow { bindId: "focusUp"; label: page.sys.tr("Focus up") }
+            BindRow { bindId: "focusDown"; label: page.sys.tr("Focus down") }
+            BindRow { bindId: "moveLeft"; label: page.sys.tr("Move window left") }
+            BindRow { bindId: "moveRight"; label: page.sys.tr("Move window right") }
+            BindRow { bindId: "moveUp"; label: page.sys.tr("Move window up") }
+            BindRow { bindId: "moveDown"; label: page.sys.tr("Move window down") }
+            BindRow { bindId: "resizeLeft"; label: page.sys.tr("Decrease width") }
+            BindRow { bindId: "resizeRight"; label: page.sys.tr("Increase width") }
+            BindRow { bindId: "resizeUp"; label: page.sys.tr("Decrease height") }
+            BindRow { bindId: "resizeDown"; label: page.sys.tr("Increase height") }
 
-            Head { text: page.sys.tr("Рабочие столы") }
-            BindRow { bindId: "emptyWorkspace";   label: page.sys.tr("На пустой стол") }
+            Head { text: page.sys.tr("Workspaces") }
+            BindRow { bindId: "emptyWorkspace";   label: page.sys.tr("Empty workspace") }
             Repeater {
                 model: 10
                 BindRow {
                     required property int index
                     bindId: "moveWorkspace" + (index + 1)
-                    label: page.sys.tr("Перенести окно на стол") + " " + (index + 1)
+                    label: page.sys.tr("Move to workspace") + " " + (index + 1)
                 }
             }
-            BindRow { bindId: "specialWorkspace"; label: page.sys.tr("Спецстол") }
-            BindRow { bindId: "packWorkspaces";   label: page.sys.tr("Собрать столы подряд") }
+            BindRow { bindId: "specialWorkspace"; label: page.sys.tr("Scratchpad") }
+            BindRow { bindId: "packWorkspaces";   label: page.sys.tr("Pack workspaces") }
         }
     }
     }
 
-    // ------------------------------------------------------------- кнопки
     RowLayout {
         Layout.fillWidth: true
         Layout.topMargin: 2
@@ -548,13 +508,13 @@ ColumnLayout {
 
         SetButton {
             sys: page.sys
-            text: page.sys.tr("Сбросить")
+            text: page.sys.tr("Reset")
             onClicked: page.resetBinds()
         }
 
         SetButton {
             sys: page.sys
-            text: page.sys.tr("Применить")
+            text: page.sys.tr("Apply")
             primary: true
             enabled: page.dirty
             onClicked: page.applyBinds()

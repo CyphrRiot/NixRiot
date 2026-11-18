@@ -36,6 +36,7 @@
             home-manager.useUserPackages = true;
             home-manager.extraSpecialArgs = specialArgs // {
               nixriotUser = "user";
+              nixriotApps = true;
             };
             home-manager.users.user = import ./home;
           }
@@ -52,16 +53,38 @@
             home-manager.useUserPackages = true;
             home-manager.extraSpecialArgs = specialArgs // {
               nixriotUser = (import ./hosts/installed/local.nix).nixriotUser;
+              nixriotApps = true;
             };
           }
         ];
+      };
+
+      nixosConfigurations.live = lib.nixosSystem {
+        inherit system specialArgs;
+        modules = [ ./iso/configuration.nix ];
       };
 
       packages.${system} = {
         iso = nixos-generators.nixosGenerate {
           inherit system;
           format = "iso";
-          modules = [ ./iso/configuration.nix ];
+          specialArgs = {
+            inherit self inputs;
+            panaceaSrc = ./panacea;
+            installedSystem =
+              self.nixosConfigurations.installed.config.system.build.toplevel;
+          };
+          modules = [
+            ./iso/configuration.nix
+            ({ lib, ... }: {
+              image.baseName = lib.mkForce "NixRiot";
+              isoImage.storeContents = [
+                inputs.nixpkgs.outPath
+                inputs.home-manager.outPath
+                inputs.nixos-generators.outPath
+              ];
+            })
+          ];
         };
 
         installer = import ./installer { pkgs = nixpkgs.legacyPackages.${system}; };

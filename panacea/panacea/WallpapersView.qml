@@ -5,19 +5,11 @@ import QtQuick.Effects
 import Quickshell
 import Quickshell.Io
 
-// Выбор обоев во весь экран: карусель, где выбранные обои стоят по центру,
-// а соседние уходят по бокам вглубь. Раньше это был узкий список под пилюлей
-// — картинку в нём было почти не видно, а выбирают обои всё-таки глазами.
 //
-// Ход каруселью считается в дробных «позициях» (pos): каждая карточка знает
-// своё расстояние до центра и по нему сама решает, насколько уменьшиться,
-// побледнеть и сдвинуть картинку внутри рамки. Последнее и даёт параллакс:
-// рамка едет быстрее, чем её содержимое.
 Item {
     id: view
     property var sys
 
-    // дробная позиция карусели; целевая — target, между ними анимация
     property real pos: 0
     property int  target: 0
     Behavior on pos {
@@ -26,31 +18,17 @@ Item {
     onTargetChanged: view.pos = view.target
 
     property string applying: ""
-    // обои, которые сейчас разлетаются во весь экран после выбора
     property string flying: ""
-    // Миниатюра выбранных обоев: она уже декодирована, поэтому разворот
-    // начинается с картинки, а не с чёрного прямоугольника.
     property string flyingThumb: ""
-    // Листал ли человек сам. Пока нет — держим фокус на текущих обоях, даже
-    // если список успел обновиться: открывая меню, ищут именно то, что стоит.
     property bool userScrolled: false
 
-    // Вкладка: "still" — обычные обои, "live" — видео. Модель, скрипт и
-    // подписи меняются вместе с ней, карусель остаётся той же.
     property string mode: "still"
-    // Накопитель колеса: мышь и тачпад сыплют десятками мелких событий, и по
-    // одной карточке на каждое лента пролетала мимо. Шагаем, только когда
-    // накопилось на щелчок (120 единиц), и не чаще одного шага за паузу.
     property real wheelAcc: 0
     readonly property bool live: view.mode === "live"
-    // Открыто ли меню. Отдельным свойством, а не прямо sys.wallsOpen: пока
-    // выбранные обои вставляются, меню уже «закрыто» для анимаций, но окно
-    // ещё живёт — иначе оно мигало обратно перед исчезновением.
     readonly property bool open: view.sys.wallsOpen && view.applying.length === 0
 
     readonly property int cardW: Math.round(Math.min(width * 0.44, 760))
     readonly property int cardH: Math.round(cardW * 9 / 16)
-    // шаг между карточками: меньше ширины, поэтому соседи заглядывают из-за краёв
     readonly property real step: cardW * 0.62
 
     ListModel { id: walls }
@@ -88,9 +66,6 @@ Item {
         view.apply(w.wPath);
     }
 
-    // Обновление модели на месте: совпавшие строки только правим, лишние
-    // убираем с конца. Карточки не пересоздаются, поэтому картинки не мигают
-    // и не грузятся заново, а прокрутка не сбрасывается на первые обои.
     function applyRows(rows, act) {
         var first = walls.count === 0;
         for (var i = 0; i < rows.length; i++) {
@@ -98,20 +73,12 @@ Item {
             else                 walls.append(rows[i]);
         }
         while (walls.count > rows.length) walls.remove(walls.count - 1);
-        // Пока не листали — стоим на текущих обоях. Список обновляется и на
-        // открытии, и после прогрева миниатюр, и раньше фокус после этого
-        // уезжал в непонятное место.
         if (view.target >= walls.count) {
             view.target = Math.max(0, walls.count - 1);
         }
     }
 
-    // Список читает корень (sys.wallList / sys.liveList) — здесь только
-    // раскладываем его в модель. Открытие поэтому мгновенное: данные уже есть.
     //
-    // Режим можно передать явно. Это важно при переключении вкладки: внутри
-    // обработчика onModeChanged привязка live ещё отдаёт ПРЕЖНЕЕ значение, и
-    // список брался от старой вкладки — картинки на «живых» и наоборот.
     function reload(liveOverride) {
         var isLive = liveOverride === undefined ? view.live : liveOverride;
         var rows = ((isLive ? view.sys.liveList : view.sys.wallList) || []).slice();
@@ -136,14 +103,9 @@ Item {
         if (isLive) liveWarmDelay.restart();
     }
 
-    // Прогрев миниатюр для новых обоев — уже после того, как карусель
-    // открылась и что-то показала. Когда закончит, перечитываем список: те
-    // карточки, что грузились из исходников, переедут на миниатюры.
     Process {
         id: pWarm
         command: ["sh", "-c", view.sys.scriptDir + "/themes.sh warm"]
-        // Пока идёт прогрев, подхватываем уже готовые миниатюры: ждать все
-        // три сотни ffmpeg до первого обновления — это минуты.
         onRunningChanged: {
             if (running) warmPoll.restart();
             else { warmPoll.stop(); view.sys.refreshWalls(); }
@@ -162,8 +124,6 @@ Item {
         onTriggered: pWarm.running = true
     }
 
-    // Постеры для видео: кадр из середины каждого. Тоже после открытия —
-    // вытаскивать кадры из десятка файлов синхронно значит ждать.
     Process {
         id: pLiveWarm
         command: ["bash", Quickshell.env("HOME")
@@ -178,9 +138,6 @@ Item {
 
     Process {
         id: pSet
-        // Обои уже на месте: гасим кроссфейд и закрываем окно. Само
-        // «applying» держим до конца — иначе меню на кадр показывалось
-        // обратно перед закрытием.
         onRunningChanged: {
             if (running) return;
             view.sys.endThemeFade();
@@ -189,14 +146,9 @@ Item {
     }
     Timer {
         id: closeAfter
-        // ждём, пока карточка докатится до кромок: закрыть раньше — и виден
-        // скачок, окно исчезает посреди движения
         interval: 560
         onTriggered: view.sys.closeWalls()
     }
-    // На каждое открытие встаём на текущие обои: возвращаться к тому месту,
-    // где листали в прошлый раз, незачем — глазами ищут «а что стоит сейчас».
-    // Состояние применения сбрасываем только когда окна уже не видно.
     Connections {
         target: view.sys
         function onWallsOpenChanged() {
@@ -215,12 +167,9 @@ Item {
         onTriggered: { view.applying = ""; view.flying = ""; view.flyingThumb = ""; }
     }
 
-    // Применяем по полному пути, а не по имени: в подкаталогах обоев имена
-    // повторяются, и по имени можно было поставить не ту картинку.
     function apply(path) {
         view.applying = path;
         view.flying = path;
-        // снимок нынешних обоев ДО скрипта: после него на диске уже новый путь
         view.sys.startThemeFade();
         pSet.command = view.live
             ? ["bash", Quickshell.env("HOME") + "/.config/hypr/scripts/live_wallpaper.sh",
@@ -229,15 +178,11 @@ Item {
         pSet.running = true;
     }
 
-    // имя в читаемом виде: dark_mountains -> Dark mountains
     function pretty(n) {
         var s = String(n).replace(/_/g, " ");
         return s.charAt(0).toUpperCase() + s.slice(1);
     }
 
-    // Превращение острова в меню: подложка начинает ровно там, где висит
-    // пилюля (она на это время спрятана), и растягивается до кромок. Поэтому
-    // меню читается как развернувшийся остров, а не как отдельное окно.
     Rectangle {
         id: morph
         color: "#111112"
@@ -275,18 +220,13 @@ Item {
         }
     }
 
-    // клик по пустому месту закрывает — как у обзора столов
     MouseArea {
         anchors.fill: parent
         onClicked: view.sys.closeWalls()
         onWheel: wheel => {
             var d = wheel.angleDelta.y !== 0 ? wheel.angleDelta.y : -wheel.angleDelta.x;
             if (d === 0) return;
-            // при смене направления копить заново, иначе прежний остаток
-            // сначала уводит ленту в прежнюю сторону
             if ((d > 0) !== (view.wheelAcc > 0)) view.wheelAcc = 0;
-            // ограничиваем запас: резкий рывок не должен ставить в очередь
-            // десяток шагов, которые потом доигрываются сами
             view.wheelAcc = Math.max(-240, Math.min(240, view.wheelAcc + d));
             if (wheelCool.running || Math.abs(view.wheelAcc) < 120) return;
             view.wheelAcc += view.wheelAcc > 0 ? -120 : 120;
@@ -295,10 +235,8 @@ Item {
         }
     }
 
-    // пауза между шагами: карточка успевает доехать до центра
     Timer { id: wheelCool; interval: 130 }
 
-    // ------------------------------------------------------------- заголовок
     ColumnLayout {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: parent.top
@@ -309,15 +247,13 @@ Item {
 
         Text {
             Layout.alignment: Qt.AlignHCenter
-            text: view.live ? view.sys.tr("Живые обои") : view.sys.tr("Обои")
+            text: view.live ? view.sys.tr("Live wallpapers") : view.sys.tr("Wallpapers")
             color: "#f2f2f2"
             font {
                 family: view.sys.fontFam
                 pixelSize: view.sys.fontSize + 12; bold: true
             }
         }
-        // Вкладки: картинки и видео. Карусель у них одна и та же — меняется
-        // только источник строк и скрипт, который ставит фон.
         RowLayout {
             Layout.alignment: Qt.AlignHCenter
             Layout.topMargin: 12
@@ -325,8 +261,8 @@ Item {
 
             Repeater {
                 model: [
-                    { m: "still", t: view.sys.tr("Обои") },
-                    { m: "live",  t: view.sys.tr("Живые обои") }
+                    { m: "still", t: view.sys.tr("Wallpapers") },
+                    { m: "live",  t: view.sys.tr("Live wallpapers") }
                 ]
                 Rectangle {
                     id: tabBtn
@@ -371,20 +307,17 @@ Item {
             text: walls.count
                   ? (view.target + 1) + " / " + walls.count
                   : (view.live ? view.sys.liveListReady : view.sys.wallListReady)
-                    ? (view.live ? view.sys.tr("Папка живых обоев пуста")
-                                 : view.sys.tr("Обоев не найдено"))
-                    : view.sys.tr("Читаю…")
+                    ? (view.live ? view.sys.tr("The live wallpaper folder is empty")
+                                 : view.sys.tr("No wallpapers found"))
+                    : view.sys.tr("Reading…")
             color: view.sys.colMuted
             font { family: view.sys.fontFam; pixelSize: view.sys.fontSize - 2 }
         }
     }
 
-    // -------------------------------------------------------------- карусель
     Item {
         id: reel
         anchors.fill: parent
-        // Появляется вслед за подложкой, а при применении тает — на экране
-        // остаётся только карточка, разворачивающаяся во весь экран.
         opacity: view.open ? 1 : 0
         scale: view.open ? 1 : 0.94
         Behavior on opacity { NumberAnimation { duration: view.sys.animMs } }
@@ -404,7 +337,6 @@ Item {
                 required property bool   wOwn
                 required property string wPath
 
-                // расстояние до центра в карточках: дробное, пока идёт ход
                 readonly property real d: card.index - view.pos
                 readonly property real ad: Math.abs(card.d)
                 readonly property bool centered: card.ad < 0.5
@@ -413,16 +345,11 @@ Item {
                 height: view.cardH
                 x: reel.width / 2 - width / 2 + card.d * view.step
                 y: reel.height / 2 - height / 2 + 22
-                // дальние карточки мельче и бледнее — получается глубина
                 scale: Math.max(0.5, 1 - card.ad * 0.16)
                 opacity: Math.max(0, 1 - card.ad * 0.34)
                 visible: card.ad < 4.2
                 z: Math.round(100 - card.ad * 10)
 
-                // clip у прямоугольника режет по его РАМКЕ, а не по радиусу:
-                // из скруглённой карточки торчали острые углы обоев. Поэтому
-                // содержимое рисуется в невидимый слой и накрывается маской
-                // со скруглением, а рамка ложится сверху.
                 Item {
                     id: frame
                     anchors.fill: parent
@@ -437,23 +364,14 @@ Item {
 
                         Rectangle { anchors.fill: parent; color: "#000000" }
 
-                    // Параллакс: картинка шире рамки и едет в обратную сторону.
-                    // Рамка ушла на step, картинка — только на часть его, и
-                    // содержимое будто отстаёт от движения.
                     Image {
                         id: img
                         width: frame.width * 1.28
                         height: frame.height
                         x: -(frame.width * 0.14) + card.d * (view.step * 0.22)
-                        // Грузим только то, что видно рядом с центром: иначе Qt
-                        // берётся декодировать все три сотни разом, и открытие
-                        // тянется секунды.
                         source: (card.ad < 5 && card.wThumb.indexOf("/") === 0)
                                 ? "file://" + card.wThumb : ""
                         fillMode: Image.PreserveAspectCrop
-                        // Пока миниатюры нет, сюда приходит исходник на 4K и
-                        // больше. Без sourceSize Qt держал бы в памяти сотни
-                        // полноразмерных кадров — по одному на карточку.
                         sourceSize.width: Math.round(view.cardW * 1.4)
                         asynchronous: true
                         cache: true
@@ -464,13 +382,11 @@ Item {
                         }
                     }
 
-                    // пока картинка грузится — мягкая пульсация вместо пустоты
                     Rectangle {
                         id: pulse
                         anchors.fill: parent
                         visible: img.status === Image.Loading
                         color: Qt.rgba(1, 1, 1, 0.06)
-                        // именно по id: внутри анимации parent — null
                         SequentialAnimation on opacity {
                             running: pulse.visible
                             loops: Animation.Infinite
@@ -479,7 +395,6 @@ Item {
                         }
                     }
 
-                    // затемнение у боковых: центр должен читаться главным
                     Rectangle {
                         anchors.fill: parent
                         color: "#000000"
@@ -487,7 +402,6 @@ Item {
                     }
                     }
 
-                    // маска: белое там, где картинку видно
                     Item {
                         id: cardMask
                         anchors.fill: parent
@@ -507,8 +421,6 @@ Item {
                         maskSource: cardMask
                     }
 
-                    // рамка поверх маски: под ней она обрезалась бы вместе с
-                    // картинкой и выглядела тоньше на скруглениях
                     Rectangle {
                         anchors.fill: parent
                         radius: frame.r
@@ -520,8 +432,6 @@ Item {
                         Behavior on border.color { ColorAnimation { duration: 200 } }
                     }
 
-                    // подпись — только у центральной, чтобы не рябило.
-                    // Живёт вне маски: внутри неё кнопки не получали бы клики.
                     Rectangle {
                         anchors.left: parent.left
                         anchors.right: parent.right
@@ -553,7 +463,6 @@ Item {
                                 }
                             }
 
-                            // отметка «стоят сейчас»
                             Rectangle {
                                 Layout.preferredWidth: 26
                                 Layout.preferredHeight: 26
@@ -568,7 +477,6 @@ Item {
                                 }
                             }
 
-                            // корзина — только у своих обоев
                             Rectangle {
                                 Layout.preferredWidth: 26
                                 Layout.preferredHeight: 26
@@ -598,7 +506,6 @@ Item {
                 MouseArea {
                     anchors.fill: parent
                     cursorShape: Qt.PointingHandCursor
-                    // боковую сначала ставим в центр, и только потом применяем
                     onClicked: {
                         if (card.centered) view.activate();
                         else { view.userScrolled = true; view.target = card.index; }
@@ -608,8 +515,6 @@ Item {
         }
     }
 
-    // Выбранные обои разлетаются во весь экран: пока скрипт работает, карточка
-    // растёт до кромок и тает — под ней уже новый фон.
     Rectangle {
         id: burst
         visible: view.flying.length > 0
@@ -618,8 +523,6 @@ Item {
         height: view.flying.length ? view.height : view.cardH
         radius: view.flying.length ? 0 : 22
         clip: true
-        // не чёрный: пока крупная картинка декодируется, чёрная заливка
-        // мелькала на весь экран
         color: "transparent"
         opacity: view.applying.length ? 1 : 0
         z: 200
@@ -628,8 +531,6 @@ Item {
         Behavior on radius  { NumberAnimation { duration: 520; easing.type: Easing.OutQuint } }
         Behavior on opacity { NumberAnimation { duration: 420; easing.type: Easing.OutCubic } }
 
-        // снизу — готовая миниатюра, сверху та же картинка в полном размере;
-        // вторая проявляется, когда декодируется, и подмены не видно
         Image {
             id: burstThumb
             anchors.fill: parent
@@ -642,8 +543,6 @@ Item {
             anchors.fill: parent
             source: view.flying.length ? "file://" + view.flying : ""
             fillMode: Image.PreserveAspectCrop
-            // без ограничения Qt отказывается декодировать обои на десятки
-            // мегапикселей: у него лимит 256 МБ на картинку
             sourceSize.width: view.width
             asynchronous: true
             opacity: status === Image.Ready ? 1 : 0
@@ -651,7 +550,6 @@ Item {
         }
     }
 
-    // --------------------------------------------------------------- подсказки
     RowLayout {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
@@ -662,9 +560,9 @@ Item {
 
         Repeater {
             model: [
-                { k: "← →",   t: view.sys.tr("выбрать") },
-                { k: "Enter", t: view.sys.tr("поставить") },
-                { k: "Esc",   t: view.sys.tr("закрыть") }
+                { k: "← →",   t: view.sys.tr("choose") },
+                { k: "Enter", t: view.sys.tr("apply") },
+                { k: "Esc",   t: view.sys.tr("close") }
             ]
             RowLayout {
                 id: rowlayout
@@ -691,13 +589,8 @@ Item {
             }
         }
 
-        // Папка живых обоев: складывать видео надо именно туда, поэтому её
-        // открывает проводник — искать путь руками не нужно.
         Rectangle {
             visible: view.live
-            // Ширина по содержимому, но не уже прежней: она была подобрана на
-            // глаз под русскую надпись, и на другом языке текст вылезал за
-            // края плашки.
             Layout.preferredWidth: Math.max(196, liveRow.implicitWidth + 24)
             Layout.preferredHeight: 38
             radius: 13
@@ -717,7 +610,7 @@ Item {
                     font { family: view.sys.fontFam; pixelSize: 16 }
                 }
                 Text {
-                    text: view.sys.tr("Папка живых обоев")
+                    text: view.sys.tr("Live wallpaper folder")
                     color: folderMa.containsMouse ? view.sys.colFg : view.sys.colMuted
                     font { family: view.sys.fontFam; pixelSize: view.sys.fontSize - 3 }
                 }
@@ -731,12 +624,8 @@ Item {
             }
         }
 
-        // свои обои — через проводник, как и раньше
         Rectangle {
             visible: !view.live
-            // Ширина по содержимому, но не уже прежней: она была подобрана на
-            // глаз под русскую надпись, и на другом языке текст вылезал за
-            // края плашки.
             Layout.preferredWidth: Math.max(156, ownRow.implicitWidth + 24)
             Layout.preferredHeight: 38
             radius: 13
@@ -756,7 +645,7 @@ Item {
                     font { family: view.sys.fontFam; pixelSize: 16 }
                 }
                 Text {
-                    text: view.sys.tr("Свои обои")
+                    text: view.sys.tr("Your wallpaper")
                     color: addMa.containsMouse ? view.sys.colFg : view.sys.colMuted
                     font { family: view.sys.fontFam; pixelSize: view.sys.fontSize - 3 }
                 }
@@ -771,7 +660,6 @@ Item {
         }
     }
 
-    // ------------------------------------------------------ удаление своих
     Process { id: pDel }
     function removeWall(name) {
         pDel.command = ["sh", "-c",
@@ -785,8 +673,6 @@ Item {
         onTriggered: view.sys.refreshWalls()
     }
 
-    // Свои обои приходят из проводника уже путём — имя спрашивать незачем,
-    // оно берётся из имени файла.
     Process {
         id: pAdd
         onRunningChanged: if (!running) { view.sys.wallpaperPick = ""; view.sys.refreshWalls(); }

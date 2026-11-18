@@ -1,28 +1,28 @@
 #!/usr/bin/env python3
-"""Вырезает область из снимка экрана и кодирует её в PNG.
+"""Crop a region out of a screenshot and encode it as PNG.
 
-    shotcrop.py СНИМОК.ppm "X,Y WxH" ФАЙЛ.png
+    shotcrop.py SHOT.ppm "X,Y WxH" FILE.png
 
-Пишет PNG в ФАЙЛ. В буфер обмена его кладёт shot.sh, читая тот же файл:
-скриншот и так должен остаться на диске, а код возврата тогда принадлежит
-обрезке, а не wl-copy, которому пустой ввод сошёл бы за успешную работу.
+Writes the PNG to FILE. shot.sh copies it to the clipboard by reading the same file:
+the screenshot has to stay on disk anyway, and the exit code then belongs
+to the crop rather than to wl-copy, for which empty input would pass as success.
 
-Зачем вообще резать самим. Скриншот области можно снять и вторым вызовом
-grim — по замершему кадру, который уже висит на экране. Но тогда картинка
-второй раз проходит через композитор, и её качество начинает зависеть от
-того, что он делает с выводом: ночная температура (hyprsunset), цифровая
-насыщенность, дизеринг под 10 бит. Сегодня захват идёт до всего этого и
-кадр возвращается пиксель в пиксель — проверено, но это свойство чужой
-реализации, а не обещание. Здесь же режется тот самый файл, который сняли
-в начале: ни цветовых преобразований, ни округлений, ни второго кадра.
+Why we crop ourselves at all. A region screenshot could be taken with a second
+grim call against the frozen frame already on screen. But then the image
+passes through the compositor a second time, and its quality starts to depend on
+what the compositor does with the output: night temperature (hyprsunset), digital
+vibrance, dithering to 10 bits. Today capture happens before all of that and the
+frame comes back pixel for pixel, which has been verified, but that is a property
+of someone else's implementation rather than a promise. Here we crop the very file
+captured at the start, with no colour conversions, no rounding, no second frame.
 
-Отсюда и PPM вместо PNG для исходного снимка: он нужен ровно двум людям —
-слою, который показывает стоп-кадр, и этому скрипту. Оба читают его сразу,
-а не жмут и разжимают ради временного файла в памяти.
+Hence PPM rather than PNG for the source shot: exactly two readers need it,
+the layer that shows the freeze frame and this script. Both read it at once,
+rather than compressing and decompressing for a temporary file in memory.
 
-Своя возня с PNG, а не ImageMagick, потому что тянуть его ради одной
-обрезки не за чем: python3 в зависимостях и так есть, а zlib — в его
-стандартной поставке.
+Its own PNG handling rather than ImageMagick, because pulling that in for one
+crop is not worth it: python3 is already a dependency, and zlib ships in its
+standard library.
 """
 
 import json
@@ -38,21 +38,20 @@ def die(msg):
 
 
 def read_ppm(path):
-    """P6, 8 бит на канал — единственное, что печатает grim -t ppm."""
+    """P6, 8 bits per channel, the only thing grim -t ppm prints."""
     try:
         with open(path, "rb") as f:
             data = f.read()
     except OSError as e:
         die(str(e))
     if data[:2] != b"P6":
-        die("снимок не в формате P6")
+        die("shot is not in P6 format")
 
-    # Заголовок — три числа, между ними любые пробелы и комментарии с «#».
     nums = []
     i = 2
     while len(nums) < 3:
         if i >= len(data):
-            die("обрезанный заголовок")
+            die("truncated header")
         c = data[i:i + 1]
         if c.isspace():
             i += 1
@@ -66,31 +65,29 @@ def read_ppm(path):
             j += 1
         nums.append(int(data[i:j]))
         i = j
-    # После последнего числа стоит ровно один пробельный символ, дальше пиксели.
     i += 1
 
     w, h, maxval = nums
     if maxval != 255:
-        die("ожидалось 8 бит на канал, получено maxval=%d" % maxval)
+        die("expected 8 bits per channel, got maxval=%d" % maxval)
     return w, h, data[i:i + w * h * 3]
 
 
 def layout_frame(img_w):
-    """Начало раскладки и множитель «логическая точка → пиксель снимка».
+    """Origin of the layout and the "logical point to shot pixel" factor.
 
-    grim снимает все мониторы одной картинкой, а slurp отдаёт координаты в
-    логических точках раскладки, начало которой не обязано быть нулевым:
-    монитор слева от главного живёт в отрицательных x. Считаем по самому
-    снимку — его ширина и есть раскладка в пикселях.
+    grim captures all monitors in one image, while slurp reports coordinates in
+    logical layout points, whose origin need not be zero:
+    a monitor left of the main one lives at negative x. We work it out from the
+    shot itself: its width is the layout in pixels.
     """
     try:
         out = subprocess.run(["hyprctl", "monitors", "-j"],
                              capture_output=True, text=True, check=True).stdout
         mons = json.loads(out)
         if not mons:
-            raise ValueError("пустой список мониторов")
+            raise ValueError("empty monitor list")
     except Exception:
-        # Без композитора под рукой считаем раскладку одним экраном 1:1.
         return 0, 0, 1.0
 
     min_x = min(m["x"] for m in mons)
@@ -102,13 +99,13 @@ def layout_frame(img_w):
 
 
 def parse_geom(text):
-    """«X,Y WxH» — то, что печатает slurp."""
+    """"X,Y WxH", the form slurp prints."""
     try:
         pos, size = text.strip().split(" ")
         x, y = (int(v) for v in pos.split(","))
         w, h = (int(v) for v in size.split("x"))
     except ValueError:
-        die("не разобрать область: %r" % text)
+        die("cannot parse the region: %r" % text)
     return x, y, w, h
 
 
@@ -118,9 +115,8 @@ def encode_png(w, h, rows):
         return (struct.pack(">I", len(payload)) + body
                 + struct.pack(">I", zlib.crc32(body)))
 
-    # Фильтр 0 на каждой строке: жать сильнее незачем, файл живёт секунды.
     raw = b"".join(b"\x00" + r for r in rows)
-    header = struct.pack(">IIBBBBB", w, h, 8, 2, 0, 0, 0)  # 8 бит, truecolor
+    header = struct.pack(">IIBBBBB", w, h, 8, 2, 0, 0, 0)
     return (b"\x89PNG\r\n\x1a\n"
             + chunk(b"IHDR", header)
             + chunk(b"IDAT", zlib.compress(raw, 6))
@@ -129,12 +125,12 @@ def encode_png(w, h, rows):
 
 def main():
     if len(sys.argv) != 4:
-        die("использование: shotcrop.py СНИМОК.ppm \"X,Y WxH\" ФАЙЛ.png")
+        die("usage: shotcrop.py SHOT.ppm \"X,Y WxH\" FILE.png")
     src, geom, dst = sys.argv[1:4]
 
     img_w, img_h, pixels = read_ppm(src)
     if len(pixels) < img_w * img_h * 3:
-        die("снимок короче своего заголовка")
+        die("shot is shorter than its header")
 
     off_x, off_y, scale = layout_frame(img_w)
     gx, gy, gw, gh = parse_geom(geom)
@@ -144,11 +140,10 @@ def main():
     w = int(round(gw * scale))
     h = int(round(gh * scale))
 
-    # Выделение краем уходит за экран, если тянуть рамку за границу монитора.
     x0, y0 = max(0, x), max(0, y)
     x1, y1 = min(img_w, x + w), min(img_h, y + h)
     if x1 <= x0 or y1 <= y0:
-        die("выделение вне снимка")
+        die("the selection is outside the shot")
 
     rows = []
     for row in range(y0, y1):

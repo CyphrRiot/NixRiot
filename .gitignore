@@ -3,8 +3,15 @@ result-*
 .direnv
 AGENTS.md
 
+# Source JPEGs for the wallpaper set. The shipped form is panacea/hypr/wallpaper/*.webp.
+Wallpapers/
+
 # User-owned secrets. Never commit these.
 crypto.toml
 *.key
 *.pem
 .env
+
+# Python bytecode caches from Panacea's scripts.
+__pycache__/
+*.py[cod]

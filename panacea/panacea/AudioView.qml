@@ -6,7 +6,6 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Services.Pipewire
 
-// Звук: общая громкость, выбор устройства вывода и раздельный микшер приложений.
 Item {
     id: view
     property var sys
@@ -24,7 +23,6 @@ Item {
     readonly property var sink: Pipewire.defaultAudioSink
     readonly property var sinkAudio: sink ? sink.audio : null
 
-    // -------------------------------------------------- микшер приложений (pactl)
     property var streamsList: []
     property bool isUserDragging: false
 
@@ -33,7 +31,6 @@ Item {
         command: ["sh", "-c", Quickshell.env("HOME") + "/.config/panacea/scripts/audio_streams.sh list"]
         stdout: SplitParser {
             onRead: data => {
-                // Не перезаписываем список, если пользователь прямо сейчас тянет ползунок
                 if (view.isUserDragging) return;
                 try {
                     let parsed = JSON.parse(data.trim());
@@ -104,7 +101,6 @@ Item {
         RowLayout {
             Layout.fillWidth: true
             spacing: 10
-            // назад к плиткам
             Rectangle {
                 Layout.preferredWidth: 30
                 Layout.preferredHeight: 30
@@ -127,13 +123,12 @@ Item {
             }
             Text {
                 Layout.fillWidth: true
-                text: view.sys.tr("Звук")
+                text: view.sys.tr("Sound")
                 color: view.sys.colFg
                 font { family: view.sys.fontFam; pixelSize: view.sys.fontSize + 1; bold: true }
             }
         }
 
-        // ------------------------------------------------------- общая громкость
         RowLayout {
             Layout.fillWidth: true
             spacing: 12
@@ -167,7 +162,6 @@ Item {
                 function setFromX(x) {
                     if (!view.sinkAudio) return;
                     var r = Math.max(0, Math.min(1, (x - knob.width / 2) / Math.max(1, usable)));
-                    // Полностью плавная регулировка без ступенек
                     view.sinkAudio.volume = r;
                 }
 
@@ -216,11 +210,10 @@ Item {
             }
         }
 
-        // -------------------------------------------------------- устройства
         Text {
             Layout.fillWidth: true
             Layout.topMargin: 2
-            text: view.sys.tr("Устройство вывода")
+            text: view.sys.tr("Output device")
             color: view.sys.colMuted
             font {
                 family: view.sys.fontFam; pixelSize: view.sys.fontSize - 4
@@ -293,20 +286,19 @@ Item {
         Text {
             Layout.fillWidth: true
             visible: view.sys.audioSinks.length === 0
-            text: view.sys.tr("Нет устройств")
+            text: view.sys.tr("No devices")
             color: view.sys.colMuted
             horizontalAlignment: Text.AlignHCenter
             font { family: view.sys.fontFam; pixelSize: view.sys.fontSize - 2 }
         }
 
-        // ------------------------------------------ громкость приложений (микшер)
         RowLayout {
             Layout.fillWidth: true
             Layout.topMargin: 4
             spacing: 8
 
             Text {
-                text: view.sys.tr("Громкость приложений")
+                text: view.sys.tr("App volume")
                 color: view.sys.colMuted
                 font {
                     family: view.sys.fontFam; pixelSize: view.sys.fontSize - 4
@@ -368,7 +360,7 @@ Item {
 
                         Text {
                             Layout.fillWidth: true
-                            text: strCard.modelData.name || strCard.modelData.binary || view.sys.tr("Приложение")
+                            text: strCard.modelData.name || strCard.modelData.binary || view.sys.tr("Application")
                             color: view.sys.colFg
                             elide: Text.ElideRight
                             font {
@@ -402,7 +394,6 @@ Item {
                         }
                     }
 
-                    // Ползунок громкости конкретного приложения (плавный, мгновенный прыжок)
                     Item {
                         id: appSl
                         Layout.fillWidth: true
@@ -476,7 +467,7 @@ Item {
         Text {
             Layout.fillWidth: true
             visible: view.streamsList.length === 0
-            text: view.sys.tr("Нет активных приложений со звуком")
+            text: view.sys.tr("No apps playing audio")
             color: view.sys.colMuted
             horizontalAlignment: Text.AlignHCenter
             font { family: view.sys.fontFam; pixelSize: view.sys.fontSize - 2; italic: true }

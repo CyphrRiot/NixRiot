@@ -2,7 +2,13 @@
 {
   config = lib.mkIf (config.nixriot.enable && config.nixriot.desktop.enable) {
     fonts.packages = with pkgs; [
-      nerd-fonts.jetbrains-mono
+      (runCommand "jetbrains-mono-nerd-subset" { } ''
+        mkdir -p $out/share/fonts/truetype
+        src=${nerd-fonts.jetbrains-mono}/share/fonts/truetype/NerdFonts/JetBrainsMono
+        for w in Regular Bold Italic BoldItalic; do
+          cp "$src/JetBrainsMonoNerdFont-$w.ttf" $out/share/fonts/truetype/
+        done
+      '')
       material-design-icons
       noto-fonts
       noto-fonts-color-emoji
@@ -12,9 +18,13 @@
     ];
 
     environment.systemPackages = with pkgs; [
-      bibata-cursors
+      (runCommand "nixriot-cursors" { } ''
+        mkdir -p $out/share/icons
+        for t in Bibata-Modern-Ice Bibata-Modern-Classic; do
+          cp -r ${bibata-cursors}/share/icons/$t $out/share/icons/
+        done
+      '')
       kora-icon-theme
-      papirus-icon-theme
     ];
 
     environment.sessionVariables = {

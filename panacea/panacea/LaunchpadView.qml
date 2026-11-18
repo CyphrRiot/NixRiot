@@ -6,47 +6,28 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
 
-// Launchpad: все приложения сеткой на весь экран, поверх размытого рабочего
-// стола. Живёт рядом со списком по Super+A, а не вместо него: список — чтобы
-// найти по имени, сетка — чтобы найти глазами.
 //
-// Раскладка своя у каждого: порядок плиток и папки лежат в
-// ~/.local/share/panacea/launchpad.json. Не в ~/.config/panacea — тот
-// каталог обновление перезаписывает целиком, а раскладку собирают руками
-// и терять её из-за обновления нельзя. Новые приложения, которых в файле
-// ещё нет, встают в конец по алфавиту.
 //
-// Папки — как на macOS: перетащить приложение на другое — получится папка,
-// на папку — приложение ляжет в неё, из папки наружу — вернётся в сетку.
-// То же самое есть и в меню по правой кнопке, для тех, кто не любит
-// перетаскивать.
 FocusScope {
     id: view
     property var sys
-    // открыт ли слой; отдаётся оболочкой
     property bool open: false
-    // экран, который размываем под сеткой
     property var outputScreen: null
 
     focus: true
 
-    // ------------------------------------------------------------ сетка
     readonly property int cols: 7
     readonly property int rows: 5
     readonly property int perPage: cols * rows
 
-    // Клетка подстраивается под экран, но не раздувается на широких:
-    // семь колонок по 170 px — уже почти макбучная ширина.
     readonly property real gridW: Math.min(width * 0.84, cols * 170)
     readonly property real cellW: gridW / cols
     readonly property real cellH: Math.max(60, pages.height / rows)
     readonly property real iconSize: Math.min(96, Math.min(cellW, cellH) * 0.56)
 
-    // где на экране начинается сетка текущей страницы
     readonly property real gridX: pages.x + (pages.width - cols * cellW) / 2
     readonly property real gridY: pages.y + (pages.height - rows * cellH) / 2
 
-    // ------------------------------------------------------------ данные
     readonly property string dataDir:
         (Quickshell.env("XDG_DATA_HOME") || (Quickshell.env("HOME") + "/.local/share"))
         + "/panacea"
@@ -65,7 +46,6 @@ FocusScope {
         id: layoutFile
         path: view.dataDir + "/launchpad.json"
         printErrors: false
-        // раскладку можно править и руками: подхватываем без перезапуска
         watchChanges: true
         onFileChanged: reload()
         onLoaded: {
@@ -86,8 +66,6 @@ FocusScope {
         layoutFile.setText(JSON.stringify(L, null, 2) + "\n");
     }
 
-    // Тот же список недавних, что у лаунчера: запущенное отсюда наверху и
-    // в списке по Super+A.
     readonly property string recentFile:
         (Quickshell.env("XDG_CACHE_HOME") || (Quickshell.env("HOME") + "/.cache"))
         + "/panacea/recent-apps"
@@ -101,9 +79,6 @@ FocusScope {
         pRecent.running = true;
     }
 
-    // Список приложений приходит по одному, и пересобирать на каждое всю
-    // сетку из сотен иконок — это секунды подвисания. Собираем раз, когда
-    // поток затих.
     property var appMap: ({})
     Connections {
         target: DesktopEntries.applications
@@ -111,8 +86,6 @@ FocusScope {
     }
     Timer { id: appsSettle; interval: 120; onTriggered: pHidden.running = true }
 
-    // Что на этом столе не показывать (OnlyShowIn/NotShowIn/Hidden):
-    // Quickshell этих ключей не отдаёт, читаем файлы сами — см. скрипт.
     property var hiddenIds: ({})
     Process {
         id: pHidden
@@ -130,10 +103,6 @@ FocusScope {
     function rebuildApps() {
         var all = DesktopEntries.applications ? DesktopEntries.applications.values : [];
         var m = {};
-        // Одна и та же программа, поставленная дважды (из пакета и
-        // собранная в /usr/local), даёт две записи с одним именем и
-        // командой. Оставляем одну — с обратно-доменным id, если есть: это
-        // имя, под которым её ставит сам проект.
         var twin = {};
         for (var i = 0; i < all.length; i++) {
             var a = all[i];
@@ -156,9 +125,6 @@ FocusScope {
         return String(x.name || "").localeCompare(String(y.name || ""));
     }
 
-    // Плитки главной сетки по порядку: приложения и папки. Всё, чего в
-    // раскладке нет, дописывается в конец, а то, чего больше нет на машине,
-    // молча пропускается — файл при этом не трогаем, пока его не правят.
     readonly property var entries: {
         var map = view.appMap;
         var L = view.layout;
@@ -175,7 +141,7 @@ FocusScope {
             }
             if (!apps.length) return null;
             return { key: "folder:" + fid, kind: "folder", fid: fid,
-                     name: String(f.name || view.sys.tr("Папка")), apps: apps };
+                     name: String(f.name || view.sys.tr("Folder")), apps: apps };
         };
 
         var order = L.order || [];
@@ -189,7 +155,6 @@ FocusScope {
                 if (fe) out.push(fe);
             } else if (k.indexOf("app:") === 0) {
                 var aid = k.slice(4);
-                // приложение, которое лежит в папке, в сетке не дублируем
                 if (!map[aid] || used[aid] || view.inSomeFolder(aid)) continue;
                 used[aid] = true;
                 out.push({ key: k, kind: "app", id: aid, app: map[aid], name: map[aid].name });
@@ -223,7 +188,6 @@ FocusScope {
         return false;
     }
 
-    // --------------------------------------------------------------- поиск
     property string query: ""
     readonly property bool searching: query.trim().length > 0
 
@@ -252,7 +216,6 @@ FocusScope {
         return view.shown.slice(p * view.perPage, (p + 1) * view.perPage);
     }
 
-    // выделение с клавиатуры: -1 — ничего, пока не нажали стрелку
     property int sel: -1
 
     onQueryChanged: {
@@ -260,9 +223,6 @@ FocusScope {
         view.goPage(0, true);
     }
 
-    // ------------------------------------------------------- правка раскладки
-    // Каждая правка начинается со снимка того, что сейчас на экране: так в
-    // файл попадает и порядок новых приложений, а не только тронутых.
     function snapshot() {
         var src = view.layout.folders || {};
         var folders = {};
@@ -274,8 +234,6 @@ FocusScope {
         return { order: view.entries.map(e => e.key), folders: folders };
     }
 
-    // Вынуть приложение оттуда, где оно сейчас: из сетки или из папки.
-    // Опустевшая папка исчезает вместе со своей плиткой.
     function takeApp(L, id, fromFid) {
         if (fromFid && L.folders[fromFid]) {
             var a = L.folders[fromFid].apps;
@@ -297,7 +255,6 @@ FocusScope {
         if (at < 0) L.order.push(key); else L.order.splice(at, 0, key);
     }
 
-    // Переставить плитку главной сетки (приложение или папку) перед другой.
     function moveEntry(key, beforeKey) {
         if (key === beforeKey) return;
         var L = view.snapshot();
@@ -308,9 +265,6 @@ FocusScope {
         view.commit(L);
     }
 
-    // Приложение из папки — обратно в сетку.
-    // beforeKey: ключ плитки, перед которой встать; null — в самый конец;
-    // "" — рядом с папкой (или на её место, если папка опустела).
     function moveOut(id, fromFid, beforeKey) {
         var L = view.snapshot();
         var key = "app:" + id;
@@ -330,26 +284,21 @@ FocusScope {
 
     function guessFolderName(a, b) {
         var names = {
-            Development: "Разработка", Graphics: "Графика", Office: "Офис",
-            Game: "Игры", AudioVideo: "Мультимедиа", Audio: "Мультимедиа",
-            Video: "Мультимедиа", Network: "Интернет", Utility: "Утилиты",
-            System: "Система", Settings: "Настройки", Education: "Образование",
-            Science: "Наука"
+            Development: "Development", Graphics: "Graphics", Office: "Office",
+            Game: "Games", AudioVideo: "Multimedia", Audio: "Multimedia",
+            Video: "Multimedia", Network: "Network", Utility: "Utilities",
+            System: "System", Settings: "Settings", Education: "Education",
+            Science: "Science"
         };
-        // categories приходит списком Qt, а не массивом JS: длины у него
-        // может не быть, поэтому разбираем через строку
         var cats = x => (x && x.categories) ? String(x.categories).split(",") : [];
         var ca = cats(a), cb = cats(b);
-        // сперва общая категория обоих, иначе — того, на кого положили
         for (var i = 0; i < ca.length; i++)
             if (names[ca[i]] && cb.indexOf(ca[i]) >= 0) return view.sys.tr(names[ca[i]]);
         for (var j = 0; j < ca.length; j++)
             if (names[ca[j]]) return view.sys.tr(names[ca[j]]);
-        return view.sys.tr("Папка");
+        return view.sys.tr("Folder");
     }
 
-    // Положить приложение на плитку: на папку — внутрь неё, на приложение —
-    // обе плитки становятся новой папкой на месте той, на которую положили.
     function mergeInto(id, fromFid, targetKey) {
         if (targetKey === "app:" + id) return;
         var L = view.snapshot();
@@ -377,8 +326,8 @@ FocusScope {
         var key = fromFid ? "folder:" + fromFid : "app:" + id;
         var at = L.order.indexOf(key);
         view.takeApp(L, id, fromFid);
-        L.folders[nf] = { name: view.sys.tr("Новая папка"), apps: [id] };
-        if (fromFid && L.order.indexOf(key) >= 0) at++;      // папка осталась — встаём за ней
+        L.folders[nf] = { name: view.sys.tr("New folder"), apps: [id] };
+        if (fromFid && L.order.indexOf(key) >= 0) at++;
         if (at < 0 || at > L.order.length) L.order.push("folder:" + nf);
         else L.order.splice(at, 0, "folder:" + nf);
         view.commit(L);
@@ -407,7 +356,6 @@ FocusScope {
         view.commit(L);
     }
 
-    // Расформировать: приложения встают в сетку на место папки.
     function dissolveFolder(fid) {
         var L = view.snapshot();
         var f = L.folders[fid];
@@ -421,7 +369,6 @@ FocusScope {
         if (view.folderId === fid) view.closeFolder();
     }
 
-    // --------------------------------------------------------------- папка
     property string folderId: ""
     readonly property var folder: {
         if (!folderId.length) return null;
@@ -443,12 +390,8 @@ FocusScope {
         view.renaming = false;
         search.forceActiveFocus();
     }
-    // если папку расформировали или она опустела — закрываем
-    // через callLater: закрытие меняет folderId прямо во время пересчёта
-    // folder, и Qt ругался на петлю привязок
     onFolderChanged: if (folderId.length && !folder && !dragging) Qt.callLater(view.closeFolder)
 
-    // ------------------------------------------------------------- запуск
     function launchApp(app) {
         if (!app) return;
         view.rememberApp(String(app.id));
@@ -461,7 +404,6 @@ FocusScope {
         else view.launchApp(e.app);
     }
 
-    // --------------------------------------------------------- клавиатура
     function moveSel(dx, dy) {
         if (view.folder) {
             var n = view.folder.apps.length, c = folderGrid.fcols;
@@ -479,7 +421,6 @@ FocusScope {
         var local = view.sel - p * view.perPage;
         var col = local % view.cols, row = Math.floor(local / view.cols);
         if (dx !== 0) {
-            // вправо с последней колонки — на следующую страницу, как на macOS
             col += dx;
             if (col >= view.cols) { if (p + 1 < view.pageCount) { p++; col = 0; } else col = view.cols - 1; }
             if (col < 0) { if (p > 0) { p--; col = view.cols - 1; } else col = 0; }
@@ -509,22 +450,13 @@ FocusScope {
         view.goPage(pages.currentIndex + d);
     }
 
-    // ------------------------------------------------------------ пейджер
-    // Своя лента вместо ListView. У того прокрутка тачпадом боролась с
-    // «прилипанием» к странице: чтобы перелистнуть, приходилось очень сильно
-    // свайпать. Теперь страница едет за пальцами, а по отпусканию доводится
-    // до ближайшей — с учётом скорости, так что хватает короткого жеста.
-    property real pagePos: 0            // дробная: 1.3 — между 2-й и 3-й
-    property bool tracking: false       // пальцы на тачпаде / мышь тянет
+    property real pagePos: 0
+    property bool tracking: false
     property bool pageAnimOn: true
     Behavior on pagePos {
         enabled: !view.tracking && view.pageAnimOn && !view.sys.noMotion
         NumberAnimation { duration: 460; easing.type: Easing.OutQuart }
     }
-    // То, что видно на экране, мягко догоняет pagePos каждый кадр. События
-    // тачпада приходят неровными порциями, и лента, привязанная к ним
-    // напрямую, шла рывками; с догонялкой движение ровное, а задержка —
-    // пара кадров, на глаз незаметная.
     property real shownPos: 0
     FrameAnimation {
         running: Math.abs(view.shownPos - view.pagePos) > 0.0004
@@ -542,7 +474,6 @@ FocusScope {
         if (instant) view.shownPos = p;
         view.pageAnimOn = true;
     }
-    // сдвиг ленты на d страниц: за краем — с сопротивлением, как резинка
     function dragBy(d) {
         var max = view.pageCount - 1;
         var np = view.pagePos + d;
@@ -550,7 +481,7 @@ FocusScope {
         view.pagePos = Math.max(-0.35, Math.min(max + 0.35, np));
     }
     property real trackStart: 0
-    property real trackVel: 0           // страниц в секунду
+    property real trackVel: 0
     property double trackT: 0
     function beginTrack() {
         if (view.tracking) return;
@@ -570,22 +501,19 @@ FocusScope {
         view.tracking = false;
         var moved = view.pagePos - view.trackStart;
         var target = view.trackStart;
-        // хватает короткого быстрого рывка или сдвига на восьмую часть экрана
         if (Math.abs(view.trackVel) > 0.9) target += view.trackVel > 0 ? 1 : -1;
         else if (Math.abs(moved) > 0.12) target += moved > 0 ? 1 : -1;
         view.goPage(target);
     }
 
-    // ------------------------------------------------------ перетаскивание
     property bool dragging: false
-    property var dragEntry: null       // что тащим
-    property string dragFrom: ""       // fid папки, из которой тащим, или ""
+    property var dragEntry: null
+    property string dragFrom: ""
     property point dragPos: Qt.point(0, 0)
-    // куда положим: слияние с плиткой или вставка перед плиткой
     property string mergeKey: ""
     property bool mergeArmed: false
-    property int insertSlot: -1        // глобальный индекс в сетке, -1 — нет
-    property int folderInsert: -1      // индекс внутри открытой папки
+    property int insertSlot: -1
+    property int folderInsert: -1
 
     readonly property bool canEdit: !searching
 
@@ -606,7 +534,6 @@ FocusScope {
 
     function dragMove(p) {
         view.dragPos = p;
-        // Из папки наружу: папка прячется, дальше тащим уже по сетке.
         if (view.folder && view.dragFrom !== "" && !view.folderHidden && !view.overFolderPanel(p))
             view.folderHidden = true;
 
@@ -617,7 +544,6 @@ FocusScope {
         }
         view.folderInsert = -1;
 
-        // у края — листаем страницу
         if (p.x < view.gridX - 8) edgeFlip.arm(-1);
         else if (p.x > view.gridX + view.cols * view.cellW + 8) edgeFlip.arm(1);
         else edgeFlip.disarm();
@@ -632,7 +558,6 @@ FocusScope {
         var col = Math.floor(cx), row = Math.floor(cy);
         var idx = pages.currentIndex * view.perPage + row * view.cols + col;
         var target = view.shown[idx];
-        // центр иконки — зона слияния, края клетки — вставка
         var fx = cx - col - 0.5, fy = (cy - row) - view.iconCenterFrac;
         var near = Math.hypot(fx * view.cellW, fy * view.cellH) < view.iconSize * 0.38;
         var canMerge = target && view.dragEntry.kind === "app"
@@ -647,7 +572,6 @@ FocusScope {
         }
     }
 
-    // доля высоты клетки, где центр иконки
     readonly property real iconCenterFrac: (cellH * 0.1 + iconSize / 2) / cellH
 
     function setMerge(k) {
@@ -688,7 +612,6 @@ FocusScope {
             if (from !== "") view.moveOut(e.id, from, bk);
             else view.moveEntry(e.key, bk);
         } else if (from !== "") {
-            // бросили мимо сетки — приложение всё равно выходит из папки
             view.moveOut(e.id, from, "");
         }
         view.cancelDrag();
@@ -708,16 +631,9 @@ FocusScope {
         if (wasHidden) view.closeFolder();
     }
 
-    // ------------------------------------------------- открытие и закрытие
-    // Снимок экрана для размытия держим одним постоянным захватом и только
-    // просим новый кадр: пересоздание захвата на каждом открытии стоило
-    // около трети секунды. Сетку показываем через пару кадров — композитор
-    // к этому времени уже снял экран, пока слой был прозрачным, и сама
-    // сетка в размытие не попадает.
     property bool revealed: false
 
     onOpenChanged: if (open) view.opened(); else { view.revealed = false; revealTimer.stop(); }
-    // слой создаётся уже открытым — onOpenChanged при этом не приходит
     Component.onCompleted: { pHidden.running = true; if (open) view.opened(); }
 
     function opened() {
@@ -734,8 +650,6 @@ FocusScope {
     }
     Timer { id: revealTimer; interval: 40; onTriggered: { view.revealed = true; introAnim.restart(); } }
 
-    // Появление: плитки проявляются волной от левого верхнего угла. Одна
-    // анимация на всех — каждая плитка считает свою задержку сама.
     property real introT: 1
     NumberAnimation {
         id: introAnim
@@ -744,17 +658,9 @@ FocusScope {
         duration: view.sys.noMotion ? 0 : 560
     }
 
-    // ------------------------------------------------------- иконки
-    // Поиск иконки в теме с проверкой (iconPath(..., true)) синхронный и
-    // медленный — до десятков миллисекунд на штуку, особенно на тех, которых
-    // в теме нет. На сотне с лишним плиток открытие вставало на секунды.
-    // Поэтому ищем заранее, по паре за раз, пока сетка закрыта, и кладём в
-    // кэш; плитка без найденной иконки до тех пор показывает букву.
-    property var iconCache: ({})        // id -> путь, "" — иконки нет
+    property var iconCache: ({})
     property var iconQueue: []
 
-    // Очередь — в порядке сетки, чтобы первая страница нашлась первой.
-    // Через callLater: при первой сборке список плиток ещё не посчитан.
     onAppMapChanged: Qt.callLater(view.queueIcons)
     function queueIcons() {
         var q = [], seen = {};
@@ -797,15 +703,12 @@ FocusScope {
         NumberAnimation { duration: view.sys.noMotion ? 0 : 220; easing.type: Easing.OutCubic }
     }
 
-    // ------------------------------------------------------------------ фон
     ScreencopyView {
         id: shot
         anchors.fill: parent
         captureSource: view.outputScreen
         live: false
         paintCursor: false
-        // сам снимок не рисуем: под размытием он проступал резким, пока
-        // слой проявляется
         visible: false
         layer.enabled: true
     }
@@ -827,7 +730,6 @@ FocusScope {
         opacity: view.fade * (shot.hasContent ? 0.32 : 0.62)
     }
 
-    // клик по пустому месту закрывает — сначала папку, потом весь слой
     MouseArea {
         anchors.fill: parent
         acceptedButtons: Qt.LeftButton | Qt.RightButton
@@ -848,8 +750,6 @@ FocusScope {
             var px = w.pixelDelta, ad = w.angleDelta;
             var horiz = Math.abs(ad.x) + Math.abs(px.x) > Math.abs(ad.y) + Math.abs(px.y);
             if (px.x !== 0 || px.y !== 0) {
-                // Тачпад: страница идёт за пальцами. Инерцию после отрыва
-                // пальцев не берём — доводку делает settle().
                 if (w.phase === Qt.ScrollMomentum) return;
                 var d = -(horiz ? px.x : px.y) / Math.max(1, pages.width) * 1.6;
                 view.beginTrack();
@@ -858,7 +758,6 @@ FocusScope {
                 if (w.phase === Qt.ScrollEnd) { settleTimer.stop(); view.settle(); }
                 return;
             }
-            // колесо мыши: щелчок — страница
             var now = Date.now();
             acc += -(horiz ? ad.x : ad.y);
             if (Math.abs(acc) >= 60 && now - last > 200) {
@@ -868,22 +767,17 @@ FocusScope {
             }
         }
     }
-    // конец жеста без явного ScrollEnd: пальцы замерли
-    // (обычно приходит ScrollEnd, и таймер не нужен; это запасной путь)
     Timer { id: settleTimer; interval: 70; onTriggered: view.settle() }
 
-    // ----------------------------------------------------------- содержимое
     Item {
         id: content
         anchors.fill: parent
-        // под открытой папкой сетка почти гаснет, как на macOS
         property real dim: (view.folder && !view.folderHidden) ? 0.06 : 1
         Behavior on dim { NumberAnimation { duration: view.sys.animFast } }
         opacity: view.fade * dim
         scale: 1.06 - 0.06 * view.fade
         visible: opacity > 0.01
 
-        // поиск
         Rectangle {
             id: searchBox
             anchors.horizontalCenter: parent.horizontalCenter
@@ -922,7 +816,7 @@ FocusScope {
                 Text {
                     anchors.fill: parent
                     visible: !search.text.length
-                    text: view.sys.tr("Поиск")
+                    text: view.sys.tr("Search")
                     color: Qt.rgba(1, 1, 1, 0.5)
                     font: search.font
                     verticalAlignment: Text.AlignVCenter
@@ -948,7 +842,6 @@ FocusScope {
             }
         }
 
-        // страницы
         Item {
             id: pages
             anchors.top: searchBox.bottom
@@ -959,14 +852,11 @@ FocusScope {
             anchors.right: parent.right
             property int currentIndex: 0
 
-            // колесо и тачпад листают по странице, а не прокручивают ленту
             WheelHandler {
                 acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
                 onWheel: (ev) => wheelPager.feed(ev)
             }
 
-            // Мышью страницы тоже тянутся — за пустое место между плитками.
-            // Клик без движения по-прежнему закрывает слой.
             MouseArea {
                 anchors.fill: parent
                 z: -1
@@ -999,9 +889,7 @@ FocusScope {
                         x: page.index * pages.width
                         width: pages.width
                         height: pages.height
-                        // рисуем только видимые и соседние страницы
                         visible: Math.abs(page.index - view.shownPos) < 1.5
-                        // уходящая страница чуть гаснет — глубина без лишнего шума
                         opacity: 1 - Math.min(1, Math.abs(page.index - view.shownPos)) * 0.45
                         readonly property var items: { view.shown; return view.pageSlice(page.index); }
 
@@ -1023,7 +911,6 @@ FocusScope {
             }
         }
 
-        // метка вставки при перетаскивании
         Rectangle {
             readonly property int slot: view.insertSlot - pages.currentIndex * view.perPage
             visible: view.dragging && !view.folder && view.insertSlot >= 0 && slot >= 0 && slot <= view.perPage
@@ -1038,7 +925,6 @@ FocusScope {
             color: view.sys.colOn
         }
 
-        // точки страниц
         Row {
             id: dots
             anchors.horizontalCenter: parent.horizontalCenter
@@ -1050,7 +936,6 @@ FocusScope {
                 model: view.pageCount
                 delegate: Rectangle {
                     required property int index
-                    // текущая точка вытягивается в пилюлю и плавно едет за жестом
                     readonly property real near: Math.max(0, 1 - Math.abs(index - view.shownPos))
                     width: 8 + 14 * near; height: 8; radius: 4
                     color: Qt.rgba(1, 1, 1, 0.35 + 0.6 * near)
@@ -1067,13 +952,12 @@ FocusScope {
         Text {
             anchors.centerIn: parent
             visible: view.searching && view.results.length === 0
-            text: view.sys.tr("Ничего не найдено")
+            text: view.sys.tr("Nothing found")
             color: Qt.rgba(1, 1, 1, 0.6)
             font { family: view.sys.fontFam; pixelSize: 15 }
         }
     }
 
-    // --------------------------------------------------------- открытая папка
     Item {
         id: folderLayer
         anchors.fill: parent
@@ -1081,7 +965,6 @@ FocusScope {
         opacity: (view.folder && !view.folderHidden) ? view.fade : 0
         Behavior on opacity { NumberAnimation { duration: view.sys.animFast } }
 
-        // под папкой сетку приглушаем
         Rectangle {
             anchors.fill: parent
             color: "#000000"
@@ -1106,7 +989,6 @@ FocusScope {
             scale: view.folder ? 1 : 0.85
             Behavior on scale { NumberAnimation { duration: view.sys.animMs; easing.type: Easing.OutBack; easing.overshoot: 0.8 } }
 
-            // клики внутри панели не должны закрывать папку
             MouseArea { anchors.fill: parent; acceptedButtons: Qt.LeftButton | Qt.RightButton }
 
             TextInput {
@@ -1142,7 +1024,6 @@ FocusScope {
                     search.forceActiveFocus();
                 }
 
-                // по имени папки щёлкают, чтобы переименовать
                 MouseArea {
                     anchors.fill: parent
                     enabled: !view.renaming
@@ -1212,13 +1093,12 @@ FocusScope {
         }
     }
 
-    // ---------------------------------------------------- плитка (иконка)
     component Tile: Item {
         id: tile
         property var v: null
         property var entry
         property int globalIndex: -1
-        property string inFolder: ""       // fid, если плитка внутри папки
+        property string inFolder: ""
         property bool selected: false
 
         readonly property bool isFolder: entry && entry.kind === "folder"
@@ -1228,7 +1108,6 @@ FocusScope {
 
         width: tile.v.cellW
         height: tile.v.cellH
-        // своя доля общей анимации появления: чем дальше от угла, тем позже
         readonly property real intro: {
             if (tile.inFolder.length || tile.globalIndex < 0) return 1;
             var i = tile.globalIndex % tile.v.perPage;
@@ -1261,7 +1140,6 @@ FocusScope {
                  : (tileMa.pressed && !tile.v.dragging ? 0.92 : 1)
             Behavior on scale { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
 
-            // приложение
             AppIcon {
                 v: tile.v
                 anchors.fill: parent
@@ -1269,7 +1147,6 @@ FocusScope {
                 app: tile.isFolder ? null : (tile.entry ? tile.entry.app : null)
             }
 
-            // папка: подложка и до девяти иконок внутри, как на macOS
             Rectangle {
                 anchors.fill: parent
                 visible: tile.isFolder
@@ -1294,7 +1171,6 @@ FocusScope {
                     }
                 }
             }
-            // приложение под курсором — подсвечиваем, что станет папкой
             Rectangle {
                 anchors.fill: parent
                 anchors.margins: -6
@@ -1330,7 +1206,6 @@ FocusScope {
             hoverEnabled: true
             cursorShape: tile.v.dragging ? Qt.ClosedHandCursor : Qt.PointingHandCursor
             acceptedButtons: Qt.LeftButton | Qt.RightButton
-            // начатое перетаскивание у нас не отбирает ни ListView, ни Flickable
             preventStealing: tile.v.canEdit
             property point pressAt
             property bool dragOn: false
@@ -1362,7 +1237,6 @@ FocusScope {
         }
     }
 
-    // иконка приложения из темы, с буквой на случай, если её нет
     component AppIcon: Item {
         id: ai
         property var v: null
@@ -1395,7 +1269,6 @@ FocusScope {
         }
     }
 
-    // --------------------------------------------- то, что тащим под курсором
     Item {
         visible: view.dragging
         x: view.dragPos.x - width / 2
@@ -1419,7 +1292,6 @@ FocusScope {
         }
     }
 
-    // ------------------------------------------------- меню по правой кнопке
     Rectangle {
         id: menu
         property var entry: null
@@ -1445,20 +1317,20 @@ FocusScope {
             var it = [];
             var T = view.sys.tr;
             if (e.kind === "folder") {
-                it.push({ label: T("Открыть"), act: () => view.openFolder(e.fid, false) });
-                it.push({ label: T("Переименовать"), act: () => view.openFolder(e.fid, true) });
-                it.push({ label: T("Расформировать папку"), act: () => view.dissolveFolder(e.fid) });
+                it.push({ label: T("Open"), act: () => view.openFolder(e.fid, false) });
+                it.push({ label: T("Rename"), act: () => view.openFolder(e.fid, true) });
+                it.push({ label: T("Dissolve folder"), act: () => view.dissolveFolder(e.fid) });
             } else {
-                it.push({ label: T("Открыть"), act: () => view.launchApp(e.app) });
+                it.push({ label: T("Open"), act: () => view.launchApp(e.app) });
                 if (view.canEdit) {
                     if (fromFid !== "")
-                        it.push({ label: T("Убрать из папки"), act: () => view.moveOut(e.id, fromFid, "") });
-                    it.push({ label: T("Новая папка с этим приложением"),
+                        it.push({ label: T("Remove from folder"), act: () => view.moveOut(e.id, fromFid, "") });
+                    it.push({ label: T("New folder with this app"),
                               act: () => view.newFolderWith(e.id, fromFid) });
                     var fl = view.entries.filter(x => x.kind === "folder" && x.fid !== fromFid);
                     for (var i = 0; i < fl.length; i++) {
                         (function (f) {
-                            it.push({ label: T("В папку") + " «" + f.name + "»",
+                            it.push({ label: T("Into folder") + " " + f.name,
                                       act: () => view.mergeInto(e.id, fromFid, f.key) });
                         })(fl[i]);
                     }

@@ -1,4 +1,22 @@
+<div align="center">
+
 # NixRiot
+
+## One flake. Complete NixOS desktop. Reproducible by construction.
+
+![Status](https://img.shields.io/badge/status-pre--release-9ECE6A?labelColor=1a1b26)
+![Platform](https://img.shields.io/badge/platform-NixOS-9ECE6A?logo=nixos&logoColor=white&labelColor=1a1b26)
+![Shell](https://img.shields.io/badge/shell-Hyprland-9ECE6A?logo=hyprland&logoColor=9ECE6A&labelColor=1a1b26)
+![UI](https://img.shields.io/badge/UI-Quickshell-9ECE6A?labelColor=1a1b26)
+![Last Commit](https://img.shields.io/github/last-commit/CyphrRiot/NixRiot?color=8BB85A&labelColor=1a1b26)
+![Code Size](https://img.shields.io/github/languages/code-size/CyphrRiot/NixRiot?color=9ECE6A&labelColor=1a1b26)
+
+![Code](https://img.shields.io/badge/human-coded-9ECE6A?logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmZmZmYiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0ibHVjaWRlIGx1Y2lkZS1wZXJzb24tc3RhbmRpbmctaWNvbiBsdWNpZGUtcGVyc29uLXN0YW5kaW5nIj48Y2lyY2xlIGN4PSIxMiIgY3k9IjUiIHI9IjEiLz48cGF0aCBkPSJtOSAyMCAzLTYgMyA2Ii8+PHBhdGggZD0ibTYgOCA2IDIgNi0yIi8+PHBhdGggZD0iTTEyIDEwdjQiLz48L3N2Zz4=&logoColor=9ECE6A&labelColor=1a1b26)
+![Language](https://img.shields.io/badge/language-Nix-9ECE6A?logo=nixos&logoColor=cyan&labelColor=1a1b26)
+![Language](https://img.shields.io/badge/language-QML-9ECE6A?logo=qt&logoColor=41CD52&labelColor=1a1b26)
+[![Donate BTC](https://img.shields.io/badge/Donate-Bitcoin-F7931A?logo=bitcoin&logoColor=white&labelColor=1a1b26)](#donations)
+
+</div>
 
 A reproducible NixOS desktop with the [Panacea](https://github.com/EnsixD/Panacea)
 shell and the parts of [OpenRiot](https://github.com/CyphrRiot/OpenRiot) that
@@ -18,6 +36,7 @@ roadmap. This file is the manual.
 - [What you get](#what-you-get)
 - [Download](#download)
 - [Requirements](#requirements)
+- [Supported hardware](#supported-hardware)
 - [Install](#install)
 - [First boot](#first-boot)
 - [Keybindings](#keybindings)
@@ -31,6 +50,7 @@ roadmap. This file is the manual.
 - [Updating](#updating)
 - [Advanced: build your own image](#advanced-build-your-own-image)
 - [Troubleshooting](#troubleshooting)
+- [Donations](#donations)
 - [Licence and credits](#licence-and-credits)
 
 ---
@@ -49,13 +69,15 @@ NixRiot ships no wallet files, no secrets, and no `crypto.toml`. You own those.
 - **Hyprland** with the Panacea pill (Quickshell): launcher, launchpad,
   overview, clipboard, notifications, settings, power menu, lock screen.
 - **fish** with starship, plus the OpenRiot aliases and functions.
-- **Helix**, Zed, Kate, and Crush.
-- **Firefox**, LibreOffice, Thunderbird, zathura, Thunar.
+- **Helix** (the default editor), Crush, and a plain text editor.
+- **Firefox**, LibreOffice, zathura, Thunar.
 - **Media**: mpv, mpd with rmpc, yt-dlp, optional Transmission.
-- **Crypto**: Monero GUI, Bitcoin Core, WireGuard.
+- **Crypto** (opt-in): Monero GUI, Bitcoin Core, WireGuard.
+- **Mullvad VPN**: installed and enabled by default, with the GUI in the app
+  launcher and the Panacea VPN panel.
 - **Security**: firewall, SSH hardening, sysctl hardening, MAC randomization,
   `restic` and `rclone` for backups.
-- The **NixRiot wallpaper set** (13 WebP images).
+- The **NixRiot wallpaper set** (26 WebP images, `00.webp` through `25.webp`).
 - Full-disk encryption (LUKS2) on the root volume, chosen during install.
 
 ---
@@ -64,7 +86,7 @@ NixRiot ships no wallet files, no secrets, and no `crypto.toml`. You own those.
 
 Grab the latest image and write it to a USB stick. No build tools required.
 
-- **Download page:** https://github.com/CyphrRiot/NixRiot/releases/latest
+- **Download page:** [github.com/CyphrRiot/NixRiot/releases/latest](https://github.com/CyphrRiot/NixRiot/releases/latest)
 - **Image:** `nixriot-x86_64.iso` (about 2.5 GB)
 
 ```sh
@@ -86,20 +108,64 @@ sudo dd if=nixriot-x86_64.iso of=/dev/sdX bs=4M status=progress oflag=sync
 ## Requirements
 
 - x86_64 machine that boots modern UEFI.
-- A USB stick of at least 6 GB.
+- A USB stick of at least 4 GB.
 - A target disk that can be erased.
 - Network during install, unless you are using an offline image.
 
-You do not need to know Nix to install NixRiot. You need Nix, with flakes
-enabled and about 40 GB free, only if you build the image yourself.
+Installing from the ISO does not require Nix on your machine. The ISO carries
+everything. You only need Nix, with flakes enabled and about 40 GB free, if you
+build the image yourself.
+
+---
+
+## Supported hardware
+
+NixRiot targets x86_64 machines with an Intel or AMD GPU. Hyprland and
+Quickshell need working OpenGL under Mesa, and Mesa is what the open-source
+Intel and AMD drivers use.
+
+- **GPU:** Intel (i915 or Xe) and AMD (amdgpu), integrated or discrete. NVIDIA
+  needs proprietary drivers and is not supported or tested.
+- **CPU:** Intel and AMD x86_64. ARM is not built.
+- **Drivers and firmware:** `hardware.graphics` is enabled, and the live image
+  turns on all hardware, so GPU, Wi-Fi and Bluetooth firmware load on their own.
+- **Boot:** UEFI and legacy BIOS, both via systemd-boot and its own installer.
+  Secure Boot must be off (see Download).
+- **Out of scope:** NVIDIA, ARM, and Secure Boot. Fingerprint readers are off by
+  default but supported through `fprintd`; see the note below.
+- **Installed systems:** regenerate the hardware config for the machine with
+  `nixos-generate-config` before installing, so the disk and firmware modules
+  are correct.
+
+### Fingerprint reader
+
+Off by default. To try it, enable the daemon **without** touching PAM first:
+
+```nix
+nixriot.fingerprint.enable = true;
+```
+
+Rebuild, then run `fprintd-enroll` and `fprintd-verify` as your user. Only if
+those succeed, add fingerprint auth to login, sudo and polkit:
+
+```nix
+nixriot.fingerprint.enable = true;
+nixriot.fingerprint.pam = true;
+```
+
+If the reader needs Touch OEM Drivers, set `nixriot.fingerprint.tod.enable =
+true` and point `nixriot.fingerprint.tod.driver` at the matching package (for
+example `pkgs.libfprint-2-tod1-goodix`). Support comes from `libfprint`; a
+reader it does not know cannot be made to work.
 
 ---
 
 ## Install
 
 1. Boot the USB stick (disable Secure Boot first if the firmware refuses it).
-2. You land in the NixOS live session with the NixRiot repo at `/etc/nixriot`.
-3. Open a terminal and run:
+2. It boots straight into the NixRiot desktop and opens the installer in a
+   terminal by itself. The repo for the install lives at `/etc/nixriot`.
+3. If it is not already running, open a terminal (`foot`) and run:
 
    ```sh
    sudo nixriot-install
@@ -111,11 +177,14 @@ enabled and about 40 GB free, only if you build the image yourself.
 6. Enter the LUKS passphrase when `cryptsetup` prompts. You will type this at
    every boot, so pick something you can remember and write it down somewhere
    safe.
-7. It partitions (512M ESP labeled `BOOT`, the rest as an encrypted `nixos`
+7. Choose a username for the desktop user. Use lowercase letters, digits,
+   underscore, or hyphen, and do not start with a digit or underscore. This is
+   the name you log in with; there is no default.
+8. It partitions (512M ESP labeled `BOOT`, the rest as an encrypted `nixos`
    volume), formats, mounts, and runs `nixos-install`.
-8. When `nixos-install` finishes, the installer asks you to set a password for
-   the `riot` user. Choose one; there is no default.
-9. Reboot and remove the USB stick.
+9. When `nixos-install` finishes, the installer asks you to set a password for
+   the user you chose. Choose one; there is no default password.
+10. Reboot and remove the USB stick.
 
 The install builds the target system from the flake, so it needs network the
 first time. Offline installs are on the roadmap, not shipped yet.
@@ -124,11 +193,11 @@ first time. Offline installs are on the roadmap, not shipped yet.
 
 ## First boot
 
-The disk passphrase prompt comes first, then SDDM. Log in as **`riot`** with the
-password you set at the end of the install. `sudo` asks for the same password.
-NixRiot ships no default password.
+The disk passphrase prompt comes first, then SDDM. Log in as the user you chose
+during install, with the password you set. `sudo` asks for the same password.
+NixRiot ships no default user or password.
 
-If you skipped that step, set one from the installer or a TTY:
+To change or reset your password, log in and run:
 
 ```sh
 passwd
@@ -219,13 +288,13 @@ full set.
 
 | Module | Packages |
 |---|---|
-| `apps/shell.nix` | fish, starship, eza, zoxide, ripgrep, fd, fzf, btop, fastfetch, lsd, bat, pv, tree, jq, yq |
-| `apps/editors.nix` | helix, neovim, zed-editor, kate, gnome-text-editor, crush, git |
+| `apps/shell.nix` | fish, starship, zoxide, ripgrep, fd, fzf, btop, fastfetch, lsd, bat, pv, jq, gurk-rs |
+| `apps/editors.nix` | helix, gnome-text-editor, crush, git |
 | `apps/media.nix` | mpv, mpd, rmpc, yt-dlp, ffmpeg, ffmpegthumbnailer, cava, transmission (optional) |
-| `apps/office.nix` | libreoffice, zathura, firefox, thunderbird, thunar, tumbler, file-roller, prusa-slicer, orca-slicer |
-| `desktop/panacea.nix` | hyprland, quickshell, hyprpaper, hyprsunset, hypridle, foot, grim, slurp, wl-clipboard, cliphist, wf-recorder, swaylock, yazi, voxtype, tesseract, and the rest of the shell's runtime |
-| `desktop/theme.nix` | JetBrains Mono Nerd Font, Material Design icons, Noto fonts, Bibata cursors, Kora and Papirus icons |
-| `crypto/*` | monero-gui, bitcoin and bitcoind, wireguard-tools |
+| `apps/office.nix` | libreoffice, zathura, firefox, thunar, tumbler, file-roller |
+| `desktop/panacea.nix` | hyprland, quickshell, hyprpaper, hyprsunset, hypridle, foot, grim, slurp, wl-clipboard, cliphist, wf-recorder, yazi, swappy, mpvpaper, tesseract, and the rest of the shell's runtime |
+| `desktop/theme.nix` | JetBrains Mono Nerd Font, Material Design icons, Noto fonts, Bibata cursors, Kora icons |
+| `crypto/*` | monero-gui, bitcoin and bitcoind, glyphriot, wireguard-tools |
 | `security/*` | restic, rclone, firewall, SSH hardening, sysctl hardening |
 | `apps/games.nix` | optional, off by default |
 
@@ -262,8 +331,8 @@ binding.
 
 ## Wallpapers
 
-The NixRiot set (13 WebP images, `00.webp` through `12.webp`) ships in
-`panacea/hypr/wallpaper/`, default `00.webp`. Change the wallpaper from
+The NixRiot set (26 WebP images, `00.webp` through `25.webp`) ships in
+`panacea/hypr/wallpaper/`, default `16.webp`. Change the wallpaper from
 the pill's appearance settings. The manifest is
 `panacea/hypr/wallpaper/WALLPAPERS.md`.
 
@@ -280,12 +349,27 @@ Enable in the host config:
 nixriot = {
   crypto.monero = true;
   crypto.bitcoin = true;
+  crypto.glyphriot = true;
 };
 ```
 
-Monero GUI and Bitcoin Core come from nixpkgs. WireGuard is configured through
-`nixriot.wireguard`. Wallet files and keys are yours to create and back up; the
-flake never ships them.
+Monero GUI and Bitcoin Core come from nixpkgs. `crypto.glyphriot` installs
+[GlyphRiot](https://github.com/CyphrRiot/glyphriot), a seed-phrase glyph tool
+for self-custody, built from source and pinned to a commit. WireGuard is
+configured through `nixriot.wireguard`. Wallet files and keys, seed phrases
+included, are yours to create and back up; the flake never ships them.
+
+---
+
+## VPN
+
+Mullvad VPN is installed and enabled by default. Open the Mullvad app from the
+app launcher, or use the VPN panel in the Panacea pill. The daemon starts at
+boot and the GUI is available in the system menu.
+
+For a WireGuard config (the OpenRiot workflow), enable `nixriot.wireguard` in
+the host config and put your config in `/etc/wireguard/wg0.conf`. The Panacea
+VPN panel detects `wg0` and reports the tunnel state.
 
 ---
 
@@ -365,8 +449,17 @@ access for the first `nix flake lock`.
   starts over.
 - **No network during install.** The first cut needs network to build the
   target. Offline installs are not implemented yet.
-- **Voice to text does nothing.** `voxtype` needs a speech model downloaded; it
-  is not packaged.
+
+---
+
+<a id="donations"></a>
+
+## Donations
+
+NixRiot was built by one person. If it saved you time, consider donating
+(in Bitcoin):
+
+`bc1q77vh5x2ujgzjesc8s877hsvuzgx8z8m20flww8`
 
 ---
 

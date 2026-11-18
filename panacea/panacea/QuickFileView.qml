@@ -18,13 +18,13 @@ ColumnLayout {
         stdout: StdioCollector { onStreamFinished: view.result = text.trim() }
         onExited: (code, status) => {
             view.busy = false;
-            if (code !== 0) view.result = view.sys.tr("Не удалось выполнить действие");
+            if (code !== 0) view.result = view.sys.tr("Action failed");
         }
     }
     Process {
         id: clipboard
         onExited: (code, status) => {
-            view.result = code === 0 ? view.sys.tr("Путь скопирован") : view.sys.tr("Не удалось выполнить действие");
+            view.result = code === 0 ? view.sys.tr("Path copied") : view.sys.tr("Action failed");
         }
     }
     Process { id: externalApp }
@@ -79,29 +79,29 @@ ColumnLayout {
             }
             ColumnLayout {
                 Layout.fillWidth: true; spacing: 2
-                Text { text: view.sys.tr("Быстрые действия"); color: view.sys.colFg; font { family: view.sys.fontFam; pixelSize: 15; bold: true } }
-                Text { Layout.fillWidth: true; text: view.paths.length === 1 ? view.filename : view.paths.length + " " + view.sys.tr("файлов"); elide: Text.ElideMiddle; color: view.sys.colMuted; font { family: view.sys.fontFam; pixelSize: 10 } }
+                Text { text: view.sys.tr("Quick actions"); color: view.sys.colFg; font { family: view.sys.fontFam; pixelSize: 15; bold: true } }
+                Text { Layout.fillWidth: true; text: view.paths.length === 1 ? view.filename : view.paths.length + " " + view.sys.tr("files"); elide: Text.ElideMiddle; color: view.sys.colMuted; font { family: view.sys.fontFam; pixelSize: 10 } }
             }
         }
         Item { Layout.preferredHeight: 2 }
         ActionRow {
-            icon: "󰆏"; label: view.sys.tr("Скопировать путь")
+            icon: "󰆏"; label: view.sys.tr("Copy path")
             onTriggered: {
                 if (clipboard.running) return;
                 clipboard.command = ["sh", "-c", "printf '%s' \"$1\" | wl-copy", "_", view.paths.join("\n")];
                 clipboard.running = true;
             }
         }
-        ActionRow { icon: "󰉋"; label: view.sys.tr("Открыть папку"); onTriggered: view.openDetached(["xdg-open", view.path.substring(0, view.path.lastIndexOf('/')) || "/"]) }
+        ActionRow { icon: "󰉋"; label: view.sys.tr("Open folder"); onTriggered: view.openDetached(["xdg-open", view.path.substring(0, view.path.lastIndexOf('/')) || "/"]) }
         ActionRow {
-            icon: "󰇮"; label: view.sys.tr("Прикрепить к письму")
+            icon: "󰇮"; label: view.sys.tr("Attach to email")
             onTriggered: { var args = ["xdg-email"]; for (var i = 0; i < view.paths.length; ++i) args.push("--attach", view.paths[i]); view.openDetached(args); }
         }
-        ActionRow { visible: view.isImage; icon: "󰋩"; label: view.sys.tr("Сжать изображение в WebP"); available: !view.busy; onTriggered: view.run("compress") }
-        ActionRow { visible: view.isArchive; icon: "󰗄"; label: view.sys.tr("Извлечь в новую папку"); available: !view.busy; onTriggered: view.run("extract") }
+        ActionRow { visible: view.isImage; icon: "󰋩"; label: view.sys.tr("Compress image to WebP"); available: !view.busy; onTriggered: view.run("compress") }
+        ActionRow { visible: view.isArchive; icon: "󰗄"; label: view.sys.tr("Extract into a new folder"); available: !view.busy; onTriggered: view.run("extract") }
         Text {
             Layout.fillWidth: true; visible: view.busy || view.result.length > 0
-            text: view.busy ? view.sys.tr("Выполняется…") : view.result
+            text: view.busy ? view.sys.tr("Running…") : view.result
             color: view.sys.colMuted; wrapMode: Text.WrapAnywhere
             font { family: view.sys.fontFam; pixelSize: 10 }
         }

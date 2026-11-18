@@ -13,13 +13,77 @@ pkgs.writeScriptBin "nixriot-install" ''
       pkgs.coreutils
       pkgs.gnused
       pkgs.gnugrep
+      pkgs.curl
     ]}:$PATH
+
+  LOG=/tmp/nixriot-install.log
+  stage=/tmp/nixriot-stage
+  repo="https://github.com/CyphrRiot/NixRiot"
+
+  exec > >(tee -a "$LOG") 2>&1
+  trap 'echo; echo "Installer stopped at line $LINENO."; echo "Log: $LOG" >&2' ERR
 
   if [ "$(id -u)" -ne 0 ]; then
     echo "Run as root: sudo nixriot-install" >&2
     exit 1
   fi
 
+  echo "NixRiot installer. Log: $LOG"
+  echo
+
+  while :; do
+    read -r -p "Username for the desktop user: " user
+    case "$user" in
+      ""|root)
+        echo "Enter a username." >&2
+        continue
+        ;;
+      *[!a-z0-9_-]*|[0-9_-]*)
+        echo "Use lowercase letters, digits, underscore or hyphen, not starting with a digit or underscore." >&2
+        continue
+        ;;
+    esac
+    break
+  done
+
+  # Stage the tree and check the network BEFORE touching any disk, so a
+  # failure here costs nothing.
+  if [ -n "''${NIXRIOT_FLAKE:-}" ]; then
+    flake_ref="$NIXRIOT_FLAKE"
+    echo "Using the flake at $flake_ref"
+  else
+    echo "Staging the install tree in $stage ..."
+    rm -rf "$stage"
+    mkdir -p "$stage"
+
+    if [ "''${NIXRIOT_USE_REPO:-0}" = "1" ] && git clone --depth 1 "$repo" "$stage" >/dev/null 2>&1; then
+      :
+    else
+      src=$(readlink -f /etc/nixriot)
+      cp -rL "$src/." "$stage/"
+      chmod -R u+w "$stage"
+      git -C "$stage" init -q
+      git -C "$stage" remote add origin "$repo" 2>/dev/null || true
+      git -C "$stage" add -A
+      git -C "$stage" -c user.name=nixriot -c user.email=nixriot@localhost \
+        commit -q -m "image snapshot" >/dev/null
+    fi
+
+    printf '{\n  nixriotUser = "%s";\n}\n' "$user" > "$stage/hosts/installed/local.nix"
+    git -C "$stage" add hosts/installed/local.nix
+    git -C "$stage" -c user.name=nixriot -c user.email=nixriot@localhost \
+      commit -q -m "local: desktop user" >/dev/null 2>&1 || true
+  fi
+
+  if [ "''${NIXRIOT_OFFLINE:-0}" != "1" ]; then
+    if curl -fsS --max-time 15 -o /dev/null https://cache.nixos.org/nix-cache-info; then
+      :
+    else
+      echo "No network to cache.nixos.org; continuing, the image is offline-capable." >&2
+    fi
+  fi
+
+  echo
   echo "Whole disks:"
   lsblk -dpno NAME,SIZE,MODEL,TYPE | grep -w disk || true
   echo
@@ -60,48 +124,19 @@ pkgs.writeScriptBin "nixriot-install" ''
   mount /dev/mapper/cryptroot /mnt
   mount "$esp" /mnt/boot
 
-  while :; do
-    read -r -p "Username for the desktop user: " user
-    case "$user" in
-      ""|root)
-        echo "Enter a username." >&2
-        continue
-        ;;
-      *[!a-z0-9_-]*|[0-9_-]*)
-        echo "Use lowercase letters, digits, underscore or hyphen, not starting with a digit or underscore." >&2
-        continue
-        ;;
-    esac
-    break
-  done
-
-  repo="https://github.com/CyphrRiot/NixRiot"
-
-  if [ -n "''${NIXRIOT_FLAKE:-}" ]; then
-    flake_ref="$NIXRIOT_FLAKE"
-  elif git clone --depth 1 "$repo" /mnt/etc/nixriot >/dev/null 2>&1; then
-    printf '{\n  nixriotUser = "%s";\n}\n' "$user" > /mnt/etc/nixriot/hosts/installed/local.nix
-    git -C /mnt/etc/nixriot add hosts/installed/local.nix
-    git -C /mnt/etc/nixriot -c user.name=nixriot -c user.email=nixriot@localhost \
-      commit -m "local: desktop user" >/dev/null
+  if [ -z "''${NIXRIOT_FLAKE:-}" ]; then
+    mkdir -p /mnt/etc
+    cp -a "$stage" /mnt/etc/nixriot
     flake_ref="/mnt/etc/nixriot#installed"
-  else
-    echo "Could not clone $repo; installing from the image copy." >&2
-    echo "Updates will need a manual clone into /etc/nixriot afterwards." >&2
-    flake_dir=/tmp/nixriot-flake
-    rm -rf "$flake_dir"
-    cp -rL /etc/nixriot "$flake_dir"
-    chmod -R u+w "$flake_dir"
-    printf '{\n  nixriotUser = "%s";\n}\n' "$user" > "$flake_dir/hosts/installed/local.nix"
-    flake_ref="$flake_dir#installed"
   fi
 
-  nixos-install --root /mnt --flake "$flake_ref"
-
-  if [ -n "''${flake_dir:-}" ] && [ -d "$flake_dir" ]; then
-    mkdir -p /mnt/etc/nixriot
-    cp -rL "$flake_dir/." /mnt/etc/nixriot/
-    chmod -R u+w /mnt/etc/nixriot
+  echo
+  echo "Installing. This needs the network and can take a while."
+  if ! nixos-install --root /mnt --flake "$flake_ref"; then
+    echo
+    echo "nixos-install FAILED. The disk is partitioned, but nothing was installed." >&2
+    echo "Fix the cause and run the installer again. Log: $LOG" >&2
+    exit 1
   fi
 
   echo

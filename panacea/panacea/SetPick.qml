@@ -3,22 +3,16 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
 
-// Выбор из длинного списка: шрифты, часовые пояса, форматы даты.
-// Список раскрывается прямо в потоке страницы, а не всплывающим окном —
-// всплывающее в прокручиваемой карточке пришлось бы возить за содержимым и
-// оно всё равно обрезалось бы краем окна.
 ColumnLayout {
     id: pick
 
     property var sys
     property string label: ""
-    // список строк либо [{ id, text }]
     property var options: []
     property string value: ""
     property bool open: false
     property bool searchable: false
     property string query: ""
-    // сколько строк видно до появления собственной прокрутки
     property int visibleRows: 7
     signal picked(string id)
 
@@ -79,7 +73,6 @@ ColumnLayout {
                 anchors.right: parent.right
                 anchors.rightMargin: 10
                 anchors.verticalCenter: parent.verticalCenter
-                // шеврон вверх, когда список раскрыт, и вниз, когда свёрнут
                 text: String.fromCodePoint(pick.open ? 0xF0143 : 0xF0140)
                 color: pick.sys.colMuted
                 font { family: pick.sys.fontFam; pixelSize: pick.sys.fontSize - 2 }
@@ -116,7 +109,7 @@ ColumnLayout {
             anchors.right: parent.right
             anchors.margins: 6
             height: 30
-            placeholderText: pick.sys.tr("Поиск языка или кода")
+            placeholderText: pick.sys.tr("Search language or code")
             onTextEdited: pick.query = text
             color: pick.sys.colFg
             placeholderTextColor: pick.sys.colMuted

@@ -1,6 +1,6 @@
 { config, lib, pkgs, ... }:
 {
-  config = lib.mkIf config.nixriot.enable {
+  config = lib.mkIf (config.nixriot.enable && config.nixriot.apps) {
     environment.systemPackages = with pkgs; [
       restic
       rclone

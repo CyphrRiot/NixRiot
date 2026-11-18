@@ -3,11 +3,7 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
 
-// Менеджер паролей.
 //
-// Закрыт — виден только запрос пароля (того же, что спрашивает sudo).
-// Открыт — список записей: откуда пароль, логин, кнопка «скопировать».
-// Через 15 минут без обращений хранилище закрывается само.
 FocusScope {
     id: view
     property var sys
@@ -17,7 +13,6 @@ FocusScope {
     Component.onCompleted: view.forceActiveFocus()
     FocusGrabber { target: view.sys.vaultUnlocked ? search : pw }
 
-    // любое действие продлевает жизнь открытого хранилища
     MouseArea {
         anchors.fill: parent
         acceptedButtons: Qt.NoButton
@@ -29,7 +24,7 @@ FocusScope {
     function goBack() { view.sys.page = "main"; return true; }
     Keys.onEscapePressed: view.goBack()
 
-    property string editId: ""       // id записи в режиме правки
+    property string editId: ""
     property string query: ""
 
     readonly property var shown: {
@@ -41,7 +36,6 @@ FocusScope {
         });
     }
 
-    // поле правки: одно и то же для названия, логина и пароля
     component Field: Rectangle {
         id: fld
         property alias text: fin.text
@@ -80,7 +74,6 @@ FocusScope {
         width: parent.width
         spacing: 14
 
-        // ------------------------------------------------------------ шапка
         RowLayout {
             Layout.fillWidth: true
             spacing: 12
@@ -104,22 +97,21 @@ FocusScope {
                 Layout.fillWidth: true
                 spacing: 1
                 Text {
-                    text: view.sys.tr("Пароли")
+                    text: view.sys.tr("Passwords")
                     color: view.sys.colFg
                     font { family: view.sys.fontFam; pixelSize: view.sys.fontSize; bold: true }
                 }
                 Text {
                     Layout.fillWidth: true
                     text: view.sys.vaultUnlocked
-                          ? view.sys.vaultEntries.length + " " + view.sys.tr("записей")
-                          : view.sys.tr("Введите пароль пользователя")
+                          ? view.sys.vaultEntries.length + " " + view.sys.tr("entries")
+                          : view.sys.tr("Enter your user password")
                     color: view.sys.colMuted
                     elide: Text.ElideRight
                     font { family: view.sys.fontFam; pixelSize: view.sys.fontSize - 3 }
                 }
             }
 
-            // закрыть хранилище вручную
             Rectangle {
                 visible: view.sys.vaultUnlocked
                 Layout.preferredWidth: 34
@@ -138,14 +130,11 @@ FocusScope {
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
-                    // закрыли хранилище — держать пустую страницу с запросом
-                    // пароля незачем, уходим к плиткам
                     onClicked: { view.sys.lockVault(); view.sys.page = "main"; }
                 }
             }
         }
 
-        // ------------------------------------------------------- ввод пароля
         Rectangle {
             visible: !view.sys.vaultUnlocked
             Layout.fillWidth: true
@@ -175,7 +164,7 @@ FocusScope {
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
                         visible: pw.text.length === 0
-                        text: view.sys.tr("Пароль")
+                        text: view.sys.tr("Password")
                         color: Qt.rgba(1, 1, 1, 0.28)
                         font { family: view.sys.fontFam; pixelSize: view.sys.fontSize }
                     }
@@ -183,7 +172,7 @@ FocusScope {
 
                 Text {
                     visible: view.sys.vaultBusy
-                    text: view.sys.tr("Проверка…")
+                    text: view.sys.tr("Checking\\u2026")
                     color: view.sys.colMuted
                     font { family: view.sys.fontFam; pixelSize: view.sys.fontSize - 4 }
                 }
@@ -202,13 +191,12 @@ FocusScope {
         Text {
             visible: !view.sys.vaultUnlocked
             Layout.fillWidth: true
-            text: view.sys.tr("Хранилище шифруется этим же паролем и закрывается само через 15 минут простоя.")
+            text: view.sys.tr("The vault is encrypted with that same password and locks itself after 15 idle minutes.")
             color: Qt.rgba(1, 1, 1, 0.30)
             wrapMode: Text.WordWrap
             font { family: view.sys.fontFam; pixelSize: view.sys.fontSize - 4 }
         }
 
-        // ---------------------------------------------------------- поиск/+
         RowLayout {
             visible: view.sys.vaultUnlocked
             Layout.fillWidth: true
@@ -235,14 +223,13 @@ FocusScope {
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
                         visible: search.text.length === 0
-                        text: view.sys.tr("Поиск")
+                        text: view.sys.tr("Search")
                         color: Qt.rgba(1, 1, 1, 0.28)
                         font { family: view.sys.fontFam; pixelSize: view.sys.fontSize - 2 }
                     }
                 }
             }
 
-            // поискать пароли в браузерах
             Rectangle {
                 Layout.preferredWidth: 36
                 Layout.preferredHeight: 36
@@ -253,7 +240,6 @@ FocusScope {
                 Glyph {
                     id: scanGlyph
                     anchors.fill: parent
-                    // во время поиска — «часы», иначе значок браузера
                     glyph: String.fromCodePoint(view.sys.browserScanning ? 0xF051B : 0xF059F)
                     color: view.sys.colFg
                     fontFam: view.sys.fontFam
@@ -274,7 +260,7 @@ FocusScope {
                     onClicked: view.sys.browserScan()
                 }
                 ToolTip.visible: scanMa.containsMouse
-                ToolTip.text: view.sys.tr("Из браузеров")
+                ToolTip.text: view.sys.tr("From browsers")
             }
 
             Rectangle {
@@ -284,7 +270,7 @@ FocusScope {
                 color: addMa.containsMouse ? Qt.rgba(1, 1, 1, 0.13) : Qt.rgba(1, 1, 1, 0.06)
                 Glyph {
                     anchors.fill: parent
-                    glyph: String.fromCodePoint(0xF0415)      // плюс
+                    glyph: String.fromCodePoint(0xF0415)
                     color: view.sys.colFg
                     fontFam: view.sys.fontFam
                     size: view.sys.iconSize - 2
@@ -295,7 +281,7 @@ FocusScope {
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
                     onClicked: {
-                        view.sys.vaultAdd(view.sys.tr("Новая запись"), "", "");
+                        view.sys.vaultAdd(view.sys.tr("New entry"), "", "");
                         view.editId = view.sys.vaultEntries.length
                                       ? view.sys.vaultEntries[0].id : "";
                     }
@@ -303,9 +289,6 @@ FocusScope {
             }
         }
 
-        // ------------------------------------------- найденное в браузерах
-        // Появляется только после поиска: ничего не переносится само,
-        // каждую запись человек добавляет сам — или все разом.
         ColumnLayout {
             visible: view.sys.vaultUnlocked
                      && (view.sys.browserScanning || view.sys.browserScanned)
@@ -319,13 +302,13 @@ FocusScope {
                 Text {
                     Layout.fillWidth: true
                     text: view.sys.browserScanning
-                          ? view.sys.tr("Ищем в браузерах…")
+                          ? view.sys.tr("Searching browsers…")
                           : (view.sys.browserError.length
                              ? view.sys.browserError
                              : (view.sys.browserFound.length
-                                ? view.sys.tr("Найдено в браузерах") + " · "
+                                ? view.sys.tr("Found in browsers") + " · "
                                   + view.sys.browserFound.length
-                                : view.sys.tr("В браузерах ничего нового")))
+                                : view.sys.tr("Nothing new in the browsers")))
                     color: view.sys.browserError.length ? view.sys.colCrit : view.sys.colMuted
                     elide: Text.ElideRight
                     font {
@@ -334,7 +317,6 @@ FocusScope {
                     }
                 }
 
-                // добавить все разом
                 Rectangle {
                     visible: view.sys.browserFound.length > 1
                     Layout.preferredWidth: allTxt.implicitWidth + 20
@@ -345,7 +327,7 @@ FocusScope {
                     Text {
                         id: allTxt
                         anchors.centerIn: parent
-                        text: view.sys.tr("Добавить все")
+                        text: view.sys.tr("Add all")
                         color: view.sys.colOk
                         font { family: view.sys.fontFam; pixelSize: view.sys.fontSize - 4 }
                     }
@@ -433,7 +415,7 @@ FocusScope {
                                                        : Qt.rgba(1, 1, 1, 0.07)
                             Glyph {
                                 anchors.fill: parent
-                                glyph: String.fromCodePoint(0xF0415)   // плюс
+                                glyph: String.fromCodePoint(0xF0415)
                                 color: impMa.containsMouse ? view.sys.colOk : view.sys.colFg
                                 fontFam: view.sys.fontFam
                                 size: view.sys.iconSize - 4
@@ -451,7 +433,6 @@ FocusScope {
             }
         }
 
-        // ------------------------------------------------------------ список
         ListView {
             id: list
             visible: view.sys.vaultUnlocked
@@ -505,7 +486,7 @@ FocusScope {
                             color: Qt.rgba(1, 1, 1, 0.08)
                             Glyph {
                                 anchors.fill: parent
-                                glyph: String.fromCodePoint(0xF0306)     // ключ
+                                glyph: String.fromCodePoint(0xF0306)
                                 color: view.sys.colMuted
                                 fontFam: view.sys.fontFam
                                 size: view.sys.iconSize - 4
@@ -533,7 +514,6 @@ FocusScope {
                             }
                         }
 
-                        // скопировать пароль
                         Rectangle {
                             Layout.preferredWidth: 32
                             Layout.preferredHeight: 32
@@ -560,7 +540,6 @@ FocusScope {
                             }
                         }
 
-                        // правка
                         Rectangle {
                             Layout.preferredWidth: 32
                             Layout.preferredHeight: 32
@@ -568,7 +547,7 @@ FocusScope {
                             color: editMa.containsMouse ? Qt.rgba(1, 1, 1, 0.14) : Qt.rgba(1, 1, 1, 0.07)
                             Glyph {
                                 anchors.fill: parent
-                                glyph: String.fromCodePoint(0xF03EB)     // карандаш
+                                glyph: String.fromCodePoint(0xF03EB)
                                 color: view.sys.colFg
                                 fontFam: view.sys.fontFam
                                 size: view.sys.iconSize - 4
@@ -582,7 +561,6 @@ FocusScope {
                             }
                         }
 
-                        // удалить
                         Rectangle {
                             Layout.preferredWidth: 32
                             Layout.preferredHeight: 32
@@ -590,7 +568,7 @@ FocusScope {
                             color: delMa.containsMouse ? Qt.rgba(1, 0.27, 0.27, 0.18) : Qt.rgba(1, 1, 1, 0.07)
                             Glyph {
                                 anchors.fill: parent
-                                glyph: String.fromCodePoint(0xF01B4)     // корзина
+                                glyph: String.fromCodePoint(0xF01B4)
                                 color: delMa.containsMouse ? view.sys.colCrit : view.sys.colFg
                                 fontFam: view.sys.fontFam
                                 size: view.sys.iconSize - 4
@@ -605,15 +583,14 @@ FocusScope {
                         }
                     }
 
-                    // строка правки: название, логин, пароль
                     RowLayout {
                         visible: row.editing
                         Layout.fillWidth: true
                         spacing: 6
 
-                        Field { id: fLabel; text: String(row.modelData.label); hint: view.sys.tr("Название") }
-                        Field { id: fLogin; text: String(row.modelData.login); hint: view.sys.tr("Логин") }
-                        Field { id: fPw; text: String(row.modelData.pw); hint: view.sys.tr("Пароль"); secret: true }
+                        Field { id: fLabel; text: String(row.modelData.label); hint: view.sys.tr("Name") }
+                        Field { id: fLogin; text: String(row.modelData.login); hint: view.sys.tr("Login") }
+                        Field { id: fPw; text: String(row.modelData.pw); hint: view.sys.tr("Password"); secret: true }
 
                         Rectangle {
                             Layout.preferredWidth: 60
@@ -623,7 +600,7 @@ FocusScope {
                                                       : Qt.rgba(view.sys.colOk.r, view.sys.colOk.g, view.sys.colOk.b, 0.16)
                             Text {
                                 anchors.centerIn: parent
-                                text: view.sys.tr("ОК")
+                                text: view.sys.tr("OK")
                                 color: view.sys.colOk
                                 font { family: view.sys.fontFam; pixelSize: view.sys.fontSize - 3 }
                             }
@@ -647,8 +624,8 @@ FocusScope {
         Text {
             visible: view.sys.vaultUnlocked && view.shown.length === 0
             Layout.fillWidth: true
-            text: view.query.length ? view.sys.tr("Ничего не найдено")
-                                    : view.sys.tr("Пока ни одного пароля")
+            text: view.query.length ? view.sys.tr("Nothing found")
+                                    : view.sys.tr("No passwords yet")
             color: view.sys.colMuted
             horizontalAlignment: Text.AlignHCenter
             font { family: view.sys.fontFam; pixelSize: view.sys.fontSize - 2 }

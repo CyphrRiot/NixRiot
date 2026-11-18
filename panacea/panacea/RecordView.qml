@@ -3,8 +3,6 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Layouts
 
-// Пульт записи экрана: состояние, настройки и кнопки.
-// Открывается наведением на пилюлю, пока идёт запись, или из плиток.
 Item {
     id: view
     property var sys
@@ -16,8 +14,6 @@ Item {
         forceActiveFocus();
         if (view.sys.cfg.recMic) view.sys.refreshMics();
     }
-    // Esc возвращает к плиткам, а не закрывает пилюлю целиком: страницу
-    // открыли из quick settings, туда же логично и вернуться.
     function goBack() { view.sys.page = "main"; return true; }
     Keys.onEscapePressed: view.goBack()
 
@@ -28,7 +24,6 @@ Item {
         return String(d).replace("~/", "").length ? String(d) : "~";
     }
 
-    // --------------------------------------------------------- общие кусочки
     component Chip: Rectangle {
         property string label: ""
         property bool active: false
@@ -68,7 +63,6 @@ Item {
         }
     }
 
-    // переключатель со строкой-подписью
     component Toggle: Rectangle {
         id: tog
 
@@ -114,9 +108,6 @@ Item {
                     width: 17; height: 17; radius: 9
                     y: 2
                     x: tog.checked ? parent.width - width - 2 : 2
-                    // Включённая дорожка налита акцентом, и белый кружок на
-                    // ней пропадает — тумблер выглядит просто белой плашкой.
-                    // На выключенной дорожка тёмная, там белый и нужен.
                     color: tog.checked
                            ? view.sys.fgOn(view.sys.colOn) : "#ffffff"
                     Behavior on x {
@@ -136,7 +127,6 @@ Item {
         }
     }
 
-    // строка выбора микрофона
     component MicRow: Rectangle {
         id: microw
 
@@ -231,13 +221,11 @@ Item {
         }
     }
 
-    // ------------------------------------------------------------------ вид
     ColumnLayout {
         id: col
         width: parent.width
         spacing: 12
 
-        // ---------------------------------------------------------- шапка
         RowLayout {
             Layout.fillWidth: true
             spacing: 10
@@ -263,9 +251,9 @@ Item {
                 Layout.fillWidth: true
                 spacing: 0
                 Text {
-                    text: !view.sys.recActive ? view.sys.tr("Запись экрана")
-                        : view.sys.recPaused  ? view.sys.tr("Пауза")
-                                              : view.sys.tr("Идёт запись")
+                    text: !view.sys.recActive ? view.sys.tr("Screen recording")
+                        : view.sys.recPaused  ? view.sys.tr("Pause")
+                                              : view.sys.tr("Recording")
                     color: view.sys.colFg
                     font { family: view.sys.fontFam; pixelSize: view.sys.fontSize; bold: true }
                 }
@@ -274,14 +262,13 @@ Item {
                     text: view.sys.recError.length ? view.sys.recError
                         : view.sys.recActive
                           ? view.sys.recFile.split("/").pop()
-                          : view.sys.tr("Готово к записи")
+                          : view.sys.tr("Ready to record")
                     color: view.sys.recError.length ? view.sys.colCrit : view.sys.colMuted
                     elide: Text.ElideMiddle
                     font { family: view.sys.fontFam; pixelSize: view.sys.fontSize - 4 }
                 }
             }
 
-            // таймер
             Text {
                 visible: view.sys.recActive
                 text: view.sys.recTimeText
@@ -316,7 +303,6 @@ Item {
                     required property var modelData
                     label: String(modelData)
                     active: view.sys.cfg.recFps === modelData
-                    // на ходу менять нечего: wf-recorder читает fps при старте
                     enabled: !view.sys.recActive
                     opacity: view.sys.recActive ? 0.45 : 1
                     onPicked: {
@@ -328,14 +314,13 @@ Item {
             Item { Layout.fillWidth: true }
         }
 
-        // ---------------------------------------------------------- папка
         RowLayout {
             Layout.fillWidth: true
             spacing: 8
 
             Text {
                 Layout.preferredWidth: 74
-                text: view.sys.tr("Папка")
+                text: view.sys.tr("Folder")
                 color: view.sys.colMuted
                 font {
                     family: view.sys.fontFam; pixelSize: view.sys.fontSize - 4
@@ -359,9 +344,8 @@ Item {
             Item { Layout.fillWidth: true }
         }
 
-        // ----------------------------------------------------------- звук
         Toggle {
-            label: view.sys.tr("Звук системы")
+            label: view.sys.tr("System audio")
             glyph: String.fromCodePoint(view.sys.cfg.recSysAudio ? 0xF057E : 0xF0581)
             checked: view.sys.cfg.recSysAudio
             onToggled: {
@@ -371,7 +355,7 @@ Item {
         }
 
         Toggle {
-            label: view.sys.tr("Микрофон")
+            label: view.sys.tr("Microphone")
             glyph: String.fromCodePoint(view.sys.cfg.recMic ? 0xF036C : 0xF036D)
             checked: view.sys.cfg.recMic
             onToggled: {
@@ -381,7 +365,6 @@ Item {
             }
         }
 
-        // выбор микрофона — только когда он включён
         ColumnLayout {
             Layout.fillWidth: true
             Layout.leftMargin: 8
@@ -390,7 +373,7 @@ Item {
             opacity: view.sys.recActive ? 0.45 : 1
 
             MicRow {
-                label: view.sys.tr("По умолчанию")
+                label: view.sys.tr("Default")
                 device: ""
             }
             Repeater {
@@ -403,7 +386,6 @@ Item {
             }
         }
 
-        // -------------------------------------------------------- кнопки
         RowLayout {
             Layout.fillWidth: true
             Layout.topMargin: 2
@@ -412,7 +394,7 @@ Item {
             BigButton {
                 visible: !view.sys.recActive
                 glyph: String.fromCodePoint(0xF044A)   // md-record
-                label: view.sys.tr("Начать запись")
+                label: view.sys.tr("Start recording")
                 tint: view.sys.colCrit
                 filled: true
                 onPressedAction: view.sys.startRecord()
@@ -421,8 +403,8 @@ Item {
             BigButton {
                 visible: view.sys.recActive
                 glyph: String.fromCodePoint(view.sys.recPaused ? 0xF040A : 0xF03E4)
-                label: view.sys.recPaused ? view.sys.tr("Продолжить")
-                                          : view.sys.tr("Пауза")
+                label: view.sys.recPaused ? view.sys.tr("Resume")
+                                          : view.sys.tr("Pause")
                 tint: view.sys.colWarn
                 filled: view.sys.recPaused
                 onPressedAction: view.sys.pauseRecord()
@@ -431,30 +413,28 @@ Item {
             BigButton {
                 visible: view.sys.recActive
                 glyph: String.fromCodePoint(0xF04DB)   // md-stop
-                label: view.sys.tr("Закончить")
+                label: view.sys.tr("Finish")
                 tint: view.sys.colCrit
                 filled: true
                 onPressedAction: view.sys.stopRecord()
             }
         }
 
-        // папка с записями
         RowLayout {
             Layout.fillWidth: true
             spacing: 9
 
             BigButton {
                 glyph: String.fromCodePoint(0xF0770)   // md-folder_open
-                label: view.sys.tr("Открыть папку с записями")
+                label: view.sys.tr("Open recordings folder")
                 onPressedAction: view.sys.openRecordDir()
             }
         }
 
-        // куда сохранится файл — видно до старта
         Text {
             Layout.fillWidth: true
             visible: !view.sys.recActive
-            text: view.sys.tr("Файл ляжет в ") + view.sys.cfg.recDir
+            text: view.sys.tr("Saves to ") + view.sys.cfg.recDir
             color: Qt.rgba(1, 1, 1, 0.30)
             elide: Text.ElideMiddle
             font { family: view.sys.fontFam; pixelSize: view.sys.fontSize - 5 }

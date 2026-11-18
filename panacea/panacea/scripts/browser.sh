@@ -1,8 +1,4 @@
 #!/bin/bash
-# Браузер по умолчанию.
-#   browser.sh list  -> desktop-файл|Название   (все установленные браузеры)
-#   browser.sh get   -> desktop-файл текущего
-#   browser.sh set D -> сделать D браузером по умолчанию
 case "$1" in
     list)
         python3 - <<'PY'
@@ -37,7 +33,6 @@ PY
         D="${2:?}"
         case "$D" in *.desktop) ;; *) exit 1 ;; esac
         xdg-settings set default-web-browser "$D" 2>/dev/null
-        # xdg-settings на «чужом» окружении трогает не всё — дописываем сами
         for m in x-scheme-handler/http x-scheme-handler/https text/html \
                  application/xhtml+xml x-scheme-handler/about x-scheme-handler/unknown; do
             xdg-mime default "$D" "$m"

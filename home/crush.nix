@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ pkgs, lib, nixriotApps ? true, ... }:
 {
-  home.packages = [ pkgs.crush ];
+  home.packages = lib.optionals nixriotApps [ pkgs.crush ];
 }

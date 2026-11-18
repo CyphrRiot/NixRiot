@@ -13,27 +13,27 @@ ColumnLayout {
     function duration(seconds) {
         var mins = Math.round(seconds / 60);
         var hours = Math.floor(mins / 60), minutes = mins % 60;
-        return (hours ? hours + " " + sys.tr("ч") + " " : "") + minutes + " " + sys.tr("мин");
+        return (hours ? hours + " " + sys.tr("h") + " " : "") + minutes + " " + sys.tr("min");
     }
     Text {
         Layout.fillWidth: true
         text: sys.batteryRemainingSeconds > 60
-              ? (sys.batteryCharging ? sys.tr("До полной зарядки: ") : sys.tr("Осталось примерно: ")) + view.duration(sys.batteryRemainingSeconds)
-              : sys.tr("Время работы пока недоступно")
+              ? (sys.batteryCharging ? sys.tr("Until full: ") : sys.tr("Approximately remaining: ")) + view.duration(sys.batteryRemainingSeconds)
+              : sys.tr("Time estimate unavailable")
         color: sys.colFg
         font { family: sys.fontFam; pixelSize: 12; bold: true }
     }
     Text {
         Layout.fillWidth: true
-        text: sys.powerProfile === "power-saver" ? sys.tr("Экономия снижает энергопотребление.")
-            : sys.powerProfile === "performance" ? sys.tr("Максимум отдаёт приоритет производительности.")
-            : sys.tr("Баланс сочетает производительность и расход энергии.")
+        text: sys.powerProfile === "power-saver" ? sys.tr("Power saver reduces energy use.")
+            : sys.powerProfile === "performance" ? sys.tr("Performance prioritizes speed.")
+            : sys.tr("Balanced trades off performance and energy use.")
         color: sys.colMuted; wrapMode: Text.WordWrap
         font { family: sys.fontFam; pixelSize: 10 }
     }
     Text {
         Layout.fillWidth: true
-        text: sys.tr("История заряда · последние 24 часа")
+        text: sys.tr("Charge history · last 24 hours")
         color: sys.colFg
         font { family: sys.fontFam; pixelSize: 11; bold: true }
     }
@@ -59,7 +59,7 @@ ColumnLayout {
         }
         Text {
             anchors.centerIn: parent; visible: view.history.length < 2
-            text: view.sys.tr("История накапливается во время работы оболочки")
+            text: view.sys.tr("History builds up while the shell is running")
             color: view.sys.colMuted
             font { family: view.sys.fontFam; pixelSize: 10 }
         }
@@ -67,7 +67,7 @@ ColumnLayout {
     Text {
         Layout.fillWidth: true
         visible: view.info.cycle !== null && view.info.cycle !== undefined && view.info.cycle >= 0
-        text: view.sys.tr("Циклы зарядки: ") + view.info.cycle
+        text: view.sys.tr("Charge cycles: ") + view.info.cycle
         color: view.sys.colMuted; font { family: view.sys.fontFam; pixelSize: 10 }
     }
     ColumnLayout {
@@ -75,7 +75,7 @@ ColumnLayout {
         visible: view.info.start !== null && view.info.start !== undefined && view.info.end !== null && view.info.end !== undefined
         Text {
             Layout.fillWidth: true
-            text: view.sys.tr("Пороги зарядки: ") + view.info.start + "–" + view.info.end + "%"
+            text: view.sys.tr("Charge thresholds: ") + view.info.start + "–" + view.info.end + "%"
             color: view.sys.colFg; font { family: view.sys.fontFam; pixelSize: 11; bold: true }
         }
         RowLayout {
@@ -114,7 +114,7 @@ ColumnLayout {
         }
         Text {
             Layout.fillWidth: true; wrapMode: Text.WordWrap
-            text: view.sys.tr("Изменение требует прав администратора; TLP может восстановить свои настройки.")
+            text: view.sys.tr("Administrator access is required; TLP may restore its own settings.")
             color: view.sys.colMuted; font { family: view.sys.fontFam; pixelSize: 10 }
         }
     }

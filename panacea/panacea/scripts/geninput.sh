@@ -7,7 +7,7 @@ lua_out="$HOME/.config/hypr/lua/input_data.lua"
 conf_out="$HOME/.config/hypr/input_data.conf"
 [ -f "$cfg" ] && command -v jq >/dev/null 2>&1 || exit 1
 
-layouts="$(jq -r '.keyboardLayouts // "us,ru"' "$cfg" | tr -d '[:space:]')"
+layouts="$(jq -r '.keyboardLayouts // "us"' "$cfg" | tr -d '[:space:]')"
 variants="$(jq -r '.keyboardVariants // ","' "$cfg" | tr -d '[:space:]')"
 options="$(jq -r '.keyboardOptions // "grp:alt_shift_toggle"' "$cfg" | tr -d '[:space:]')"
 

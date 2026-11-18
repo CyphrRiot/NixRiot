@@ -77,14 +77,14 @@ Item {
                 Column {
                     anchors.left: parent.left; anchors.leftMargin: 20
                     anchors.verticalCenter: parent.verticalCenter; spacing: 10
-                    Text { text: view.sys.tr("VPN и регион").toUpperCase(); color: view.sys.colMuted; font { family: view.sys.fontBody; pixelSize: 10; letterSpacing: 2 } }
+                    Text { text: view.sys.tr("VPN and region").toUpperCase(); color: view.sys.colMuted; font { family: view.sys.fontBody; pixelSize: 10; letterSpacing: 2 } }
                     Row {
                         spacing: 12
                         Rectangle {
                             width: 42; height: 42; radius: 21; color: view.sys.vpnConnected ? view.sys.colFg : "#303135"
                             Text { anchors.centerIn: parent; text: view.sys.vpnCountry; color: view.sys.vpnConnected ? view.sys.colBg : view.sys.colFg; font { family: view.sys.fontDisplay; pixelSize: 15; bold: true } }
                         }
-                        Text { anchors.verticalCenter: parent.verticalCenter; text: view.sys.vpnBusy ? view.sys.tr("Ожидание ответа клиента…") : (view.sys.vpnConnected ? view.sys.tr("Подключено") : view.sys.tr("Отключено")); color: view.sys.colFg; font { family: view.sys.fontBody; pixelSize: 11 } }
+                        Text { anchors.verticalCenter: parent.verticalCenter; text: view.sys.vpnBusy ? view.sys.tr("Waiting for the client…") : (view.sys.vpnConnected ? view.sys.tr("Connected") : view.sys.tr("Disconnected")); color: view.sys.colFg; font { family: view.sys.fontBody; pixelSize: 11 } }
                     }
                 }
                 Rectangle {
@@ -102,7 +102,7 @@ Item {
             }
             RowLayout {
                 Layout.fillWidth: true
-                Text { Layout.fillWidth: true; text: view.sys.tr("VPN-клиент"); color: view.sys.colFg; font { family: view.sys.fontDisplay; pixelSize: 15; bold: true } }
+                Text { Layout.fillWidth: true; text: view.sys.tr("VPN client"); color: view.sys.colFg; font { family: view.sys.fontDisplay; pixelSize: 15; bold: true } }
                 Text { text: "↻"; color: view.sys.colMuted; font.pixelSize: 21; MouseArea { anchors.fill: parent; anchors.margins: -7; cursorShape: Qt.PointingHandCursor; onClicked: view.refresh() } }
             }
             Text { Layout.fillWidth: true; text: view.error; visible: view.error.length > 0; wrapMode: Text.WordWrap; color: view.sys.colCrit }
@@ -114,11 +114,11 @@ Item {
                     title: modelData.name
                     mark: modelData.name.substring(0, 2).toUpperCase()
                     chosen: view.selectedClient === modelData.desktop
-                    subtitle: modelData.desktop.toLowerCase().endsWith("/happ.desktop") ? view.sys.tr("Управление подключением через Happ") : view.sys.tr("Управление в приложении клиента")
+                    subtitle: modelData.desktop.toLowerCase().endsWith("/happ.desktop") ? view.sys.tr("Connection controlled through Happ") : view.sys.tr("Manage in the client application")
                     onPicked: view.chooseClient(modelData.desktop)
                 }
             }
-            Text { visible: view.apps.length === 0; Layout.fillWidth: true; wrapMode: Text.WordWrap; text: view.sys.tr("VPN-приложения не найдены"); color: view.sys.colMuted }
+            Text { visible: view.apps.length === 0; Layout.fillWidth: true; wrapMode: Text.WordWrap; text: view.sys.tr("No VPN applications found"); color: view.sys.colMuted }
             Text { visible: view.profiles.length > 0; text: "NETWORKMANAGER"; color: view.sys.colMuted; font { family: view.sys.fontBody; pixelSize: 10; letterSpacing: 2 } }
             Repeater {
                 model: view.profiles
@@ -126,11 +126,11 @@ Item {
                     required property var modelData
                     sys: view.sys; title: modelData.name; mark: "NM"
                     chosen: !view.selectedClient && view.sys.cfg.vpnPreferred === modelData.id
-                    subtitle: modelData.active ? view.sys.tr("Подключено") : view.sys.tr("VPN-профиль")
+                    subtitle: modelData.active ? view.sys.tr("Connected") : view.sys.tr("VPN profile")
                     onPicked: view.chooseProfile(modelData.id)
                 }
             }
-            Text { Layout.fillWidth: true; Layout.topMargin: 4; wrapMode: Text.WordWrap; text: view.sys.tr("Выбор сохраняется. Нажмите на страну в острове, чтобы управлять подключением."); color: view.sys.colMuted; font { family: view.sys.fontBody; pixelSize: 10 } }
+            Text { Layout.fillWidth: true; Layout.topMargin: 4; wrapMode: Text.WordWrap; text: view.sys.tr("Your choice is saved. Click the country in the island to control the connection."); color: view.sys.colMuted; font { family: view.sys.fontBody; pixelSize: 10 } }
         }
     }
 }

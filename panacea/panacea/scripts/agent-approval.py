@@ -56,8 +56,8 @@ try:
     body = html.escape(tool + ': ' + text)
     result = subprocess.run(['notify-send', '--app-name', 'Panacea ' + agent,
         '--icon', 'dialog-question', '--urgency', 'normal', '--expire-time', '30000',
-        '--action=panacea-allow=Разрешить', '--action=panacea-deny=Отклонить',
-        agent + ': требуется подтверждение', body],
+        '--action=panacea-allow=Allow', '--action=panacea-deny=Deny',
+        agent + ': confirmation required', body],
         text=True, capture_output=True, timeout=35, check=False)
     choice = result.stdout.strip()
     if result.returncode == 0 and choice in ('panacea-allow', 'panacea-deny'):

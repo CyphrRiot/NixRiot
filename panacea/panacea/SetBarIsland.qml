@@ -1,9 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
 
-// Bar & Island. Главный переключатель здесь — режим выреза: от него зависит,
-// примыкает остров к кромке или висит отдельной капсулой, и часть ползунков
-// имеет смысл только в одном из двух состояний.
 ColumnLayout {
     id: page
 
@@ -14,55 +11,54 @@ ColumnLayout {
     Layout.fillWidth: true
     spacing: 12
 
-    // ------------------------------------------------------------- форма
     SetCard {
         sys: page.sys
 
         SetToggle {
             sys: page.sys
-            label: page.sys.tr("Режим выреза")
-            sub: page.sys.tr("Остров прилегает к кромке экрана и растекается по ней вогнутыми уголками. Выключить — станет отдельной капсулой с отступом от кромки.")
+            label: page.sys.tr("Notch mode")
+            sub: page.sys.tr("The island sits flush against the screen edge and flares into it with concave corners. Turn off and it becomes a separate capsule with a gap from the edge.")
             on: page.notch
             onToggled: value => { page.sys.cfg.notchMode = value; page.sys.saveCfg(); }
         }
 
         SetToggle {
             sys: page.sys
-            label: page.sys.tr("Автоскрытие")
-            sub: page.sys.tr("Остров уезжает за кромку и не занимает место под себя: окна получают весь экран. Возвращается наведением на край.")
+            label: page.sys.tr("Auto-hide")
+            sub: page.sys.tr("The island slides off the edge and stops reserving space, so windows get the whole screen. Point at the edge to bring it back.")
             on: page.sys.cfg.pillAutoHide
             onToggled: value => { page.sys.cfg.pillAutoHide = value; page.sys.saveCfg(); }
         }
 
         SetToggle {
             sys: page.sys
-            label: page.sys.tr("Режим оверлея (Floating)")
-            sub: page.sys.tr("Остров парит поверх окон без резервирования верхней строки: окна приложений не сжимаются и не прыгают при открытии или скрытии.")
+            label: page.sys.tr("Floating overlay mode")
+            sub: page.sys.tr("The island floats over windows without reserving the top row: app windows do not shrink or jump when it opens or hides.")
             on: page.sys.cfg.pillOverlay
             onToggled: value => { page.sys.cfg.pillOverlay = value; page.sys.saveCfg(); }
         }
 
         SetToggle {
             sys: page.sys
-            label: page.sys.tr("Остров виден при раскрытии")
-            sub: page.sys.tr("Остров остаётся на своём месте в свёрнутом виде, а панель быстрых настроек и страницы открываются отдельной плавающей карточкой под ним.")
+            label: page.sys.tr("Keep bar visible on expand")
+            sub: page.sys.tr("Keep the top bar/island visible in its collapsed state while opening quick settings and pages as a separate floating card below it.")
             on: page.sys.cfg.pillKeepVisible
             onToggled: value => { page.sys.cfg.pillKeepVisible = value; page.sys.saveCfg(); }
         }
 
         SetToggle {
             sys: page.sys
-            label: page.sys.tr("Нагрузка системы на острове")
-            sub: page.sys.tr("Показывать загрузку и температуру CPU и GPU на свёрнутом острове.")
+            label: page.sys.tr("System load on island")
+            sub: page.sys.tr("Show CPU and GPU usage and temperatures on the collapsed island.")
             on: page.sys.cfg.systemLoadOnIsland
             onToggled: value => { page.sys.cfg.systemLoadOnIsland = value; page.sys.saveCfg(); }
         }
 
         SetToggle {
             sys: page.sys
-            label: page.sys.tr("Закрывать окна Panacea по Super+Q")
+            label: page.sys.tr("Close Panacea windows on Super+Q")
             visible: page.detailsOpen
-            sub: page.sys.tr("При открытых панелях или настройках Panacea нажатие Super+Q закрывает оверлей. Выключить — Super+Q всегда закрывает активное приложение на фоне.")
+            sub: page.sys.tr("When a Panacea panel is open, Super+Q closes it. Disable this to always close the active application.")
             on: page.sys.cfg.closePanaceaFirst
             onToggled: value => { page.sys.cfg.closePanaceaFirst = value; page.sys.saveCfg(); }
         }
@@ -72,7 +68,7 @@ ColumnLayout {
             visible: page.detailsOpen
             enabled: page.notch
             opacity: enabled ? 1 : 0.4
-            label: page.sys.tr("Выступ выреза")
+            label: page.sys.tr("Notch flare")
             from: 0; to: 32; step: 1
             value: page.sys.cfg.notchFlare
             suffix: "px"
@@ -84,7 +80,7 @@ ColumnLayout {
             visible: page.detailsOpen
             enabled: !page.notch
             opacity: enabled ? 1 : 0.4
-            label: page.sys.tr("Отступ от края")
+            label: page.sys.tr("Edge gap")
             from: 0; to: 48; step: 1
             value: page.sys.cfg.islandGap
             suffix: "px"
@@ -96,33 +92,30 @@ ColumnLayout {
             visible: page.detailsOpen
             enabled: !page.notch
             opacity: enabled ? 1 : 0.4
-            label: page.sys.tr("Скругление капсулы")
+            label: page.sys.tr("Capsule radius")
             from: 0; to: 40; step: 1
             value: page.sys.cfg.islandRadius
-            // ноль читается как «скругление по половине высоты», а не как
-            // прямые углы: именно так капсула и выглядит по умолчанию
             valueText: page.sys.cfg.islandRadius === 0
-                       ? page.sys.tr("по высоте") : page.sys.cfg.islandRadius + " px"
+                       ? page.sys.tr("by height") : page.sys.cfg.islandRadius + " px"
             onMoved: v => { page.sys.cfg.islandRadius = v; page.sys.saveCfg(); }
         }
     }
 
     SetButton {
         sys: page.sys
-        text: page.detailsOpen ? page.sys.tr("Скрыть подробности") : page.sys.tr("Подробные настройки")
+        text: page.detailsOpen ? page.sys.tr("Hide details") : page.sys.tr("Detailed settings")
         onClicked: page.detailsOpen = !page.detailsOpen
     }
 
-    // ------------------------------------------------------------- размеры
     SetCard {
         sys: page.sys
         visible: page.detailsOpen
 
-        SetLabel { sys: page.sys; text: page.sys.tr("Размеры") }
+        SetLabel { sys: page.sys; text: page.sys.tr("Sizes") }
 
         SetSlider {
             sys: page.sys
-            label: page.sys.tr("Высота панели")
+            label: page.sys.tr("Bar height")
             from: 24; to: 72; step: 1
             value: page.sys.cfg.pillH
             suffix: "px"
@@ -131,7 +124,7 @@ ColumnLayout {
 
         SetSlider {
             sys: page.sys
-            label: page.sys.tr("Ширина свёрнутого острова")
+            label: page.sys.tr("Collapsed width")
             from: 120; to: 640; step: 4
             value: page.sys.cfg.collapsedW
             suffix: "px"
@@ -140,7 +133,7 @@ ColumnLayout {
 
         SetSlider {
             sys: page.sys
-            label: page.sys.tr("Ширина раскрытого острова")
+            label: page.sys.tr("Expanded width")
             from: 380; to: 900; step: 10
             value: page.sys.cfg.panelW
             suffix: "px"
@@ -149,7 +142,7 @@ ColumnLayout {
 
         SetSlider {
             sys: page.sys
-            label: page.sys.tr("Высота раскрытого острова")
+            label: page.sys.tr("Expanded height")
             from: 260; to: 1000; step: 10
             value: page.sys.cfg.expandedH
             suffix: "px"
@@ -157,17 +150,16 @@ ColumnLayout {
         }
     }
 
-    // ------------------------------------------------------------- поведение
     SetCard {
         sys: page.sys
         visible: page.detailsOpen
 
-        SetLabel { sys: page.sys; text: page.sys.tr("Поведение") }
+        SetLabel { sys: page.sys; text: page.sys.tr("Behaviour") }
 
         SetToggle {
             sys: page.sys
-            label: page.sys.tr("Переносить остров мышью")
-            sub: page.sys.tr("Остров можно взять прямо на экране и перетащить к другой кромке.")
+            label: page.sys.tr("Drag the island with the mouse")
+            sub: page.sys.tr("The island can be grabbed right on the screen and dragged to another edge.")
             on: page.sys.cfg.pillDrag
             onToggled: value => { page.sys.cfg.pillDrag = value; page.sys.saveCfg(); }
         }

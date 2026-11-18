@@ -3,7 +3,6 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
 
-// Все уведомления, что приходили, одним списком, и режим «не беспокоить».
 Item {
     id: view
     property var sys
@@ -12,8 +11,6 @@ Item {
 
     focus: true
     Component.onCompleted: forceActiveFocus()
-    // Esc возвращает к плиткам, а не закрывает пилюлю целиком: страницу
-    // открыли из quick settings, туда же логично и вернуться.
     function goBack() { view.sys.page = "main"; return true; }
     Keys.onEscapePressed: view.goBack()
 
@@ -28,16 +25,12 @@ Item {
 
             Text {
                 Layout.fillWidth: true
-                text: view.sys.tr("Уведомления")
+                text: view.sys.tr("Notifications")
                 color: view.sys.colFg
                 font { family: view.sys.fontFam; pixelSize: view.sys.fontSize + 1; bold: true }
             }
 
-            // не беспокоить
             Rectangle {
-                // Ширина по содержимому, но не уже прежней: она была подобрана на
-                // глаз под русскую надпись, и на другом языке текст вылезал за
-                // края плашки.
                 Layout.preferredWidth: Math.max(132, dndRow.implicitWidth + 24)
                 Layout.preferredHeight: 30
                 radius: 10
@@ -59,7 +52,7 @@ Item {
                         font { family: view.sys.fontFam; pixelSize: view.sys.iconSize - 4 }
                     }
                     Text {
-                        text: view.sys.tr("Не беспокоить")
+                        text: view.sys.tr("Do not disturb")
                         color: view.sys.dnd ? view.sys.colFg : view.sys.colMuted
                         font { family: view.sys.fontFam; pixelSize: view.sys.fontSize - 4 }
                     }
@@ -73,7 +66,6 @@ Item {
                 }
             }
 
-            // очистить историю
             Rectangle {
                 Layout.preferredWidth: 90
                 Layout.preferredHeight: 30
@@ -83,7 +75,7 @@ Item {
                 Behavior on color { ColorAnimation { duration: 150 } }
                 Text {
                     anchors.centerIn: parent
-                    text: view.sys.tr("Очистить")
+                    text: view.sys.tr("Clear")
                     color: view.sys.colMuted
                     font { family: view.sys.fontFam; pixelSize: view.sys.fontSize - 4 }
                 }
@@ -97,10 +89,6 @@ Item {
             }
         }
 
-        // Один список на всё. Раньше страница делилась на «Активные» и
-        // «Историю»: одно и то же уведомление показывалось дважды, а разница
-        // между разделами человеку ничего не давала — карточка остаётся
-        // видимой, пока её не убрали, и это всё, что нужно знать.
         ListView {
             id: list
             Layout.fillWidth: true
@@ -155,8 +143,6 @@ Item {
                             anchors.fill: parent
                             anchors.margins: 5
                             source: row.nImage
-                            // не Ready — значит не открылась: пусть лучше будет
-                            // свой значок, чем клетчатый прямоугольник Qt
                             visible: source !== "" && status === Image.Ready
                             fillMode: Image.PreserveAspectFit
                             smooth: true
@@ -198,8 +184,6 @@ Item {
                             wrapMode: Text.WordWrap
                             maximumLineCount: 2
                             elide: Text.ElideRight
-                            // тело уведомления может содержать разметку —
-                            // см. bodyMarkupSupported в shell.qml
                             textFormat: Text.StyledText
                             font { family: view.sys.fontFam; pixelSize: view.sys.fontSize - 4 }
                         }
@@ -227,9 +211,6 @@ Item {
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
-                    // Клик открывает повод уведомления: приложение само
-                    // разворачивает нужный чат, а Hyprland перелистывает на
-                    // тот стол, где это приложение живёт.
                     onClicked: view.sys.activateNotification(row.nId)
                 }
             }
@@ -238,8 +219,8 @@ Item {
         Text {
             Layout.fillWidth: true
             visible: view.sys.notifications.count === 0
-            text: view.sys.dnd ? view.sys.tr("Режим «не беспокоить» включён")
-                               : view.sys.tr("Пока ничего нет")
+            text: view.sys.dnd ? view.sys.tr("Do not disturb is on")
+                               : view.sys.tr("Nothing yet")
             color: view.sys.colMuted
             horizontalAlignment: Text.AlignHCenter
             font { family: view.sys.fontFam; pixelSize: view.sys.fontSize - 2 }

@@ -1,8 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
 
-// «Сохранить пароль?» — предложение, которое пилюля показывает, заметив
-// в буфере обмена строку, похожую на пароль.
 FocusScope {
     id: view
     property var sys
@@ -18,7 +16,7 @@ FocusScope {
 
     function save() {
         if (!view.prompt) return;
-        view.sys.vaultAdd(name.text.length ? name.text : view.sys.tr("Без названия"),
+        view.sys.vaultAdd(name.text.length ? name.text : view.sys.tr("Untitled"),
                           login.text, view.prompt.pw);
         view.sys.vaultPrompt = null;
         view.sys.collapse();
@@ -40,7 +38,7 @@ FocusScope {
                 color: Qt.rgba(0.23, 0.51, 0.96, 0.16)
                 Glyph {
                     anchors.fill: parent
-                    glyph: String.fromCodePoint(0xF0306)          // ключ
+                    glyph: String.fromCodePoint(0xF0306)
                     color: view.sys.colOn
                     fontFam: view.sys.fontFam
                     size: view.sys.iconSize + 2
@@ -51,15 +49,15 @@ FocusScope {
                 Layout.fillWidth: true
                 spacing: 1
                 Text {
-                    text: view.sys.tr("Сохранить пароль?")
+                    text: view.sys.tr("Save this password?")
                     color: view.sys.colFg
                     font { family: view.sys.fontFam; pixelSize: view.sys.fontSize; bold: true }
                 }
                 Text {
                     Layout.fillWidth: true
                     text: view.sys.vaultUnlocked
-                          ? view.sys.tr("Он попадёт в менеджер паролей")
-                          : view.sys.tr("Сначала откройте хранилище своим паролем")
+                          ? view.sys.tr("It will go to the password manager")
+                          : view.sys.tr("Unlock the vault with your password first")
                     color: view.sys.colMuted
                     elide: Text.ElideRight
                     font { family: view.sys.fontFam; pixelSize: view.sys.fontSize - 3 }
@@ -67,7 +65,6 @@ FocusScope {
             }
         }
 
-        // ------------------------------------- хранилище закрыто: просим пароль
         Rectangle {
             visible: !view.sys.vaultUnlocked
             Layout.fillWidth: true
@@ -93,7 +90,7 @@ FocusScope {
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
                     visible: pw.text.length === 0
-                    text: view.sys.tr("Пароль пользователя")
+                    text: view.sys.tr("User password")
                     color: Qt.rgba(1, 1, 1, 0.28)
                     font { family: view.sys.fontFam; pixelSize: view.sys.fontSize - 1 }
                 }
@@ -108,7 +105,6 @@ FocusScope {
             font { family: view.sys.fontFam; pixelSize: view.sys.fontSize - 3 }
         }
 
-        // --------------------------------------------- хранилище открыто: поля
         RowLayout {
             visible: view.sys.vaultUnlocked
             Layout.fillWidth: true
@@ -135,7 +131,7 @@ FocusScope {
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
                         visible: name.text.length === 0
-                        text: view.sys.tr("Откуда пароль")
+                        text: view.sys.tr("Where it is from")
                         color: Qt.rgba(1, 1, 1, 0.28)
                         font { family: view.sys.fontFam; pixelSize: view.sys.fontSize - 2 }
                     }
@@ -162,7 +158,7 @@ FocusScope {
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
                         visible: login.text.length === 0
-                        text: view.sys.tr("Логин (необязательно)")
+                        text: view.sys.tr("Login (optional)")
                         color: Qt.rgba(1, 1, 1, 0.28)
                         font { family: view.sys.fontFam; pixelSize: view.sys.fontSize - 2 }
                     }
@@ -170,7 +166,6 @@ FocusScope {
             }
         }
 
-        // сам пароль показываем только точками — на случай чужих глаз рядом
         Text {
             Layout.fillWidth: true
             text: view.prompt ? "•".repeat(Math.min(24, String(view.prompt.pw).length)) : ""
@@ -189,7 +184,7 @@ FocusScope {
                 color: noMa.containsMouse ? Qt.rgba(1, 1, 1, 0.13) : Qt.rgba(1, 1, 1, 0.06)
                 Text {
                     anchors.centerIn: parent
-                    text: view.sys.tr("Не сохранять")
+                    text: view.sys.tr("Don\\u0027t save")
                     color: view.sys.colFg
                     font { family: view.sys.fontFam; pixelSize: view.sys.fontSize - 2 }
                 }
@@ -212,7 +207,7 @@ FocusScope {
                                            : Qt.rgba(view.sys.colOk.r, view.sys.colOk.g, view.sys.colOk.b, 0.17)
                 Text {
                     anchors.centerIn: parent
-                    text: view.sys.tr("Сохранить")
+                    text: view.sys.tr("Save")
                     color: view.sys.colOk
                     font { family: view.sys.fontFam; pixelSize: view.sys.fontSize - 2 }
                 }

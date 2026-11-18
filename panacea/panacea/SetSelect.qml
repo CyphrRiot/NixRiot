@@ -2,14 +2,11 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Layouts
 
-// Строка выбора: подпись слева, справа — сегменты вариантов. Годится для
-// коротких списков (2–4 значения); длинные лучше через SetPick.
 RowLayout {
     id: sel
 
     property var sys
     property string label: ""
-    // [{ id, text }] — id уходит в настройку, text показывается
     property var options: []
     property string value: ""
     signal picked(string id)

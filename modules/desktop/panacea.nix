@@ -35,6 +35,11 @@
 
     networking.networkmanager.enable = true;
 
+    services.mullvad-vpn = {
+      enable = true;
+      gui.enable = true;
+    };
+
     environment.sessionVariables.NIXOS_OZONE_WL = "1";
 
     environment.systemPackages = with pkgs; [
@@ -60,15 +65,10 @@
       bluez-tools
       upower
       power-profiles-daemon
-      mpvpaper
       swappy
       jq
       gnome-keyring
 
-      swaylock
-      (tesseract.override { enableLanguages = [ "eng" "rus" ]; })
-      voxtype
-      wtype
       ddcutil
       wireplumber
       yazi
@@ -87,6 +87,7 @@
       udisks2
       udiskie
       gvfs
-    ];
+    ] ++ lib.optionals config.nixriot.ocr [ tesseract ]
+      ++ lib.optionals config.nixriot.apps [ mpvpaper ];
   };
 }

@@ -1,33 +1,14 @@
 #!/bin/bash
-# Бэкенд проводника пилюли.
 #
-#   list DIR              -> строки  тип|имя|размер|мтайм|mime
-#                            тип: d (каталог) | f (файл)
-#   apps PATH             -> чем можно открыть: desktop-файл|Название|Иконка
-#                            первым идёт приложение по умолчанию
-#   open PATH [DESKTOP]   -> открыть (без DESKTOP — приложением по умолчанию)
-#   mkdir DIR NAME        -> создать папку
-#   rename PATH NEWNAME   -> переименовать
-#   trash PATH            -> в корзину (обратимо, в отличие от rm)
-#   places                -> закладки: ключ|путь|подпись
-#   copy DST SRC...       -> копировать в каталог
-#   move DST SRC...       -> перенести в каталог
 #
-# copy и move печатают в stdout строки «PROGRESS <проценты>»: пилюля рисует
-# по ним полоску. Копирование гигабайтов иначе выглядит как зависание —
-# файл не появляется, и понять, идёт работа или нет, нельзя.
 
 py() { python3 "$@"; }
 
-# ---------------------------------------------------------------- прогресс
-# Ни cp, ни mv не умеют сообщать, сколько уже сделано, поэтому смотрим со
-# стороны: раз в четверть секунды меряем, насколько выросли цели.
-# Строка: «PROGRESS <проценты> <сделано_байт> <всего_байт>».
 PROGRESS_PID=""
 WORK_PID=""
 CUR_TARGET=""
 
-progress_start() {   # $1 — суммарный размер источников, дальше пути целей
+progress_start() {
     local total=$1; shift
     [ "$total" -gt 0 ] 2>/dev/null || return 0
     local targets=("$@")
@@ -38,7 +19,7 @@ progress_start() {   # $1 — суммарный размер источнико
             if [ -n "$cur" ]; then
                 [ "$cur" -gt "$total" ] && cur=$total
                 local pct=$(( cur * 100 / total ))
-                [ "$pct" -gt 99 ] && pct=99   # 100 печатает уже сам вызов
+                [ "$pct" -gt 99 ] && pct=99
                 printf 'PROGRESS %d %d %d\n' "$pct" "$cur" "$total"
             fi
             sleep 0.25
@@ -52,8 +33,6 @@ progress_kill() {
     PROGRESS_PID=""
 }
 
-# Отмена: панель шлёт TERM. Без этого cp доработал бы до конца сиротой, а
-# недописанный файл остался бы лежать как целый.
 on_cancel() {
     progress_kill
     [ -n "$WORK_PID" ] && kill "$WORK_PID" 2>/dev/null && wait "$WORK_PID" 2>/dev/null
@@ -62,13 +41,10 @@ on_cancel() {
     exit 130
 }
 
-# Сброс кэша на носитель. cp заканчивается, когда данные легли в память, а
-# не на флешку: выдернуть её в этот момент — потерять файл. Ждём, пока ядро
-# допишет, и показываем, сколько ещё осталось (Dirty + Writeback).
 dirty_kb() {
     awk '/^(Dirty|Writeback):/ {s += $2} END {print s+0}' /proc/meminfo
 }
-flush_to_disk() {   # $1 — каталог на целевой ФС
+flush_to_disk() {
     printf 'PHASE sync\n'
     local start; start=$(dirty_kb)
     sync -f "$1" 2>/dev/null &
@@ -86,10 +62,7 @@ flush_to_disk() {   # $1 — каталог на целевой ФС
     WORK_PID=""
 }
 
-# Имя, свободное в каталоге назначения: не затираем существующее молча,
-# а дописываем номер. Слова тут нарочно нет — скрипт не знает язык
-# интерфейса.
-uniq_target() {   # $1 — каталог назначения, $2 — имя
+uniq_target() {
     local dst=$1 name=$2
     local target="$dst/$name"
     [ -e "$target" ] || { printf '%s' "$target"; return; }
@@ -103,10 +76,6 @@ uniq_target() {   # $1 — каталог назначения, $2 — имя
 }
 
 case "$1" in
-    # list <каталог> [hidden]
-    # hidden — показывать файлы с точки. В домашнем каталоге почти всё
-    # интересное начинается именно с неё (.config, .local), и прятать их
-    # значит прятать ровно то, ради чего сюда и заходят.
     list)
         DIR="${2:-$HOME}"
         DIR="${DIR/#\~/$HOME}"
@@ -183,15 +152,12 @@ for d in dirs:
         elif group and any(m.startswith(group) for m in mimes):
             similar[fn] = item
         else:
-            # Мало какая программа объявляет все типы, которые тянет.
-            # Показываем и остальные — пусть выбор будет за человеком.
             rest[fn] = item
 
 def emit(fn, table):
     name, icon = table[fn]
     print(f"{fn}|{name}|{icon}")
 
-# приложение по умолчанию — первой строкой, в какой бы группе ни оказалось
 for table in (exact, similar, rest):
     if default in table:
         emit(default, table)
@@ -265,23 +231,13 @@ EOF
         fi
         ;;
 
-    # Каталог назначения идёт первым, источники — списком: так один вызов
-    # переносит хоть один файл, хоть выделение целиком, и полоска считает
-    # общий объём, а не каждый файл заново.
-    # Что из перетаскиваемого уже лежит в каталоге назначения. Печатает по
-    # одному имени в строке; пусто — совпадений нет.
     #
-    # Спрашиваем отдельно, а не разбираемся по ходу копирования: решение о
-    # перезаписи принимает человек, и принять его надо ДО того, как первый файл
-    # уже перезаписан. Заодно вопрос задаётся один раз на всю пачку, а не по
-    # файлу.
     conflicts)
         DST="${2:?}"; shift 2
         DST="${DST/#\~/$HOME}"
         for src; do
             src="${src/#\~/$HOME}"
             name="$(basename "$src")"
-            # Сам себя файл не перекрывает: источник и цель — одно и то же.
             [ "$src" = "$DST/$name" ] && continue
             [ -e "$DST/$name" ] && printf '%s\n' "$name"
         done
@@ -290,10 +246,6 @@ EOF
     copy|move)
         OP="$1"
         DST="${2:?}"
-        # Что делать с уже существующими именами:
-        #   keepboth  — рядом, с номером
-        #   overwrite — заменить
-        #   skip      — не трогать, оставить как есть
         MODE="${3:-keepboth}"
         shift 3
         DST="${DST/#\~/$HOME}"
@@ -308,7 +260,6 @@ EOF
             src="${src%/}"
             [ -e "$src" ] || continue
             name="$(basename "$src")"
-            # папку в саму себя не кладём: cp ушёл бы в бесконечную рекурсию
             case "$DST/" in "$src/"*) printf 'ERROR into-self\n'; continue ;; esac
             case "$MODE" in
                 overwrite) target="$DST/$name" ;;
@@ -327,8 +278,6 @@ EOF
         trap on_cancel INT TERM
         trap progress_kill EXIT
 
-        # Перенос в пределах одного раздела — это переименование: мгновенно и
-        # места не требует. Считать и проверять объём надо только для копий.
         CROSS=0
         for s1 in "${srcs[@]}"; do
             [ "$(stat -c %d "$s1" 2>/dev/null)" = "$dst_dev" ] || CROSS=1
@@ -341,7 +290,6 @@ EOF
                 printf 'ERROR no-space %s %s\n' "$total" "$avail"
                 exit 1
             fi
-            # FAT32 не держит файлы больше 4 ГиБ — cp упал бы на середине
             fstype=$(stat -f -c %T "$DST" 2>/dev/null)
             if [ "$fstype" = "msdos" ] || [ "$fstype" = "vfat" ]; then
                 big=$(find "${srcs[@]}" -type f -size +4194303k -print -quit 2>/dev/null)
@@ -359,8 +307,6 @@ EOF
                 rm -rf -- "${targets[$i]}"
             fi
             CUR_TARGET="${targets[$i]}"
-            # Фоном и через wait: так TERM прерывает работу сразу, а не после
-            # того, как cp закончит очередной гигабайт.
             if [ "$OP" = "copy" ]; then
                 cp -r --no-clobber --preserve=mode,timestamps -- "${srcs[$i]}" "${targets[$i]}" 2>"/tmp/panacea-fileop.$$" &
             else
@@ -377,7 +323,6 @@ EOF
         rm -f "/tmp/panacea-fileop.$$"
         progress_kill
 
-        # дописать на носитель, а уж потом говорить «готово»
         if [ "$need_bytes" -gt 0 ]; then
             flush_to_disk "$DST"
         fi
@@ -392,27 +337,21 @@ EOF
         ;;
 
     places)
-        # Подписи здесь черновые: интерфейс переводит их сам по ключу.
         printf 'home|%s|Home\n' "$HOME"
         for k in Downloads Documents Pictures Videos Music Desktop; do
             [ -d "$HOME/$k" ] && printf '%s|%s/%s|%s\n' "${k,,}" "$HOME" "$k" "$k"
         done
         printf 'root|/|System\n'
-        # корзина — последней: это не место, куда ходят по делу
         printf 'trash|%s/Trash/files|Trash\n' "${XDG_DATA_HOME:-$HOME/.local/share}"
         ;;
 
 disks)
-    # Смонтированные носители и съёмные накопители (включая неподключённые флешки).
-    #   вид|путь|подпись|всего_байт|занято_байт|устройство
-    # вид: disk (внутренний) | removable (флешка, карта, телефон)
     python3 -c '
 import subprocess, json, sys, os, re
 
 seen = set()
 results = []
 
-# 1. Смонтированные блочные устройства (через df)
 try:
     df_p = subprocess.run(["df", "-B1", "--output=source,target,size,used", "-x", "tmpfs", "-x", "devtmpfs", "-x", "squashfs", "-x", "overlay", "-x", "efivarfs", "-x", "ramfs"], capture_output=True, text=True)
     for line in df_p.stdout.strip().split("\n")[1:]:
@@ -438,7 +377,6 @@ try:
 except Exception:
     pass
 
-# 2. Несмонтированные съёмные накопители (флешки, карты памяти, внешние диски)
 try:
     res = subprocess.run(["lsblk", "-J", "-b", "-o", "PATH,KNAME,TYPE,RM,HOTPLUG,TRAN,SUBSYSTEMS,SIZE,FSTYPE,LABEL,MOUNTPOINT,PKNAME,MODEL"], capture_output=True, text=True)
     devs = json.loads(res.stdout).get("blockdevices", [])
@@ -482,7 +420,6 @@ try:
 except Exception:
     pass
 
-# 3. MTP устройства (Android телефоны) и GVFS
 try:
     if os.path.isfile("/proc/mounts"):
         with open("/proc/mounts", "r") as f:
@@ -513,7 +450,6 @@ for r in results:
 mountdisk)
     dev="$2"
     [ -n "$dev" ] || exit 1
-    # Сначала проверяем, не смонтирован ли уже
     mp=$(findmnt -n -o TARGET "$dev" 2>/dev/null | head -1)
     if [ -n "$mp" ] && [ -d "$mp" ]; then
         printf '%s\n' "$mp"
@@ -546,9 +482,6 @@ unmountdisk)
     ;;
 
 ejectdisk)
-    # Безопасное извлечение: дописать кэш, размонтировать ВСЕ разделы
-    # устройства и обесточить его. Ошибку печатаем: если носитель занят,
-    # человек должен об этом узнать, а не выдёргивать флешку наугад.
     target="$2"
     [ -n "$target" ] || exit 1
     if [ -b "$target" ]; then dev="$target"
@@ -576,8 +509,6 @@ ejectdisk)
     ;;
 
 automount)
-    # Свежевоткнутые носители монтируем сами: udiskie есть не везде, а без
-    # монтирования раздел «Съёмные» показывает флешку, но открыть её нельзя.
     python3 - <<'PY'
 import json, subprocess
 out = subprocess.run(["lsblk", "-J", "-o", "PATH,TYPE,FSTYPE,MOUNTPOINT,RM,HOTPLUG,TRAN"],
@@ -597,13 +528,10 @@ PY
     ;;
 
     emptytrash)
-        # gio trash --empty ходит через gvfs, а его в системе может не быть
-        # («Operation not supported»). Чистим корзину сами — она устроена
-        # ровно по freedesktop-спецификации: files, info и expunged.
         base="${XDG_DATA_HOME:-$HOME/.local/share}/Trash"
         case "$base" in
             */Trash) ;;
-            *) exit 1 ;;          # подстраховка: мало ли что в переменной
+            *) exit 1 ;;
         esac
         for d in files info expunged; do
             [ -d "$base/$d" ] || continue

@@ -1,16 +1,10 @@
 #!/bin/bash
-# Погода с OpenWeatherMap и Open-Meteo (резервный источник) — для настольных виджетов.
 #
 #   weather.sh KEY CITY UNITS LANG
 #
 #   UNITS  metric | imperial
-#   LANG   ru | en   — язык словесного описания
 #
-# Если указан API ключ, в первую очередь опрашивается OpenWeatherMap.
-# Если ключа нет или запрос к OpenWeatherMap не удался, используется бесплатный
-# сервис Open-Meteo с геокодированием по названию города.
 #
-# Отдаёт строки key=value, по одной на значение.
 
 KEY="$1"
 CITY="$2"
@@ -24,15 +18,9 @@ fail() { printf 'err=%s\n' "$1"; exit 0; }
 command -v curl >/dev/null 2>&1 || fail "no-curl"
 command -v jq   >/dev/null 2>&1 || fail "no-jq"
 
-# ------------------------------------------------ 1. Попытка OpenWeatherMap
 if [ -n "$KEY" ]; then
     case "$CITY" in
-        [0-9]*)
-            case "$CITY" in
-                *,*) FIELD="zip=$CITY" ;;
-                *)   FIELD="zip=$CITY,RU" ;;
-            esac
-            ;;
+        [0-9]*) FIELD="zip=$CITY" ;;
         *) FIELD="q=$CITY" ;;
     esac
 
@@ -60,7 +48,6 @@ if [ -n "$KEY" ]; then
     fi
 fi
 
-# ------------------------------------------------ 2. Резерв Open-Meteo
 city_name="${CITY%%,*}"
 geo=$(curl -sS --connect-timeout 5 --max-time 10 --get \
     --data-urlencode "name=$city_name" \
@@ -87,18 +74,18 @@ m_body=$(curl -sS --connect-timeout 5 --max-time 12 \
 wcode=$(printf '%s' "$m_body" | jq -r '.current.weather_code // 0' 2>/dev/null)
 
 case "$wcode" in
-    0) cond="Clear";  icon="01d"; [ "$LANG_" = "ru" ] && desc="ясно" || desc="clear sky" ;;
-    1) cond="Clouds"; icon="02d"; [ "$LANG_" = "ru" ] && desc="в основном ясно" || desc="mainly clear" ;;
-    2) cond="Clouds"; icon="03d"; [ "$LANG_" = "ru" ] && desc="переменная облачность" || desc="partly cloudy" ;;
-    3) cond="Clouds"; icon="04d"; [ "$LANG_" = "ru" ] && desc="пасмурно" || desc="overcast" ;;
-    45|48) cond="Fog"; icon="50d"; [ "$LANG_" = "ru" ] && desc="туман" || desc="fog" ;;
-    51|53|55) cond="Drizzle"; icon="09d"; [ "$LANG_" = "ru" ] && desc="морось" || desc="drizzle" ;;
-    61|63|65) cond="Rain"; icon="10d"; [ "$LANG_" = "ru" ] && desc="дождь" || desc="rain" ;;
-    71|73|75|77) cond="Snow"; icon="13d"; [ "$LANG_" = "ru" ] && desc="снег" || desc="snow" ;;
-    80|81|82) cond="Rain"; icon="09d"; [ "$LANG_" = "ru" ] && desc="ливень" || desc="rain showers" ;;
-    85|86) cond="Snow"; icon="13d"; [ "$LANG_" = "ru" ] && desc="снегопад" || desc="snow showers" ;;
-    95|96|99) cond="Thunderstorm"; icon="11d"; [ "$LANG_" = "ru" ] && desc="гроза" || desc="thunderstorm" ;;
-    *) cond="Clouds"; icon="03d"; [ "$LANG_" = "ru" ] && desc="облачно" || desc="cloudy" ;;
+    0) cond="Clear";  icon="01d"; desc="clear sky" ;;
+    1) cond="Clouds"; icon="02d"; desc="mainly clear" ;;
+    2) cond="Clouds"; icon="03d"; desc="partly cloudy" ;;
+    3) cond="Clouds"; icon="04d"; desc="overcast" ;;
+    45|48) cond="Fog"; icon="50d"; desc="fog" ;;
+    51|53|55) cond="Drizzle"; icon="09d"; desc="drizzle" ;;
+    61|63|65) cond="Rain"; icon="10d"; desc="rain" ;;
+    71|73|75|77) cond="Snow"; icon="13d"; desc="snow" ;;
+    80|81|82) cond="Rain"; icon="09d"; desc="rain showers" ;;
+    85|86) cond="Snow"; icon="13d"; desc="snow showers" ;;
+    95|96|99) cond="Thunderstorm"; icon="11d"; desc="thunderstorm" ;;
+    *) cond="Clouds"; icon="03d"; desc="cloudy" ;;
 esac
 
 printf '%s' "$m_body" | jq -r --arg cond "$cond" --arg desc "$desc" --arg icon "$icon" --arg city "$res_name" '

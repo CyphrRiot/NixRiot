@@ -24,13 +24,13 @@ def menu_state(owner, path, layout):
         label = str(props.get('label', '')).replace('&', '').strip().casefold()
         if props.get('visible', True) is False:
             continue
-        if label in ('disconnect', 'отключить', 'отключиться'):
+        if label in ('disconnect',):
             if props.get('enabled', True): actions['down'] = node[0]
             else: transition = True
-        elif label in ('connect', 'подключить', 'подключиться'):
+        elif label in ('connect',):
             if props.get('enabled', True): actions['up'] = node[0]
             else: transition = True
-        elif label.startswith(('connecting', 'disconnecting', 'подключение', 'отключение')):
+        elif label.startswith(('connecting', 'disconnecting')):
             transition = True
     state = 'busy' if transition else ('connected' if 'down' in actions else 'disconnected' if 'up' in actions else 'unknown')
     return {'clientState': state, '_owner': owner, '_menu': path, '_actions': actions}

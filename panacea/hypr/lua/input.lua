@@ -3,7 +3,7 @@ if not input_ok or type(input_data) ~= "table" then input_data = {} end
 
 hl.config({
     input = {
-        kb_layout  = input_data.layouts or "us,ru",
+        kb_layout  = input_data.layouts or "us",
         kb_variant = input_data.variants or ",",
         kb_model   = "",
         -- Alt+Shift switches the layout

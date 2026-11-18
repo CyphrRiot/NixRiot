@@ -17,7 +17,7 @@ def layout(label, enabled=True):
 class HappControlTests(unittest.TestCase):
     def test_state_comes_from_available_action(self):
         self.assertEqual(happ.menu_state(':1.1', '/MenuBar', layout('Disconnect'))['clientState'], 'connected')
-        self.assertEqual(happ.menu_state(':1.1', '/MenuBar', layout('Подключить'))['clientState'], 'disconnected')
+        self.assertEqual(happ.menu_state(':1.1', '/MenuBar', layout('Connect'))['clientState'], 'disconnected')
         self.assertEqual(happ.menu_state(':1.1', '/MenuBar', layout('Connect', False))['clientState'], 'busy')
 
     def test_connect_waits_for_confirmation(self):

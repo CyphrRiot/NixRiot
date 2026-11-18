@@ -18,22 +18,22 @@ import Quickshell.Bluetooth
 import Quickshell.Hyprland
 import "Themes.js" as Themes
 
-// Одна пилюля на всё.
+// One pill for everything.
 //
-// Свёрнутая: день недели, время, заряд.
-// Играет музыка/видео -> пилюля превращается в медиа-капсулу
-//   (обложка + название + живой эквалайзер).
-// Наведение -> плавно раскрывается: без музыки — Wi-Fi и Bluetooth,
-//   с музыкой — плеер. Курсор ушёл -> сворачивается обратно.
-// Super+A -> лаунчер приложений в той же пилюле.
+// Collapsed: weekday, time, battery.
+// Music or video playing -> the pill becomes a media capsule
+//   (cover + title + live equaliser).
+// Hover -> it unfolds smoothly: without music, Wi-Fi and Bluetooth,
+//   with music, the player. Cursor leaves -> it folds back.
+// Super+A -> the app launcher in the same pill.
 ShellRoot {
 
 PanelWindow {
     id: root
 
-    // ------------------------------------------------- сохраняемые настройки
-    // Живут в ~/.config/panacea/settings.json и правятся по Super+I.
-    // Файл читается на старте и перечитывается при внешнем изменении.
+    // ------------------------------------------------- persisted settings
+    // They live in ~/.config/panacea/settings.json and are edited with Super+I.
+    // The file is read at startup and re-read when it changes externally.
     FileView {
         id: cfgFile
         path: Quickshell.env("HOME") + "/.config/panacea/settings.json"
@@ -47,145 +47,137 @@ PanelWindow {
             property real   mutedAlpha: 0.45
             property string colOn:    "#3b82f6"
             property int    pillH:  38
-            // где живёт остров: top | bottom | left | right
+            // where the island lives: top | bottom | left | right
             property string pillPos: "top"
-            // Автоскрытие: остров уезжает за кромку и не занимает место под
-            // себя, окна получают весь экран. Возвращается наведением на
-            // узкую полоску у самого края.
+            // Autohide: the island slides past the edge and reserves no space,
+            // so windows get the whole screen. It returns when the pointer
+            // touches the thin strip at the very edge.
             property bool   pillAutoHide: false
-            // Режим оверлея: остров парит поверх окон без резервирования полосы
+            // Overlay mode: the island floats above windows without reserving a strip
             property bool   pillOverlay: true
-            // Остров виден при раскрытии (панель открывается отдельной плавающей карточкой)
+            // The island stays visible while expanded (the panel opens as a separate floating card)
             property bool   pillKeepVisible: false
-            // Закрывать оверлей Panacea по Super+Q (иначе убивать фоновое окно)
+            // Close the Panacea overlay on Super+Q (rather than killing the background window)
             property bool   closePanaceaFirst: true
 
-            // Настройки мониторов из вкладки Display, JSON вида
-            // {"eDP-1":{w,h,rr,scale,transform,vrr,pos}}. Hyprland их не
-            // запоминает: hyprctl правит живое состояние, и после перезагрузки
-            // конфига или перезахода экран возвращается к своему конфигу.
+            // Monitor settings from the Display tab, JSON of the form
+            // {"eDP-1":{w,h,rr,scale,transform,vrr,pos}}. Hyprland does not
+            // remember them: hyprctl edits the live state, and after a config
+            // reload or a re-login the screen returns to its own config.
             property string monOverrides: ""
-            // На каком экране живёт остров. "auto" — на том, где сейчас
-            // фокус: остров переезжает за человеком. Иначе имя выхода
-            // ("eDP-1", "DP-2") — остров прибит к нему намертво.
+            // Which screen the island lives on. "auto" means the one that
+            // currently has focus, so the island follows the person. Otherwise
+            // an output name ("eDP-1", "DP-2") pins it there for good.
             property string pillScreen: "auto"
 
             // ---------------------------------------------- Bar & Island
-            // Режим выреза: остров примыкает вплотную к кромке экрана и
-            // растекается по ней вогнутыми уголками. Выключенный — остров
-            // становится прямоугольной капсулой с отступом от кромки.
+            // Notch mode: the island sits flush against the screen edge and
+            // spreads along it with concave corners. When off, the island
+            // becomes a rectangular capsule with a gap from the edge.
             property bool   notchMode: true
-            // радиус вогнутого уголка примыкания
+            // radius of the concave corner where it meets the edge
             property int    notchFlare: 12
-            // ширина свёрнутого острова и высота развёрнутой панели
+            // width of the collapsed island and height of the expanded panel
             property int    collapsedW: 260
             property int    expandedH: 620
-            // отступ капсулы от кромки, когда режим выреза выключен
+            // gap between capsule and edge when notch mode is off
             property int    islandGap: 12
-            // скругление капсулы вне режима выреза (0 — по половине высоты)
+            // capsule rounding outside notch mode (0 means half its height)
             property int    islandRadius: 0
 
             // ---------------------------------------------- Clock & Date
             property bool   clockSeconds: false
             property bool   clockWeekday: true
-            // "auto" — регион и часовой пояс берутся у системы
+            // "auto" means region and time zone come from the system
             property string clockTz: "auto"
             property string clockDateFmt: "d MMMM"
 
             // ---------------------------------------------- Appearance
-            // Тема палитры. "nothing" — основной облик
+            // Palette theme. "nothing" is the main look
             property string themeId: "nothing"
-            // текстовый шрифт и шрифт заголовков
+            // body font and heading font
             property string fontBody: "JetBrainsMono Nerd Font"
             property string fontDisplay: "JetBrainsMono Nerd Font"
-            // шаг отступов и малый радиус — из них считается вся геометрия
+            // spacing step and small radius; all geometry derives from them
             property int    spacingUnit: 8
             property int    smallRadius: 10
 
             // ---------------------------------------------- Motion
-            // Полный отказ от анимаций: все длительности считаются нулевыми.
+            // Full opt-out of animation: every duration counts as zero.
             property string vpnPreferredClient: ""
             property string vpnPreferred: ""
             property bool   mascotEnabled: true
             property bool   reduceMotion: false
-            property int    animMove: 230      // размер и положение, мс
-            property int    animFade: 200      // прозрачность и цвет, мс
-            property int    animHover: 150     // отклик на наведение, мс
-            property int    animBounce: 79     // перелёт осциллятора, %
+            property int    animMove: 230      // size and position, ms
+            property int    animFade: 200      // opacity and colour, ms
+            property int    animHover: 150     // hover response, ms
+            property int    animBounce: 79     // oscillator overshoot, %
 
             // ---------------------------------------------- Notifications
             property bool   notifDnd: false
-            property int    notifTimeout: 5000       // обычные, мс
-            property int    notifCritTimeout: 0      // 0 — висят до ответа
-            property bool   notifPreview: true       // текст в свёрнутом виде
+            property int    notifTimeout: 5000       // normal, ms
+            property int    notifCritTimeout: 0      // 0 means it stays until answered
+            property bool   notifPreview: true       // text while collapsed
 
             // ---------------------------------------------- Lock Screen
             property int    lockBlur: 32
             property string lockHint: ""
 
             // ---------------------------------------------- Control Center
-            // Порядок плиток быстрых настроек, заданный человеком.
-            // Пустая строка — заводская раскладка из root.ccDefault.
+            // Order of the quick-settings tiles, chosen by the person.
+            // An empty string means the factory layout from root.ccDefault.
             property string ccLayout: ""
-            // разрешено ли переносить остров мышью прямо на экране
+            // whether the island may be dragged with the mouse on screen
             property bool   pillDrag: false
             property int    panelW: 540
-            property string lang: "en"        // Built-in UI: en, ru, tr; other system locales use English UI.
-            property bool   clock12: false    // 12-часовой формат с AM/PM
-            // запись экрана
+            property string lang: "en"        // Built-in UI: en, tr; other system locales use English UI.
+            property bool   clock12: true     // 12-hour format with AM/PM
+            // screen recording
             property int    recFps: 60
             property string recDir: "~/Videos"
-            property bool   recSysAudio: false   // звук системы
-            property bool   recMic: false        // микрофон
-            property string recMicDevice: ""     // "" = микрофон по умолчанию
-            // менеджер паролей: предлагать сохранять пароли из буфера обмена
+            property bool   recSysAudio: false   // system audio
+            property bool   recMic: false        // microphone
+            property string recMicDevice: ""     // "" means the default microphone
+            // password manager: offer to save passwords seen on the clipboard
             property bool   vaultCapture: true
-            // проводник отдельным окном Hyprland, а не страницей пилюли
+            // file manager as its own Hyprland window instead of a pill page
             property bool   filesWindow: false
-            // Показывать файлы с точки. По умолчанию да: в домашнем каталоге
-            // почти всё, за чем в него заходят, начинается именно с неё —
-            // .config, .local, .ssh.
+            // Show dotfiles. Yes by default: in a home directory almost
+            // everything people come for starts with a dot, such as .config,
+            // .local and .ssh.
             property bool   filesHidden: true
-            // Как проводник раскладывает содержимое: "list" — строки с
-            // мелкими значками, размером и датой; "grid" — плитки покрупнее,
-            // когда важнее узнать файл в лицо, чем прочитать про него цифры.
-            // Переключатель стоит рядом с поиском, выбор запоминается.
+            // How the file manager lays out its contents: "list" gives rows
+            // with small icons, size and date; "grid" gives larger tiles, for
+            // when recognising a file matters more than reading numbers about
+            // it. The switch sits next to search and the choice is remembered.
             property string filesMode: "list"
 
-            // Цифровая интенсивность, шкала как в панели NVIDIA: 50 — как
-            // есть, 100 — максимум. На Wayland ручка из nvidia-settings не
-            // работает вовсе, поэтому цвет правит шейдер компоновщика.
+            // Digital vibrance, on the same scale as the NVIDIA panel: 50
+            // means as-is, 100 means maximum. On Wayland the nvidia-settings
+            // control does not work at all, so the compositor shader applies it.
             property int    vibrance: 50
 
-            // ------------------------------------------------------- мышь
-            // Скорость указателя в понимании libinput: -1 — самая медленная,
-            // 0 — как есть, 1 — самая быстрая. Это не «умножение на два», а
-            // сдвиг кривой, поэтому шаг мелкий.
+            // ------------------------------------------------------- mouse
+            // Pointer speed as libinput means it: -1 is slowest, 0 is as-is,
+            // 1 is fastest. This is a shift of the curve, not a doubling, so
+            // the steps are small.
             property real   mouseSens: 0
-            // Прямой ввод: libinput перестаёт разгонять указатель за резкое
-            // движение, и одно и то же расстояние по столу всегда даёт одно
-            // и то же расстояние по экрану. То, ради чего в играх выключают
-            // «повышенную точность установки указателя».
+            // Raw input: libinput stops accelerating the pointer on a fast
+            // movement, so the same distance on the desk always gives the same
+            // distance on screen. It is the reason games turn off "enhance
+            // pointer precision".
             property bool   mouseRaw: false
-            property string keyboardLayouts: "us,ru"
+            property string keyboardLayouts: "us"
             property string keyboardVariants: ","
             property string keyboardOptions: "grp:alt_shift_toggle"
 
-            // Включённые функции. При установке дотфайлов целиком доступно всё
-            // (по умолчанию true); установщик острова выключает то, что человек
-            // не отметил, и тогда соответствующей кнопки/страницы в пилюле нет,
-            // а служба (демон уведомлений, агент polkit) не регистрируется —
-            // чтобы не спорить с уже установленными в системе.
             property bool   featLauncher: true
-            // лаунчер: веб-поиск и короткие ответы ИИ (запрос с «?»)
             property string searchEngine: "duckduckgo"
             property string agentEventFilter: "all"
             property string aiUrl: ""
-            // о какой версии уже сообщали — переживает перезапуск оболочки
             property string updNotifiedVer: ""
             property string aiKey: ""
             property string aiModel: ""
-            // Launchpad: все приложения сеткой на весь экран, с папками
             property bool   featLaunchpad: true
             property bool   featPlayer: true
             property bool   featWifi: true
@@ -206,18 +198,15 @@ PanelWindow {
             property bool   featPolkit: true
 
             // ---------------------------------------------- Weather & Widgets
-            // Ключ и город пусты по умолчанию: без них виджет погоды просто
-            // не показывается. Ключ чужой, бесплатный и выдаётся на почту —
-            // подставить сюда что-то своё нельзя.
             property string weatherKey: ""
             property string weatherCity: ""
             property string weatherUnits: "metric"   // metric | imperial
-            // Погода в свёрнутом острове. Выключена по умолчанию.
             property bool   weatherOnIsland: false
             property bool   systemLoadOnIsland: false
-            // Настольные виджеты. Выключены по умолчанию: они рисуются
-            // поверх обоев и меняют вид рабочего стола, а такое включают
-            // сами, а не обнаруживают после обновления.
+            // Desktop widgets. Off by default: they are drawn over the
+            // wallpaper and change how the desktop looks, and that is
+            // something people turn on themselves rather than discover after
+            // an update.
             property bool   featWidgets: false
             property string widgetClockMode: "analog"
             property string widgetRightMode: "weather"
@@ -227,11 +216,11 @@ PanelWindow {
             // JSON string: {"Turkish":"TR","Russian":"RU"}
             property string keyboardLayoutMap: ""
 
-            // Прозрачность терминала. Живёт здесь, а правится в foot.ini:
-            // сам foot настройки оболочки не читает.
+            // Terminal opacity. It lives here but is edited in foot.ini:
+            // foot itself does not read the shell settings.
             property real   termAlpha: 0.90
 
-            // сочетания; пересобираются в lua/binds_data.lua
+            // key bindings; regenerated into lua/binds_data.lua
             property string bind_pillLauncher: "SUPER + A"
             property string bind_launchpad: "SUPER + G"
             property string bind_pillControls: "SUPER + Z"
@@ -252,8 +241,9 @@ PanelWindow {
             property string bind_exitHypr: "SUPER + SHIFT + M"
             property string bind_floatToggle: "SUPER + W"
             property string bind_pillVault: "SUPER + SHIFT + P"
-            // Голос в текст (voxtype): зажми правый Alt — говоришь, отпустил —
-            // вставилось. Обрабатывается парой press/release в keybindings.lua.
+            // Voice to text (voxtype): hold right Alt, speak, release, and the
+            // text is inserted. Handled by a press/release pair in
+            // keybindings.lua.
             property string bind_voxDictate: "Alt_R"
             property string bind_floatCenter: "SUPER + SHIFT + Space"
             property string bind_fileManager: "SUPER + E"
@@ -320,8 +310,8 @@ PanelWindow {
             property string bind_lidOff: "switch:off:Lid Switch"
         }
     }
-    // Заводские сочетания. Держим одним списком, чтобы «Сбросить»
-    // возвращал ровно те значения, что заданы по умолчанию.
+    // Factory key bindings. Kept in one list so that "Reset" restores exactly
+    // the values that ship as defaults.
     readonly property var defaultBinds: ({
         pillLauncher: "SUPER + A",
         launchpad:    "SUPER + G",
@@ -413,8 +403,9 @@ PanelWindow {
     Binding { target: Compositor; property: "keyboardLayoutMap"; value: root.cfg.keyboardLayoutMap }
     function saveCfgNow() { cfgFile.writeAdapter(); }
 
-    // Заводские значения всего, что правится в окне настроек. Сочетания
-    // клавиш сюда не входят: у них свой список и своя кнопка сброса.
+    // Factory values for everything edited in the settings window. Key
+    // bindings are not here: they have their own list and their own reset
+    // button.
     readonly property var defaultCfg: ({
         fontFam: "JetBrainsMono Nerd Font", fontBody: "JetBrainsMono Nerd Font",
         fontDisplay: "JetBrainsMono Nerd Font", fontSize: 15, iconSize: 17,
@@ -427,14 +418,14 @@ PanelWindow {
         notchMode: true, notchFlare: 12, collapsedW: 260, expandedH: 620,
         islandGap: 12, islandRadius: 0,
         reduceMotion: false, animMove: 230, animFade: 200, animHover: 150, animBounce: 0,
-        clock12: false, clockSeconds: false, clockWeekday: true,
+        clock12: true, clockSeconds: false, clockWeekday: true,
         clockTz: "auto", clockDateFmt: "d MMMM",
         notifDnd: false, notifTimeout: 5000, notifCritTimeout: 0, notifPreview: true,
         lockBlur: 32, lockHint: "",
         ccLayout: "", filesWindow: false, filesHidden: true, filesMode: "list",
         vaultCapture: true,
         vibrance: 50, mouseSens: 0, mouseRaw: false,
-        keyboardLayouts: "us,ru", keyboardVariants: ",", keyboardOptions: "grp:alt_shift_toggle",
+        keyboardLayouts: "us", keyboardVariants: ",", keyboardOptions: "grp:alt_shift_toggle",
         recFps: 60, recDir: "~/Videos", recSysAudio: false, recMic: false, recMicDevice: "",
         weatherKey: "", weatherCity: "", weatherUnits: "metric",
         weatherOnIsland: false, systemLoadOnIsland: false, keyboardLayoutMap: "", featWidgets: false,
@@ -445,7 +436,7 @@ PanelWindow {
         uiSounds: true
     })
 
-    // ------------------------------------------------------------------ звуки
+    // ------------------------------------------------------------------ sounds
     Process { id: pSound }
     function playSound(name) {
         if (root.cfg.uiSounds === false) return;
@@ -460,14 +451,14 @@ PanelWindow {
         root.saveCfg();
     }
 
-    // ------------------------------------------------------- экраны
-    // Одна точка, через которую вкладка Display разговаривает с Hyprland,
-    // и она же — память об этом разговоре.
+    // ------------------------------------------------------- screens
+    // The one point through which the Display tab talks to Hyprland, and it is
+    // also the memory of that conversation.
     //
-    // hyprctl keyword отвергается новым (не-legacy) парсером конфига и при
-    // этом выходит с нулевым кодом, поэтому раньше настройки монитора молча
-    // никуда не уезжали. Идём через hyprctl eval и hl.monitor{}, а keyword
-    // оставляем запасным путём для старых конфигов.
+    // hyprctl keyword is rejected by the newer (non-legacy) config parser and
+    // still exits with status zero, which is why monitor settings used to go
+    // nowhere silently. We go through hyprctl eval and hl.monitor{}, leaving
+    // keyword as the fallback for older configs.
     Process { id: pMon; property string args: ""; command: ["sh", "-c", pMon.args] }
 
     function monCmd(n, o) {
@@ -494,10 +485,10 @@ PanelWindow {
         all[n] = o;
         root.cfg.monOverrides = JSON.stringify(all);
         root.saveCfg();
-        // Компоновщику режим нужен ещё до нашего запуска: Qt привязывает
-        // таймер анимаций к частоте обновления, когда создаёт первое окно, а
-        // мы к тому моменту только стартуем. Пересобираем его конфиг, чтобы в
-        // следующий раз монитор поднялся сразу на своей частоте.
+        // The compositor needs the mode even before we start: Qt binds the
+        // animation timer to the refresh rate when it creates its first window,
+        // and by then we are only just starting. We regenerate its config so
+        // that next time the monitor comes up at its own rate straight away.
         genMonTimer.restart();
     }
 
@@ -513,8 +504,8 @@ PanelWindow {
         }
     }
 
-    // Накатить запомненное заново: на старте оболочки и после каждой
-    // перезагрузки конфига компоновщика — она сбрасывает живые настройки.
+    // Reapply what was remembered: at shell start, and after every compositor
+    // config reload, which resets the live settings.
     function monReplay() {
         var all = root.monMap(), parts = [];
         for (var n in all) parts.push(root.monCmd(n, all[n]));
@@ -524,16 +515,17 @@ PanelWindow {
         pMon.running = true;
     }
 
-    // ------------------------------------------- цифровая интенсивность
-    // Считает и применяет отдельный скрипт: там же лежит сам шейдер и знание
-    // о том, как разговаривать с компоновщиком. Здесь только запоминаем.
+    // ------------------------------------------- digital vibrance
+    // A separate script does the counting and the applying: the shader itself
+    // lives there, along with the knowledge of how to talk to the compositor.
+    // Here we only remember the value.
     Process { id: pVibrance }
 
-    // Ползунок шлёт значение на каждое движение мыши, а каждый вызов — это
-    // пересборка шейдера и перечитывание его компоновщиком. Без сдерживания
-    // они идут внахлёст, и Hyprland ловит файл на середине записи. Число в
-    // окне меняется сразу, к компоновщику уходит только то, на чём ручка
-    // остановилась.
+    // The slider sends a value on every mouse movement, and every call means
+    // rebuilding the shader and having the compositor reread it. Without
+    // throttling they overlap and Hyprland catches the file mid-write. The
+    // number in the window changes at once; only where the handle stopped goes
+    // to the compositor.
     Timer {
         id: vibranceFlush
         interval: 160
@@ -552,9 +544,9 @@ PanelWindow {
         vibranceFlush.restart();
     }
 
-    // ----------------------------------------------------------- мышь
-    // Через hyprctl eval по той же причине, что и настройки мониторов:
-    // keyword не-legacy парсер молча отвергает, выходя с нулевым кодом.
+    // ----------------------------------------------------------- mouse
+    // Through hyprctl eval for the same reason as the monitor settings: the
+    // non-legacy parser rejects keyword silently, exiting with status zero.
     Process { id: pInput; property string args: ""; command: ["sh", "-c", pInput.args] }
     Process {
         id: pGenInput
@@ -574,13 +566,13 @@ PanelWindow {
         var o = String(options).replace(/\s+/g, "");
         if (!/^[A-Za-z0-9_,+-]+$/.test(l) || l[0] === "," || l[l.length - 1] === "," || l.indexOf(",,") >= 0
                 || !/^[A-Za-z0-9_,+-]*$/.test(v) || !/^[A-Za-z0-9_,:+-]*$/.test(o)) {
-            root.keyboardInputError = root.tr("Некорректные коды раскладок или параметры переключения");
+            root.keyboardInputError = root.tr("Invalid layout codes or switching options");
             return false;
         }
         var count = l.split(",").length;
         if (/^,*$/.test(v)) v = Array(count).join(",");
         if (v.split(",").length !== count) {
-            root.keyboardInputError = root.tr("Число вариантов должно совпадать с числом раскладок");
+            root.keyboardInputError = root.tr("The number of variants must match the number of layouts");
             return false;
         }
         root.keyboardInputError = "";
@@ -607,25 +599,11 @@ PanelWindow {
         root.saveCfg();
     }
 
-    // Настройки ввода и цвета живут в компоновщике, а он их не помнит: любой
-    // hyprctl reload — и всё вернулось к тому, что записано в конфиге. Своё
-    // накатываем заново вместе с настройками мониторов, одним таймером —
-    // см. monReplayTimer, он же срабатывает и на старте оболочки.
 
-    // ------------------------------------------------- проводная сеть
-    // Кабель воткнут — значок сети должен быть проводной, а не Wi-Fi: связь
-    // идёт по нему, и рисовать антенну поверх работающего кабеля неверно.
     //
-    // Смотрим в sysfs, а не спрашиваем NetworkManager: в системе может стоять
-    // iwd с systemd-networkd, и тогда NM просто нет. Ядро же знает про
-    // несущую на интерфейсе всегда, кто бы сетью ни управлял.
     //
     //   type == 1  — Ethernet (ARPHRD_ETHER);
-    //   carrier    — есть ли линк прямо сейчас, то есть воткнут ли кабель;
-    //   wireless/  — каталог есть только у беспроводных, их пропускаем.
     //
-    // Мосты, докер, туннели и виртуальные пары отсеиваем по имени: у них
-    // тоже type 1 и своя несущая, но интернетом они не являются.
     property string wiredName: ""
     readonly property bool wiredOn: root.wiredName.length > 0
 
@@ -655,7 +633,6 @@ PanelWindow {
         onTriggered: { pWired.running = false; pWired.running = true; }
     }
 
-    // семейства моноширинных шрифтов для выпадающего списка настроек
     property var fontList: ["JetBrainsMono Nerd Font"]
     Process {
         id: pFonts
@@ -672,25 +649,18 @@ PanelWindow {
 
     function saveCfg() { cfgFile.writeAdapter(); }
 
-    // Russian is the source text. English and Turkish are bundled in Translations.qml;
-    // all other system locales fall back to English until a translation is added.
+    // English is the source text. Turkish is bundled in Translations.qml; every
+    // other system locale falls back to English until a translation is added.
     readonly property Translations i18n: Translations {}
 
     readonly property string localeId: String(cfg.lang || "en")
     readonly property string languageCode: localeId.split(/[_-]/)[0].toLowerCase()
-    readonly property bool isEn: languageCode !== "ru"
+    readonly property bool isEn: true
     function tr(k) {
-        if (root.languageCode === "ru") return k;
         if (root.languageCode === "tr" && i18n.tr[k] !== undefined) return i18n.tr[k];
-        return i18n.en[k] !== undefined ? i18n.en[k] : k;
+        return k;
     }
 
-    // -------------------------------------------------- язык экрана входа
-    // Greeter работает от пользователя sddm и наши настройки прочитать не
-    // может: ~/ закрыт. Дублируем выбранный язык в общий каталог тем же
-    // QML-фрагментом, что и акцент темы, — иначе экран входа продолжал бы
-    // говорить по-русски после переключения системы на английский.
-    // Каталог заводит установщик; если его нет, молча ничего не делаем.
     Process {
         id: pGreeterLocale
         command: ["sh", "-c",
@@ -699,15 +669,8 @@ PanelWindow {
             "\"$1\" > \"$d/locale.qml\" && chmod 644 \"$d/locale.qml\"",
             "_", root.cfg.lang]
     }
-    // Палитра для экрана входа — тем же способом и в тот же каталог.
     //
-    // Раньше её писал hypr/scripts/palette.sh из $accent_color, а это
-    // палитра терминалов и редакторов, к теме оболочки отношения не имеющая.
-    // Совпадение было случайным: на чёрно-белой теме экран входа встречал
-    // терракотовым кружком аватара и таким же кружком загрузки.
     //
-    // Пишем не один акцент, а всю четвёрку: у Nothing своя не только
-    // выделяющая краска, но и текст с фоном.
     Process {
         id: pGreeterTheme
         command: ["sh", "-c",
@@ -723,15 +686,8 @@ PanelWindow {
             String(root.colOn), String(root.colFg),
             String(root.colMuted), String(root.colBg)]
     }
-    // Прозрачность терминала — правилом компоновщика, а не alpha в foot.ini.
     //
-    // Сам foot читает свой конфиг только при запуске: ползунок не менял бы
-    // ничего в уже открытых окнах, а именно там его и двигают, глядя на
-    // терминал. Правило Hyprland применяется сразу и ко всем окнам разом.
     //
-    // Пишем и применяем: файл нужен, чтобы значение пережило перезагрузку —
-    // windowrules.lua подхватывает его при старте, — а eval, чтобы увидеть
-    // результат сейчас, не дожидаясь следующего входа в систему.
     Process {
         id: pTermAlpha
         command: ["sh", "-c",
@@ -741,10 +697,6 @@ PanelWindow {
             "match = { class = '^(footclient|foot)$' }, opacity = $1 })\" >/dev/null 2>&1",
             "_", root.cfg.termAlpha.toFixed(2)]
     }
-    // Сдерживаем, как и запись яркости по шине: ползунок шлёт значение на
-    // каждое движение мыши, а каждое — это запуск hyprctl. Наперегонки они
-    // спорят за один и тот же вызов, и компоновщик показывает баннер с
-    // ошибкой. Пишем, когда рука остановилась.
     Timer {
         id: termAlphaFlush
         interval: 180
@@ -755,45 +707,20 @@ PanelWindow {
     }
     function applyTermAlpha() { termAlphaFlush.restart(); }
 
-    // Перезапуск сервера терминала.
     //
-    // Нужен там, где правило компоновщика бессильно: своя alpha у foot,
-    // цвета, шрифт — всё это сервер читает один раз при старте и раздаёт
-    // клиентам. Просто убить его нельзя: автозапуск отрабатывает один раз за
-    // сеанс и заново не поднимет, а без сервера терминал перестанет
-    // открываться вовсе. Поэтому убиваем и тут же поднимаем сами.
     //
-    // Открытые окна при этом закроются — они и есть клиенты умершего
-    // сервера. Об этом сказано на кнопке.
     Process {
         id: pTermRestart
         command: ["sh", "-c",
             "pkill -x foot >/dev/null 2>&1; sleep 0.4; " +
             "setsid -f foot --server >/dev/null 2>&1"]
     }
-    // Запуск команды, переживающей закрытие панели.
     //
-    // Process, объявленный внутри страницы, умирает вместе с ней: меню
-    // питания закрывает панель сразу после запуска, и страница уничтожается
-    // в тот же миг. Быстрым командам вроде systemctl хватало мгновения
-    // отделиться, а блокировке — нет: её скрипт сперва готовит фон из обоев,
-    // и Process убивали раньше, чем дело доходило до самого экрана. Со
-    // стороны это выглядело как неработающая кнопка.
     //
-    // Здесь процесс живёт в корне оболочки, который не уничтожается никогда,
-    // так что торопиться ему некуда.
     Process { id: pDetached }
     function runDetached(cmd) {
-        // Через компоновщик, а не своим Process.
         //
-        // Даже отвязанный setsid потомок не переживал закрытия панели:
-        // блокировка успевала дойти до запуска экрана — это видно по следу в
-        // lock.log, — и тут же умирала, не оставив ни строчки в stderr и ни
-        // своего файла журнала. Так выглядит убитый процесс, а не упавший.
         //
-        // Компоновщик (Hyprland / Niri) запускает программы своим потомком —
-        // тем же способом, каким их открывают горячие клавиши, — и оболочка
-        // ему в этом не родитель. Дальше процесс живёт сам по себе.
         Compositor.exec(cmd);
     }
 
@@ -802,16 +729,8 @@ PanelWindow {
         pTermRestart.running = true;
     }
 
-    // Фон терминала под тему.
     //
-    // На Nothing он совпадает с карточками виджетов — тем же тёмно-серым,
-    // чтобы терминал читался частью набора, а не чужим окном. На остальных
-    // темах файл пустой, и цвет остаётся тот, что задаёт общая палитра: она
-    // правится руками и о темах оболочки не знает.
     //
-    // Пишем в свой файл, а не в тот, что генерирует palette.sh: у одного
-    // файла не бывает двух хозяев без спора. foot.ini подключает оба, наш
-    // вторым — побеждает подключённый позже.
     readonly property string termBg: "171717"
     Process {
         id: pTermTheme
@@ -836,19 +755,11 @@ PanelWindow {
         root.syncTermTheme();
     }
 
-    // ------------------------------------------------------------ язык
-    // Язык оболочки меняется мгновенно — это её собственный словарь. Язык
-    // остального (приложений, меню, системных сообщений) живёт в LANG и
-    // требует root, поэтому идёт через pkexec: агент polkit у оболочки свой,
-    // окно с паролем нарисует она сама.
     //
-    // Часы при этом остаются 24-часовыми при любом языке: за формат отвечает
-    // отдельная переменная, и скрипт её не трогает.
     property string sysLang: "en"
     property bool   sysLangPending: false
     function canonicalLocale(value) {
         if (value === "en") return "en_US";
-        if (value === "ru") return "ru_RU";
         if (value === "tr") return "tr_TR";
         return String(value || "");
     }
@@ -877,8 +788,6 @@ PanelWindow {
 
     function setLang(code) {
         if (root.cfg.lang === code) return;
-        // Оболочка переключается сразу, не дожидаясь пароля: её словарь
-        // системного языка не касается, и ждать здесь нечего.
         root.cfg.lang = code;
         root.saveCfg();
 
@@ -893,25 +802,13 @@ PanelWindow {
         pGreeterLocale.running = false;
         pGreeterLocale.running = true;
     }
-    // Один обработчик на сигнал: QML второго не допускает, поэтому всё, что
-    // должно случиться на смене языка, собрано здесь.
     //
-    // Погоду переспрашиваем потому, что описание словами приходит от сервиса
-    // уже переведённым — язык передаётся в запросе. Свои подписи оболочка
-    // переключает сразу, а это одно осталось бы на прежнем языке до
-    // следующего опроса, то есть до четверти часа.
     onLocaleIdChanged: {
         root.syncGreeterLocale();
         if (root.cfg.featWidgets || root.cfg.weatherOnIsland) root.refreshWeather();
     }
 
-    // Видимость вогнутых уголков острова.
     //
-    // Гаснут они сразу, а появляются с задержкой на время движения капсулы.
-    // Уголки — отдельные элементы, привязанные к её краям, и при возврате из
-    // настроек они проявлялись мгновенно, ещё когда капсула ехала на место:
-    // со стороны выглядело, будто две наклейки слетаются к острову с разных
-    // сторон. Пока он едет, их просто нет, и приезжает он целым.
     readonly property bool cornersWanted:
         !(root.settingsMode || root.wallsOpen || root.pillHidden)
     property bool cornersOn: false
@@ -929,31 +826,17 @@ PanelWindow {
         }
     }
 
-    // ------------------------------------ перезагрузка в другую систему
-    // Процесс живёт ЗДЕСЬ, в корне, а не в лаунчере, откуда его вызывают.
     //
-    // Лаунчер закрывается сразу после выбора, и через animMs + 40 мс страница
-    // сбрасывается на главную — вид уничтожается, а вместе с ним и всё, что в
-    // нём объявлено. Process, заведённый внутри лаунчера, умирал за четверть
-    // секунды, тогда как pkexec к этому моменту только успевал нарисовать окно
-    // с паролем. Снаружи это выглядело ровно как «нажал и ничего не
-    // произошло»: ни ошибки, ни окна, ни перезагрузки.
     //
-    // setsid здесь не годится, хотя и пережил бы закрытие панели: он уводит
-    // процесс в новый сеанс, а polkit по сеансу и решает, чьё это право. Корень
-    // оболочки живёт столько же, сколько сама оболочка, и этого достаточно.
     Process {
         id: pBootOs
         stderr: StdioCollector {
             onStreamFinished: {
                 var t = String(text).trim();
                 if (t.length === 0) return;
-                // Тихо падать этой команде нельзя: человек ждёт перезагрузки и
-                // по отсутствию окна не отличит отказ polkit от того, что
-                // нажатие вовсе не дошло.
                 console.warn("bootos:", t);
                 pBootOsSay.command = ["notify-send", "-u", "critical",
-                                      root.tr("Не удалось перезагрузиться"), t];
+                                      root.tr("Could not restart"), t];
                 pBootOsSay.running = false;
                 pBootOsSay.running = true;
             }
@@ -961,12 +844,6 @@ PanelWindow {
     }
     Process { id: pBootOsSay }
 
-    // ------------------------------------ открыть файл выбранной программой
-    // Живёт здесь по той же причине, что и перезагрузка в другую систему:
-    // проводник закрывается сразу после выбора, и Process, объявленный внутри
-    // него, умирал вместе с видом — раньше, чем успевал запустить программу.
-    // Снаружи это выглядело как «выбрал программу, проводник закрылся, ничего
-    // не открылось».
     Process { id: pOpenWith }
     function openFileWith(path, desktopFile) {
         if (!path) return;
@@ -978,9 +855,6 @@ PanelWindow {
         pOpenWith.running = true;
     }
 
-    // Действия от root идут через системный помощник panacea-root: его
-    // правило polkit спрашивает пароль один раз на несколько минут, а не на
-    // каждое действие. Пока помощник не поставлен — старый путь.
     readonly property string rootHelper: "/usr/local/lib/panacea/panacea-root"
     property bool rootHelperOk: false
     Process {
@@ -1000,45 +874,30 @@ PanelWindow {
         pBootOs.running = true;
     }
 
-    // Номер версии оболочки: его правит автор при выпуске, а хеш коммита
-    // рядом говорит, из какого состояния репозитория собрана сборка.
     readonly property string version: "1.0.24"
 
-    // ------------------------------------------------------------ обновление
-    // Установленную версию помечает установщик (~/.config/panacea/.version),
-    // а update.sh сверяет её с концом ветки на GitHub. Хеш коммита меняется от
-    // любой правки — и от новых файлов, и от изменений в старых, и от удалений,
-    // поэтому одного сравнения хватает, чтобы поймать всё сразу.
     property string updStatus: ""      // "" | current | behind | unknown | offline
-    property string updSubject: ""     // заголовок последнего коммита
-    property string updLatest: ""      // хеш на GitHub
-    property string updCurrent: ""     // хеш, с которого ставили
+    property string updSubject: ""
+    property string updLatest: ""
+    property string updCurrent: ""
     property bool   updBusy: false
     property string updStep: ""
-    property string updError: ""      // код ошибки от update.sh, не текст
-    // о какой версии уже сообщали: одно уведомление на выпуск, а не на проверку
+    property string updError: ""
     property string updNotified: ""
 
     readonly property bool updateAvailable: updStatus === "behind"
 
-    // update.sh печатает код, а не фразу: иначе текст ошибки приходил бы на
-    // языке скрипта и не слушался выбранного языка интерфейса.
     readonly property string updErrorText: {
         switch (root.updError) {
         case "":         return "";
-        case "nogit":    return root.tr("Не установлен git");
-        case "offline":  return root.tr("Нет связи с GitHub");
-        case "download": return root.tr("Не удалось скачать обновление");
-        case "install":  return root.tr("Установщик завершился с ошибкой");
-        default:         return root.tr("Обновление не удалось");
+        case "nogit":    return root.tr("git is not installed");
+        case "offline":  return root.tr("Cannot reach GitHub");
+        case "download": return root.tr("Could not download the update");
+        case "install":  return root.tr("The installer failed");
+        default:         return root.tr("The update failed");
         }
     }
 
-    // Идёт ли сейчас проверка. Отдельно от updBusy: обновление длится минуты и
-    // показывается в острове, а проверка — секунду-другую и живёт только в
-    // окне настроек. Без этого флага нажатие на «Проверить» не отвечало ничем:
-    // ответ приходил, когда человек уже решил, что кнопка сломана, — и если
-    // версия оказывалась прежней, не менялось вообще ничего.
     property bool updChecking: false
 
     function checkUpdate() {
@@ -1056,21 +915,11 @@ PanelWindow {
         root.updStep = "download";
         root.updCreepAt = 4;
         root.busyProgress = 4;
-        // Обновление идёт минуты и переживает закрытие настроек: показываем
-        // его в острове, иначе о нём знало бы только открытое окно.
-        root.beginBusy(root.tr("Обновление…"), "󰚰", 4);
+        root.beginBusy(root.tr("Updating…"), "󰚰", 4);
         pUpdApply.running = true;
     }
 
-    // Проценты у обновления считаются по этапам, которые печатает update.sh:
-    // байтов и файлов оно не считает, а этапы известны наперёд.
     //
-    // Веса, а не равные доли. Этапы длятся по-разному: скачивание идёт
-    // секунды, а сохранение настроек и отметка версии — доли секунды. При
-    // равных долях полоса замирала на первой седьмой, а потом за миг
-    // проскакивала остальные шесть — то есть скакала вместо того, чтобы
-    // заполняться. Числа взяты из замеров: клон около трёх секунд,
-    // установщик около одной, остальное — мгновения.
     readonly property var updSteps: [
         { id: "download",      w: 45 },
         { id: "selfupdate",    w: 2  },
@@ -1081,8 +930,6 @@ PanelWindow {
         { id: "restart",       w: 4  },
         { id: "done",          w: 0  }
     ]
-    // Скачивание git сообщает настоящим процентом (update.sh печатает dl=NN):
-    // полоса на этом шаге идёт по факту, а не подползает наугад.
     function updDownload(pct) {
         if (!root.updBusy || root.updStep !== "download") return;
         var v = root.updStepPercent + (root.updStepCeil - root.updStepPercent) * pct / 100;
@@ -1101,8 +948,6 @@ PanelWindow {
             if (root.updSteps[i].id === id) return i;
         return -1;
     }
-    // Доля начатого этапа — то, что накоплено до него. Внутри самого этапа
-    // полосу двигает updCreep: сколько именно прошло, скрипт не знает.
     readonly property int updStepPercent: {
         var i = root.updStepIndex(root.updStep);
         if (i < 0) return 0;
@@ -1110,7 +955,6 @@ PanelWindow {
         for (var k = 0; k < i; k++) acc += root.updSteps[k].w;
         return Math.round(acc * 100 / root.updWeightTotal);
     }
-    // Сколько отдать текущему этапу целиком: до этой границы его и подползаем.
     readonly property int updStepCeil: {
         var i = root.updStepIndex(root.updStep);
         if (i < 0) return 0;
@@ -1119,16 +963,7 @@ PanelWindow {
         return Math.round(acc * 100 / root.updWeightTotal);
     }
 
-    // Полоса ползёт и внутри этапа, не дожидаясь следующего.
     //
-    // Самый долгий шаг — скачивание, и его длительность зависит от связи:
-    // ни git, ни установщик о ходе работы не сообщают. Стоящая полоса на
-    // медленной сети читается как зависшее обновление. Поэтому она движется
-    // сама, замедляясь у границы этапа и никогда её не переступая: дойти до
-    // конца раньше настоящего конца было бы обманом.
-    // Своя дробная доля, а не busyProgress: тот целый, и приращение меньше
-    // единицы в нём терялось бы — полоса застревала бы у самой границы, куда
-    // подползает всё медленнее.
     property real updCreepAt: 0
     readonly property int updProgress: Math.max(0, Math.min(100, Math.round(root.updCreepAt)))
 
@@ -1140,7 +975,6 @@ PanelWindow {
         onTriggered: {
             var to = Math.max(root.updStepCeil, root.updStepPercent + 5);
             if (root.updCreepAt >= to) return;
-            // шаг тем меньше, чем ближе граница
             var left = to - root.updCreepAt;
             root.updCreepAt = Math.min(to, root.updCreepAt + Math.max(0.3, left * 0.05));
             root.busyProgress = Math.round(root.updCreepAt);
@@ -1148,8 +982,6 @@ PanelWindow {
     }
     onUpdStepChanged: {
         if (!root.updBusy) return;
-        // Назад полоса не ходит: этап мог начаться раньше, чем подполз
-        // предыдущий, и откат читался бы как сбой.
         if (root.updStepPercent > root.updCreepAt)
             root.updCreepAt = root.updStepPercent;
         if (root.updStep === "done") root.updCreepAt = 100;
@@ -1174,11 +1006,6 @@ PanelWindow {
             else if (k === "version") root.updCurrent = v;
         }
         if (!done) return;
-        // Уведомление показываем один раз на версию: проверка идёт по таймеру,
-        // и каждые шесть часов напоминать об одном и том же — навязчиво.
-        // Номер, о котором уже сообщали, живёт в настройках: в памяти он
-        // терялся с каждым перезапуском оболочки, и уведомление о той же
-        // версии приходило снова и снова.
         if (root.updStatus === "behind" && root.updLatest.length
                 && root.updLatest !== root.cfg.updNotifiedVer) {
             root.updNotified = root.updLatest;
@@ -1192,23 +1019,14 @@ PanelWindow {
         id: pUpdCheck
         command: [root.scriptDir + "/update.sh", "check"]
         stdout: StdioCollector { onStreamFinished: root.updParse(text, true) }
-        // Снимаем флаг по выходу процесса, а не по концу вывода: скрипт может
-        // упасть, ничего не напечатав, и тогда крутилка осталась бы навсегда.
         onExited: root.updChecking = false
     }
 
     Process {
         id: pUpdApply
         command: [root.scriptDir + "/update.sh", "apply"]
-        // Построчно, а не StdioCollector.
         //
-        // StdioCollector копит весь вывод и отдаёт его одним куском, когда
-        // поток закроется, то есть когда обновление уже кончилось. Строки
-        // step= приезжали все разом и в самом конце — полоса честно стояла на
-        // нуле всё обновление, а потом оболочка просто перезапускалась. Ход
-        // работы, показанный после её окончания, — это не ход работы.
         //
-        // SplitParser отдаёт каждую строку сразу, как скрипт её напечатал.
         stdout: SplitParser {
             splitMarker: "\n"
             onRead: data => root.updParse(data, false)
@@ -1222,26 +1040,17 @@ PanelWindow {
         }
     }
 
-    // Обычное уведомление рабочего стола: его увидят, даже когда окно настроек
-    // закрыто, а поймает его собственная служба уведомлений оболочки.
-    // -p заставляет notify-send напечатать номер уведомления. Он нужен,
-    // чтобы потом узнать своё же уведомление в общей ленте: сравнивать текст
-    // нельзя — он переводится, и на другом языке проверка молча перестала бы
-    // совпадать.
     property int updNotifId: -1
     Process {
         id: pUpdNotify
         command: ["notify-send", "-p", "-a", "Panacea", "-i",
                   Quickshell.env("HOME") + "/.config/panacea/assets/logo-128.png",
-                  root.tr("Доступно обновление Panacea"), root.updSubject]
+                  root.tr("A Panacea update is available"), root.updSubject]
         stdout: StdioCollector {
             onStreamFinished: root.updNotifId = parseInt(String(text).trim()) || -1
         }
     }
 
-    // ----------------------------------------------------- «что нового»
-    // update.sh кладёт список изменений в .whatsnew. Оболочка после
-    // перезапуска показывает его один раз и файл стирает.
     property var whatsNew: []
     readonly property bool whatsNewOpen: whatsNew.length > 0
 
@@ -1249,8 +1058,6 @@ PanelWindow {
         id: whatsNewFile
         path: Quickshell.env("HOME") + "/.config/panacea/.whatsnew"
         watchChanges: true
-        // Файла почти всегда нет, и это не ошибка: он появляется только
-        // после обновления. Без этого лог засорялся при каждом запуске.
         printErrors: false
         onFileChanged: reload()
         onLoaded: {
@@ -1260,9 +1067,6 @@ PanelWindow {
         onLoadFailed: root.whatsNew = []
     }
 
-    // Слежение цепляется к существующему файлу, а .whatsnew появляется уже
-    // после запуска оболочки, если обновлялись без перезапуска. Поэтому
-    // первые полминуты перечитываем сами.
     Timer {
         interval: 3000
         running: root.whatsNew.length === 0
@@ -1275,13 +1079,8 @@ PanelWindow {
         }
     }
 
-    // Пакеты, которых не хватает после обновления. Ставим не мы: обновление
-    // идёт с --no-deps, а хватать пакеты через sudo из-под кнопки в настройках
-    // — не то, чего от него ждут. Поэтому просто называем их на том же экране.
     property string missingDeps: ""
 
-    // Простое копирование в буфер. Пароли идут своим путём — им нужен
-    // --sensitive-data и очистка по таймеру, см. vaultCopy().
     Process { id: pCopyText }
     function copyText(t) {
         pCopyText.running = false;
@@ -1299,8 +1098,6 @@ PanelWindow {
         onLoadFailed: root.missingDeps = ""
     }
 
-    // Обратная сторона: что оболочка ставила раньше и больше не использует.
-    // Удалять сами не будем — это пакеты в системе человека, а не наши.
     property string obsoleteDeps: ""
     FileView {
         id: obsoleteDepsFile
@@ -1312,9 +1109,6 @@ PanelWindow {
         onLoadFailed: root.obsoleteDeps = ""
     }
 
-    // Файлы, которые человек правил сам и обновление оставило как есть
-    // (scripts/manifest.sh). Свежая версия, если она изменилась, лежит рядом
-    // как <файл>.panacea-new.
     property string keptEdits: ""
     FileView {
         id: keptEditsFile
@@ -1341,33 +1135,22 @@ PanelWindow {
                   Quickshell.env("HOME") + "/.config/panacea"]
     }
 
-    // Первая проверка не на старте: при входе в систему сеть ещё поднимается,
-    // и запрос почти наверняка не прошёл бы.
     Timer { interval: 45000; running: true; onTriggered: root.checkUpdate() }
     Timer { interval: 6 * 3600 * 1000; running: true; repeat: true; onTriggered: root.checkUpdate() }
 
     readonly property string scriptDir:
         Quickshell.env("HOME") + "/.config/panacea/scripts"
 
-    // capture.sh off зовёт этот IPC, чтобы панель сняла режим захвата
     signal cancelCaptureRequested()
 
-    // Какая вкладка настроек откроется: 0 — пилюля, 2 — экран, 3 — клавиши.
     property int settingsTab: 0
-    // Открыть настройки на разделе по имени, а не по номеру: номера зависят
-    // от порядка в списке разделов, и новый раздел посередине молча уводил бы
-    // не туда. Пустая строка — раздел не задан.
     property string settingsSection: ""
     function openSettingsAt(sectionId) {
         root.settingsSection = sectionId;
         if (root.page !== "settings" || !root.expanded) root.togglePage("settings");
     }
 
-    // Пересобрать binds_data.lua и перечитать конфиг Hyprland
     Process { id: pGenBinds }
-    // Скрипт читает settings.json, а запись файла асинхронная: если запускать
-    // его сразу после saveCfg(), он успевал прочитать ещё старое сочетание —
-    // и «Применить» не меняло ничего. Ждём сигнала о завершении записи.
     property bool bindsPending: false
     function applyBinds() {
         root.bindsPending = true;
@@ -1382,15 +1165,8 @@ PanelWindow {
             Quickshell.env("HOME") + "/.config/panacea/scripts/genbinds.sh"];
         pGenBinds.running = true;
     }
-    // страховка, если сигнала о записи почему-то не будет
     Timer { id: bindsFallback; interval: 700; onTriggered: root.runGenBinds() }
 
-    // Сочетания живут в settings.json, но Hyprland читает только производный
-    // от него binds_data.lua. Файл лежит внутри ~/.config/hypr, который
-    // установщик заменяет целиком, — и пропадал вместе с ним. Настройки при
-    // этом оставались на месте, поэтому со стороны это выглядело так, будто
-    // сочетания «не сохраняются»: окно Super+/ показывает своё, а нажатия
-    // работают заводские. Собираем файл заново, если его нет.
     Process {
         id: pBindsHeal
         running: true
@@ -1410,34 +1186,17 @@ PanelWindow {
         }
     }
 
-    // ---------------------------------------------------------------- палитра
-    // Темы не зависят от обоев: цвет всей оболочки задаёт выбранная тема, а
-    // не картинка на столе. Тема «default» — то, что было раньше: фон чёрный,
-    // а текст и акцент берутся из настроек, поэтому вручную выбранные цвета
-    // никуда не деваются.
     readonly property var themes: Themes.list
     function themeOf(id) { return Themes.of(id); }
     readonly property var theme: themeOf(cfg.themeId)
-    // Флаг на облик Nothing. Для обратной совместимости с дочерними элементами
     readonly property bool themeNothing: true
 
-    // Размер точки в числах Nothing. Считается от размера шрифта, а не задан
-    // числом: человек двигает ползунок кегля в настройках, и точечные часы
-    // должны расти вместе с остальными подписями, иначе остров расползается.
     //
-    // Три ступени — высота цифры в пикселях, тем же числом, каким меряют
-    // обычный текст. Считаются от кегля со сдвигом, а не долей от него:
-    // рядом с цифрой всегда стоит подпись, и разница между ними должна
-    // оставаться одинаковой, а не растягиваться вместе с ползунком.
-    readonly property real dotHBig:   root.fontSize + 10   // часы в панели
-    readonly property real dotHClock: root.fontSize - 1    // часы в острове
-    readonly property real dotHSmall: root.fontSize - 3    // числа при значках
-    readonly property real dotHTiny:  root.fontSize - 5    // сводка нагрузки
+    readonly property real dotHBig:   root.fontSize + 10
+    readonly property real dotHClock: root.fontSize - 1
+    readonly property real dotHSmall: root.fontSize - 3
+    readonly property real dotHTiny:  root.fontSize - 5
 
-    // Цвет надписи поверх заливки акцентом. На светлом акценте белым по
-    // белому не видно ничего — а на теме Nothing акцент именно белый.
-    // Яркость по Rec. 709: зелёный глаз видит куда лучше синего, и среднее
-    // арифметическое трёх каналов ошибается как раз на жёлтом и голубом.
     function fgOn(c) {
         return (0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b) > 0.6
                ? root.colBg : "#ffffff";
@@ -1452,33 +1211,19 @@ PanelWindow {
     readonly property color colOk:     theme.ok
     readonly property color colCrit:   theme.crit
 
-    // Цвета состояний, которых в палитре темы нет. На теме Nothing цветного
-    // выделения не бывает вовсе: смысл там несёт яркость, а не оттенок, и
-    // одинокое зелёное или синее пятно среди чёрно-белого выглядит чужим.
-    // Красный — единственное исключение, он значит «внимание», а не
-    // украшение, и живёт в палитре как colCrit.
     //
-    // tint() для тех цветов, под которые заводить строку в палитре не за
-    // чем: они встречаются в одном-двух местах и означают ровно себя.
     function tint(c) { return root.colFg; }
-    // янтарный «на паузе» и «осторожно» — он встречается часто
     readonly property color colWarn: root.tint("#fbbf24")
     readonly property string fontFam:  cfg.fontFam
-    // текстовый шрифт и шрифт заголовков; пустое значение — общий fontFam
     readonly property string fontBody:    cfg.fontBody || cfg.fontFam
     readonly property string fontDisplay: cfg.fontDisplay || cfg.fontFam
     readonly property int fontSize:    cfg.fontSize
     readonly property int iconSize:    cfg.iconSize
-    // шаг отступов и малый радиус: из них считается геометрия карточек
     readonly property int unit:        cfg.spacingUnit
     readonly property int radiusS:     cfg.smallRadius
 
-    // ---------------------------------------------------------------- метрики
-    readonly property int pillH: cfg.pillH      // высота свёрнутой пилюли
+    readonly property int pillH: cfg.pillH
 
-    // Где висит остров. Раскрытие всегда идёт к центру экрана: сверху —
-    // вниз, снизу — вверх, слева — вправо, справа — влево. Это выходит само
-    // собой, потому что капсула прижата к своей кромке и растёт от неё.
     readonly property string pillPos: {
         var p = String(cfg.pillPos || "top");
         return (p === "bottom" || p === "left" || p === "right") ? p : "top";
@@ -1487,21 +1232,13 @@ PanelWindow {
     readonly property bool pillAtBottom: pillPos === "bottom"
     readonly property bool pillAtLeft:   pillPos === "left"
     readonly property bool pillAtRight:  pillPos === "right"
-    // у боковых положений капсула стоит по центру высоты, а не у кромки экрана
     readonly property bool pillSide: pillAtLeft || pillAtRight
 
-    // ------------------------------------------------- перенос острова мышью
-    // Тумблер в настройках; тянут за полосу над часами в раскрытых быстрых
-    // настройках. У кромки остров цепляется к её центру, в пустоте —
-    // возвращается на место: цепляться там не за что.
     property bool  pillDragging: false
-    property real  dragDX: 0            // смещение от родного места, px
+    property real  dragDX: 0
     property real  dragDY: 0
-    // кромка, к которой прицепится остров, если отпустить сейчас
     property string dragEdge: ""
 
-    // Кромку выбираем по тому, к какой ближе центр капсулы, и только если он
-    // уже в её полосе — четверть экрана. Иначе отпускать некуда.
     function edgeAt(cx, cy) {
         var w = root.width, h = root.height;
         var dTop = cy, dBottom = h - cy, dLeft = cx, dRight = w - cx;
@@ -1517,71 +1254,45 @@ PanelWindow {
         var edge = root.dragEdge;
         root.pillDragging = false;
         root.dragEdge = "";
-        // смещение снимаем с анимацией: остров едет либо к новой кромке,
-        // либо обратно на своё место
         root.dragDX = 0;
         root.dragDY = 0;
         if (edge.length && edge !== root.pillPos) {
             cfg.pillPos = edge;
             root.saveCfg();
         }
-        // Сворачиваемся и не раскрываемся, пока курсор не уйдёт и не вернётся.
-        // У новой кромки раскладка страницы другая, и раскрытая панель
-        // переезжала вместе с островом, разъезжаясь на ходу. Так остров сначала
-        // спокойно встаёт на место, а панель открывается уже наведением.
         root.hoverExpandArmed = false;
         capsuleHover.markArmPoint();
         root.collapse();
     }
 
-    // Где именно сейчас стоит капсула. Нужно карусели обоев: она начинает
-    // разворот ровно из острова, поэтому ей нужны его координаты.
     property real pillRectX: 0
     property real pillRectY: 0
     property real pillRectW: 0
     property real pillRectH: 0
-    readonly property int panelW: cfg.panelW    // ширина раскрытой панели
-    readonly property int gap: 5                // зазор между пилюлей и окнами
-    // радиус примыкания к кромке; вне режима выреза примыкать нечему
+    readonly property int panelW: cfg.panelW
+    readonly property int gap: 5
     readonly property int cornerR: cfg.notchMode ? cfg.notchFlare : 0
 
-    // Единая кривая: панель «перетекает», а не прыгает.
-    // Длительности задаёт вкладка Motion. «Reduce motion» обнуляет их все
-    // разом: движение исчезает, а не ускоряется.
     readonly property bool noMotion: cfg.reduceMotion
     readonly property int animMs:   noMotion ? 0 : cfg.animMove
     readonly property int animFade: noMotion ? 0 : cfg.animFade
     readonly property int animHover: noMotion ? 0 : cfg.animHover
-    // перелёт осциллятора в долях: 79 % → 0.79 сверх цели
     readonly property real animBounce: noMotion ? 0 : cfg.animBounce / 100
-    // перелёт для кривых OutBack: 100 % ползунка — это заметный, но ещё не
-    // резиновый отскок, поэтому доля умножается, а не берётся как есть
     readonly property real easeOvershoot: animBounce * 1.7
     readonly property int animFast: Math.round(animMs * 0.52)
-    // изменение содержимого (список приложений, новая сеть) — коротко и резко
     readonly property int animQuick: Math.round(animMs * 0.48)
 
-    // true только пока идёт раскрытие/схлопывание или смена страницы.
-    // Нужно, чтобы рост списка не ехал по длинной кривой раскрытия.
     property bool morphing: false
     onExpandedChanged: {
         morphing = true;
         morphTimer.restart();
-        // панель закрылась — показываем карточки, накопившиеся за это время
         if (!expanded) toastPump.restart();
     }
     onPageChanged:     { morphing = true; morphTimer.restart() }
-    // Держим дольше самой анимации: высота страницы приходит с задержкой
-    // в кадр-другой, и без запаса второй шаг ехал бы по «быстрой» кривой.
     Timer { id: morphTimer; interval: root.animMs + 140; onTriggered: root.morphing = false }
 
-    // ------------------------------------------------------------ состояние UI
     property bool expanded: false
     // "main" | "wifi" | "bt" | "battery" | "launcher"
-    // main    — плитки Wi-Fi / Bluetooth / звук, трек и запись
-    // battery — режимы питания и состояние заряда
-    // Отдельной страницы плеера нет: играющий трек с кнопками и полосами
-    // живёт карточкой на главной, там же, где всё остальное.
     property string vpnCountry: "--"
     property string vpnCountryName: ""
     property bool vpnConnected: false
@@ -1620,9 +1331,9 @@ PanelWindow {
             var d = {}; try { d = JSON.parse(text); } catch(e) {}
             if (d.country) { root.vpnCountry = d.country; root.vpnCountryName = d.name || ""; }
             if (root.vpnAnnouncement) {
-                var title = root.vpnAnnouncement === "up" ? root.tr("VPN подключён") : root.tr("VPN отключён");
+                var title = root.vpnAnnouncement === "up" ? root.tr("VPN connected") : root.tr("VPN disconnected");
                 vpnNotify.command = ["notify-send", "--app-name", "Panacea VPN", title,
-                    d.country ? (String(d.name || d.country) + " · " + d.country) : root.tr("Регион недоступен")];
+                    d.country ? (String(d.name || d.country) + " · " + d.country) : root.tr("Region unavailable")];
                 vpnNotify.running = true; root.vpnAnnouncement = "";
             }
         } }
@@ -1636,7 +1347,7 @@ PanelWindow {
                 else { root.vpnActiveIds = (d.profiles || []).filter(p => p.active).map(p => p.id); root.vpnConnected = root.vpnActiveIds.length > 0 || !!d.tunnelActive; }
                 root.announceVpnChange(d.action || root.vpnQuickAction);
             }
-            else { vpnNotify.command = ["notify-send", "--app-name", "Panacea VPN", root.tr("Ошибка VPN"), String(d.error || "")]; vpnNotify.running = true; }
+            else { vpnNotify.command = ["notify-send", "--app-name", "Panacea VPN", root.tr("VPN error"), String(d.error || "")]; vpnNotify.running = true; }
         } catch(e) {} } }
     }
     Process { id: vpnNotify }
@@ -1650,7 +1361,6 @@ PanelWindow {
     property var islandChatMessages: []
     property var islandAgentEvents: []
     property string page: "main"
-    // что показывает медиаплеер (страница "media")
     property string quickFilePath: ""
     property var quickFilePaths: []
     property bool fileOverIsland: false
@@ -1670,9 +1380,9 @@ PanelWindow {
         var paths = [];
         for (var i = 0; i < urls.length; i++) {
             var url = String(urls[i]);
-            if (url.indexOf("file:///") !== 0) { sayToast(tr("Файлы"), tr("Поддерживаются только локальные файлы")); return; }
+            if (url.indexOf("file:///") !== 0) { sayToast(tr("Files"), tr("Only local files are supported")); return; }
             try { paths.push(decodeURIComponent(url.substring(7))); }
-            catch (e) { sayToast(tr("Файлы"), tr("Не удалось прочитать путь")); return; }
+            catch (e) { sayToast(tr("Files"), tr("Cannot read the path")); return; }
         }
         quickFilePaths = paths; quickFilePath = paths[0];
         fileOverIsland = false;
@@ -1681,19 +1391,12 @@ PanelWindow {
     }
 
     property string mediaPath: ""
-    // высота полотна плеера: большую часть экрана, но не впритык
     readonly property int mediaStageH: Math.round((screen ? screen.height : 1080) * 0.58)
-    // Плеер живёт в Loader и снаружи по id не виден, поэтому режим кропа
-    // держим здесь: кнопка и горячая клавиша дёргают один и тот же флаг.
     property bool mediaCrop: false
     function mediaCropToggle() { root.mediaCrop = !root.mediaCrop; }
 
-    // ---------------------------------------------------- добавление обоев
-    // «+» на странице обоев открывает проводник в режиме выбора: следующая
-    // выбранная картинка не откроется в плеере, а уедет на страницу обоев,
-    // где её просят назвать и сохранить.
     property bool   wallpaperPickMode: false
-    property string wallpaperPick: ""       // путь выбранной, ждёт имени
+    property string wallpaperPick: ""
     function startWallpaperPick() {
         wallsOpen = false;
         wallpaperPickMode = true;
@@ -1717,11 +1420,6 @@ PanelWindow {
         root.holdOpen = true;
     }
 
-    // ------------------------------------------------ полноэкранные окна
-    // Пилюля живёт в слое Overlay и по умолчанию рисуется поверх всего.
-    // Пока активное окно развёрнуто на весь экран, прячем её целиком:
-    // сочетания клавиш при этом работают — по ним панель раскрывается
-    // и окно снова показывается.
     property bool fullscreenActive: Compositor.isNiri ? Compositor.isFullscreen : false
 
     Process {
@@ -1736,12 +1434,6 @@ PanelWindow {
         }
     }
     Timer { id: fsProbe; interval: 120; onTriggered: if (!Compositor.isNiri) pFullscreen.running = true }
-    // События Hyprland приходят не на все переходы (например, при смене
-    // окна внутри полноэкранного слоя), поэтому подстраховываемся опросом.
-    // Опрос — только страховка: основное приходит событиями Hyprland, и
-    // fsProbe перепроверяет состояние сразу после каждого. Ежесекундный
-    // запуск hyprctl с двумя grep'ами стоил трёх процессов в секунду
-    // круглые сутки, а ловил лишь редкие пропущенные переходы.
     Timer {
         interval: 5000; running: !Compositor.isNiri; repeat: true; triggeredOnStart: true
         onTriggered: pFullscreen.running = true
@@ -1756,14 +1448,9 @@ PanelWindow {
                 || n === "closewindow" || n === "openwindow" || n === "workspace"
                 || n === "focusedmon")
                 fsProbe.restart();
-            // перезагрузка конфига Hyprland стирает всё, что мы наприменяли
             if (n === "configreloaded") monReplayTimer.restart();
         }
     }
-    // Перезагрузка конфига стирает не только настройки мониторов: скорость
-    // указателя, разгон и шейдер насыщенности живут там же и уезжают вместе
-    // с ними. Накатываем всё своё одним заходом, иначе после любого
-    // hyprctl reload мышь и цвет молча возвращались к заводским.
     Timer {
         id: monReplayTimer
         interval: 400
@@ -1778,8 +1465,6 @@ PanelWindow {
         }
     }
 
-    // Один обработчик на сигнал: QML второго не допускает, поэтому всё, что
-    // должно случиться при запуске, собрано здесь.
     Component.onCompleted: {
         fsProbe.restart();
         syncGreeterLocale();
@@ -1787,16 +1472,9 @@ PanelWindow {
         syncGreeterTheme();
         syncTermTheme();
         root.cornersOn = root.cornersWanted;
-        // Первое заполнение списка столов: дальше его ведёт onWsRawChanged, а
-        // тот срабатывает только на изменение — стартовое значение он бы
-        // пропустил, и до первого переключения точек не было бы вовсе.
         root.wsList = root.wsRaw;
     }
 
-    // ------------------------------------------------- перетаскивание файлов
-    // Источник живёт прямо в окне, а не внутри страницы: панель во время
-    // перетаскивания сворачивается, её содержимое уничтожается, и элемент
-    // изнутри утащил бы за собой начатый drag.
     Item {
         id: fileDrag
         width: 1
@@ -1813,14 +1491,10 @@ PanelWindow {
     }
     Timer {
         id: fileDragStart
-        interval: 90        // даём панели уехать вниз, потом начинаем drag
+        interval: 90
         onTriggered: fileDrag.Drag.active = true
     }
 
-    // ------------------------------------------------------ обзор столов
-    // Для превью нужны две вещи: геометрия окна (её знает Hyprland) и
-    // wayland-хэндл (по нему ScreencopyView берёт живой кадр). Оба лежат
-    // на HyprlandToplevel, поэтому собираем их в один список.
     property bool overviewOpen: false
     function openOverview() {
         if (Compositor.isNiri) {
@@ -1833,9 +1507,6 @@ PanelWindow {
     }
     function closeOverview() { root.overviewOpen = false; }
 
-    // Переход на стол. С Lua-конфигом Hyprland разбирает строку запроса как
-    // Lua-код, и привычное "workspace 2" валится синтаксической ошибкой —
-    // нужен настоящий диспетчер. На обычном конфиге работает старая форма.
     function gotoWorkspace(id) {
         if (Compositor.isNiri) {
             Compositor.focusWorkspace(id);
@@ -1850,10 +1521,6 @@ PanelWindow {
     }
 
     // ------------------------------------------------------------ Launchpad
-    // Сетка всех приложений на весь экран (LaunchpadView). Живёт своим слоем,
-    // как обзор столов: в пилюлю сетка на сорок иконок не помещается.
-    // Слой создаётся при первом открытии и дальше остаётся: второе открытие
-    // мгновенное, а раскладка и иконки уже загружены.
     property bool launchpadOpen: false
     property bool launchpadWarm: false
     function openLaunchpad() {
@@ -1864,8 +1531,6 @@ PanelWindow {
         root.launchpadOpen = true;
     }
     function closeLaunchpad() { root.launchpadOpen = false; }
-    // Слой собираем заранее, через несколько секунд после старта: тогда
-    // и первое открытие мгновенное, и иконки успевают найтись в фоне.
     Timer {
         interval: 4000
         running: root.cfg.featLaunchpad && !root.launchpadWarm
@@ -1875,29 +1540,18 @@ PanelWindow {
         if (root.launchpadOpen) closeLaunchpad(); else openLaunchpad();
     }
 
-    // ------------------------------------------------------------- клавиши
-    // Список сочетаний уехал из настроек в своё окно: их правят редко и
-    // подолгу, список длинный, а держать его пятой вкладкой значило каждый раз
-    // растягивать окно настроек под самый большой раздел.
     property bool keysWindowOpen: false
     function toggleKeysWindow() { root.keysWindowOpen = !root.keysWindowOpen; }
 
-    // ------------------------------------------------------------------ обои
-    // Карусель обоев — отдельный полноэкранный слой, как обзор столов:
-    // картинку надо видеть большой, а в пилюле для этого нет места.
     property bool wallsOpen: false
     function openWalls() {
         if (!cfg.featThemes) return;
         collapse();
         root.wallsOpen = true;
-        // список обновится в фоне; на экране пока прежний, а не пустота
         root.refreshWalls();
     }
     function closeWalls() { root.wallsOpen = false; }
 
-    // Список обоев держим здесь и читаем заранее: карусель должна открываться
-    // уже с картинками. Пока список жил внутри неё, первые полсекунды на
-    // экране висело «обоев не найдено».
     property var wallList: []
     property bool wallListReady: false
     Process {
@@ -1923,9 +1577,6 @@ PanelWindow {
             }
         }
     }
-    // Миниатюра текущих обоев: макет рабочего стола в настройках показывает
-    // именно её, а не условный градиент — иначе по макету не поймёшь, как
-    // остров будет читаться на своём фоне.
     readonly property string currentWallThumb: {
         for (var i = 0; i < wallList.length; i++) {
             if (wallList[i].wActive) return wallList[i].wThumb;
@@ -1939,9 +1590,6 @@ PanelWindow {
         root.refreshLiveWalls();
     }
 
-    // ------------------------------------------------------- живые обои
-    // Видео вместо картинки на фоне. Список и постеры готовит
-    // hypr/scripts/live_wallpaper.sh, играет mpvpaper.
     property var liveList: []
     property bool liveListReady: false
     property string liveDir: ""
@@ -1966,9 +1614,9 @@ PanelWindow {
                     if (p.length < 4) continue;
                     rows.push({
                         wName:   p[0],
-                        wThumb:  p[1],          // постер; пусто, пока не готов
+                        wThumb:  p[1],
                         wActive: p[2] === "yes",
-                        wOwn:    true,          // живые обои всегда свои
+                        wOwn:    true,
                         wPath:   p[3]
                     });
                 }
@@ -1981,14 +1629,12 @@ PanelWindow {
         pLiveList.running = false;
         pLiveList.running = true;
     }
-    // папка живых обоев в проводнике: складывать видео надо именно туда
     function openLiveFolder() {
         if (root.liveDir.length === 0) return;
         root.closeWalls();
         root.openFilesAt(root.liveDir);
     }
     Timer {
-        // не на самом старте: при входе в систему и без нас есть чем заняться
         interval: 4000
         running: true
         onTriggered: root.refreshWalls()
@@ -2019,12 +1665,8 @@ PanelWindow {
         return out;
     }
 
-    // Кто-то из окон проводника изменил файлы — остальным пора перечитать
-    // свой список: они смотрят на ту же файловую систему.
     signal filesChanged()
 
-    // fromWindow — тащат из отдельного окна проводника: пилюлю трогать не надо
-    // и ждать её уезда тоже, перетаскивание начинается сразу.
     function startFileDrag(path, fromWindow) {
         var list = Array.isArray(path) ? path : [path];
         fileDrag.uri = list.map(function (p) { return "file://" + String(p).split("/").map(encodeURIComponent).join("/"); }).join("\r\n");
@@ -2033,18 +1675,11 @@ PanelWindow {
         fileDragStart.restart();
     }
 
-    // Высота списка в проводнике фиксирована: иначе панель прыгала на каждой
-    // смене папки, подстраиваясь под число файлов.
     readonly property int filesListH: Math.round((screen ? screen.height : 1080) * 0.64)
 
-    // последняя папка проводника — чтобы он открывался там, где закрыли
     property string filesDir: Quickshell.env("HOME")
-    // Иконка трея, чьё контекстное меню сейчас открыто (страница "traymenu").
     property var trayMenuItem: null
-    // пока вводят пароль или открыт лаунчер, панель не закрывается по уходу мыши
     property bool holdOpen: false
-    // клавиатуру окно получает уже после загрузки страницы — возвращаем
-    // фокус содержимому, иначе стрелки и Enter уходят в пустоту
     onHoldOpenChanged: if (holdOpen) refocusTimer.restart()
     Timer {
         id: refocusTimer
@@ -2067,9 +1702,6 @@ PanelWindow {
         onTriggered: if (!root.expanded) { root.page = "main"; root.trayMenuItem = null; }
     }
 
-    // Открыть страницу закреплённо; повторный вызов той же страницы закрывает.
-    // Какая функция отвечает за страницу. Пустая строка — страница всегда есть
-    // (главная, календарь-из-часов и т.п. проверяются отдельно).
     function pageEnabled(name) {
         switch (name) {
             case "launcher":  return cfg.featLauncher;
@@ -2089,14 +1721,6 @@ PanelWindow {
         }
     }
 
-    // ------------------------------------------------- проводник отдельно
-    // С включённой настройкой проводник перестаёт быть страницей пилюли и
-    // становится обычным окном: Hyprland сам его тайлит, оно остаётся на
-    // своём рабочем столе и переносится между ними как любое другое. Пилюля
-    // при этом не раскрывается и остаётся в обычном виде.
-    // Окон может быть сколько угодно: Super+E в оконном режиме каждый раз
-    // открывает ещё одно, как любой нормальный проводник. Закрывается каждое
-    // само по себе — по крестику или Esc внутри него.
     property int filesWindowSeq: 0
     ListModel { id: filesWindows }
 
@@ -2106,9 +1730,6 @@ PanelWindow {
                               startDir: String(startDir || "") });
     }
 
-    // Открыть проводник сразу в нужной папке — например в каталоге живых
-    // обоев из карусели. В оконном режиме это новое окно, иначе страница
-    // пилюли, которая читает каталог при загрузке.
     property string filesStartDir: ""
     function openFilesAt(path) {
         var p = String(path || "");
@@ -2126,10 +1747,6 @@ PanelWindow {
         }
     }
 
-    // Открыть подстраницу и закрепить панель. Раньше страница батареи,
-    // сетей или устройств открывалась простым присваиванием page, панель
-    // оставалась незакреплённой и захлопывалась, стоило увести курсор —
-    // до списка было не дотянуться. Возврат — Esc или кнопка «назад».
     function openSub(name) {
         pageResetTimer.stop();
         page = name;
@@ -2138,8 +1755,7 @@ PanelWindow {
     }
 
     function togglePage(name) {
-        if (!pageEnabled(name)) return;   // выключено установщиком — молчим
-        // проводник в оконном режиме пилюлю не трогает вовсе
+        if (!pageEnabled(name)) return;
         if (name === "files" && cfg.filesWindow) { openFilesWindow(); return; }
         if (expanded && page === name) { collapse(); return; }
         pageResetTimer.stop();
@@ -2159,29 +1775,14 @@ PanelWindow {
         if (launcherOpen) closeLauncher(); else openLauncher();
     }
 
-    // Агенты открываются из лаунчера, как приложение, — своей строкой в общем
-    // списке. Отдельной кнопки в быстрых настройках нет намеренно: туда ходят
-    // за переключателями, а это справка, к которой обращаются, когда о ней
-    // вспомнили. Искать её там же, где всё остальное, — короче, чем помнить
-    // ещё одно сочетание клавиш.
-    // Растёт на каждое открытие: вид агентов на это подписан и перечитывает
-    // цифры. Само создание вида на это не годится — пока страница не сброшена
-    // на главную, повторное открытие переиспользует уже созданный.
     property int agentsEpoch: 0
     function openAgents() {
         root.agentsEpoch++;
         togglePage("agents");
     }
 
-    // ----------------------------------------------------- стоп-кадр экрана
-    // Путь к снимку всего экрана, который scripts/shot.sh показывает поверх
-    // всего, пока идёт выделение области. Пусто — слоя нет.
     property string freezeShot: ""
 
-    // Логические границы всей раскладки экранов (минимальный прямоугольник,
-    // накрывающий все мониторы). По ним слой стоп-кадра растягивает снимок,
-    // снятый в физическом разрешении, — чтобы на экране с масштабом он лёг
-    // один в один, а не куском в углу.
     readonly property rect freezeBounds: {
         var xs = Quickshell.screens;
         if (!xs || xs.length === 0) return Qt.rect(0, 0, 0, 0);
@@ -2196,20 +1797,15 @@ PanelWindow {
         return Qt.rect(minx, miny, maxx - minx, maxy - miny);
     }
 
-    // Скриншот кладётся в буфер обмена, и по экрану этого не видно: рамка
-    // выделения пропала — и всё. Уведомление здесь, а не в скрипте, потому
-    // что текст переводится вместе с остальной оболочкой.
     property string lastShotPath: ""
     Process { id: pShotSay }
     function shotCopied(path: string): void {
         root.lastShotPath = String(path);
-        // Значком берём сам снимок: уведомление показывает, что именно сняли,
-        // и промах по рамке видно, не открывая файл.
         var name = String(path).split("/").pop();
         pShotSay.command = ["notify-send", "-a", "Panacea", "-i", String(path),
                             "-h", "int:transient:1",
-                            root.tr("Скриншот"),
-                            root.tr("В буфере обмена") + " · " + name];
+                            root.tr("Screenshot"),
+                            root.tr("Copied to the clipboard") + " · " + name];
         pShotSay.running = false;
         pShotSay.running = true;
         root.playSound("screenshot");
@@ -2223,19 +1819,10 @@ PanelWindow {
         pShotSay.running = true;
     }
 
-    // Настройки — единственная страница, которая отрывается от верхней кромки
-    // и встаёт по центру экрана: содержимого много, у верха оно было тесным.
-    // Страницы, которые отрываются от верхней кромки и встают по центру:
-    // содержимого много, у верха оно тесное.
-    // Темы отсюда убраны: список стал узким и живёт прямо под пилюлей,
-    // как сети и устройства. Отдельное окно посреди экрана для выбора обоев
-    // было слишком тяжёлым жестом.
     readonly property bool settingsMode:
         expanded && (page === "settings"
                      || page === "files" || page === "media")
 
-    // Вкладка «Клавиши» раскладывается в две колонки, поэтому окно шире:
-    // вертикальный список не влезал и уезжал за нижнюю кромку экрана.
     property bool wideSettings: false
     readonly property int settingsW: {
         var want = page === "files" ? Math.round((screen ? screen.width : 1920) * 0.78)
@@ -2245,10 +1832,6 @@ PanelWindow {
         return Math.min(want, lim);
     }
 
-    // ------------------------------------------------------------ смена темы
-    // hyprpaper меняет обои мгновенно и без перехода. Поэтому снимок старых
-    // обоев остаётся висеть поверх экрана и плавно тает — снизу к этому
-    // моменту уже новые, и получается честный кроссфейд без смены бэкенда.
     property string themeFadeWall: ""
     property bool   themeFading: false
 
@@ -2266,15 +1849,6 @@ PanelWindow {
     }
     function endThemeFade() { root.themeFading = false; }
 
-    // ------------------------------------------------------------------ медиа
-    // «Липкий» текущий плеер: пока выбранный плеер ещё существует, держимся
-    // за него, даже когда на паузе он перестаёт быть «играющим». Иначе на
-    // паузе выбор перескакивал на другой MPRIS-источник (например, вкладку
-    // браузера без обложки) — и обложка/название мигали.
-    // Прежний выбор держим в обычном объекте, а не в свойстве: привязка
-    // player читает его и тут же сама в него пишет. Со свойством это был
-    // цикл привязки — Qt ругался в лог и пересчитывал выбор на каждом кадре
-    // проигрывания. Поле внутри объекта зависимости не создаёт.
     readonly property var stickyBox: ({ p: null })
     readonly property var player: {
         var list = Mpris.players ? Mpris.players.values : [];
@@ -2286,7 +1860,6 @@ PanelWindow {
             if (p === root.stickyBox.p) stickyAlive = p;
             if (p.isPlaying && !playing) playing = p;
         }
-        // играющий побеждает; иначе прежний, если он ещё жив; иначе любой
         return playing || stickyAlive || any;
     }
     onPlayerChanged: { if (player) root.stickyBox.p = player; refreshMediaArt(); }
@@ -2295,23 +1868,18 @@ PanelWindow {
         && player !== null && player !== undefined
         && String(player.trackTitle).trim().length > 0
 
-    // Обложка мигала: на паузе/возобновлении MPRIS на миг отдаёт пустой
-    // trackArtUrl, и картинка в капсуле пропадала. Запоминаем последнюю
-    // непустую обложку текущего трека и показываем её, пока трек не сменился.
     property string mediaArt: ""
     property string mediaArtTrack: ""
     function refreshMediaArt() {
         if (!player) { return; }
         var title = String(player.trackTitle || "");
         var art = String(player.trackArtUrl || "");
-        // Пустое название на миг проскакивает при паузе — такие «полукадры»
-        // игнорируем, чтобы не сбросить обложку в ноту.
         if (title.length === 0) return;
         if (title !== root.mediaArtTrack) {
             root.mediaArtTrack = title;
-            root.mediaArt = art;           // новый трек — берём что есть
+            root.mediaArt = art;
         } else if (art.length > 0) {
-            root.mediaArt = art;           // тот же трек — обновляем лишь непустым
+            root.mediaArt = art;
         }
     }
     Connections {
@@ -2320,15 +1888,9 @@ PanelWindow {
         function onTrackArtUrlChanged() { root.refreshMediaArt(); }
         function onTrackTitleChanged()  { root.refreshMediaArt(); }
         function onPostTrackChanged()   { root.refreshMediaArt(); }
-        // На паузе/возобновлении плеер иногда переотдаёт метаданные — заодно
-        // перечитываем обложку, чтобы она не пропадала после resume.
         function onIsPlayingChanged()   { root.refreshMediaArt(); }
     }
 
-    // ---------------------------------------------------------------- батарея
-    // Батарея через UPower: свойства приходят по сигналам D-Bus, поэтому
-    // иконка меняется сразу при подключении и отключении зарядки.
-    // Раньше здесь был опрос /sys раз в 20 секунд — отсюда задержка.
     readonly property var battDev: UPower.displayDevice
 
     readonly property int batteryPct:
@@ -2339,26 +1901,15 @@ PanelWindow {
 
     readonly property bool acOnline: !UPower.onBattery
 
-    // Заряжается — молния. От сети без зарядки — вилка.
-    // Иначе обычная батарея с заполнением по проценту (шаг 10).
     readonly property var battIcons: [
         0xF008E, 0xF007A, 0xF007B, 0xF007C, 0xF007D, 0xF007E,
         0xF007F, 0xF0080, 0xF0081, 0xF0082, 0xF0079]
 
-    // Только уровень, без подмены на молнию: в Quick settings молния стоит
-    // отдельным значком рядом, а сама батарея должна показывать заряд.
     readonly property string batteryLevelIcon:
         String.fromCodePoint(battIcons[Math.max(0, Math.min(10, Math.round(batteryPct / 10)))])
 
-    // Есть ли вообще батарея — на десктопе блок заряда прятать целиком.
     //
-    // По списку устройств, а не по сводному displayDevice: на настольной
-    // машине оно тоже «готово», просто отдаёт ноль, и остров честно рисовал
-    // «0%» там, где батареи нет вовсе.
     //
-    // Ищем именно системную батарею (isLaptopBattery). Тип Battery носят и
-    // мышь с клавиатурой — их заряд не имеет отношения к питанию машины, и
-    // показывать его в острове как заряд компьютера было бы неверно.
     readonly property bool batteryPresent: {
         var list = UPower.devices ? UPower.devices.values : [];
         for (var i = 0; i < list.length; i++) {
@@ -2389,21 +1940,11 @@ PanelWindow {
         function onBatteryChargingChanged() { root.battLowCheck(); }
     }
 
-    // ------------------------------------------------------------- машина
-    // Ноутбук или ПК — вопрос железа, а не настройки, поэтому спрашивать не о
-    // чем: батарея, тачпад и способ управления яркостью просто есть или их
-    // нет. Разбирается brightness.sh, тут только результат.
     //
-    // Батарею берём у UPower (он и так подключён и сам следит за появлением
-    // устройств), остальное — разовым опросом на старте: тачпад и монитор в
-    // работающей системе не появляются.
     property string brightBackend: "none"   // backlight | ddc | none
     property bool   hasTouchpad: false
     property bool   ddcutilPresent: false
     readonly property bool isLaptop: root.batteryPresent
-    // На ПК прячем то, что относится только к ноутбуку: заряд, профили
-    // питания и настройки тачпада. Пустые разделы честнее убрать, чем
-    // показывать вечные нули.
     readonly property bool showBattery: root.batteryPresent
     readonly property bool showPowerProfiles: root.batteryPresent && root.cfg.featPowerProfiles
 
@@ -2421,19 +1962,11 @@ PanelWindow {
                     if (p[0] === "touchpad") root.hasTouchpad    = p[1].trim() === "1";
                     if (p[0] === "ddcutil")  root.ddcutilPresent = p[1].trim() === "1";
                 });
-                // Список экранов нужен самой панели, а не только вкладке
-                // Display: дорожка яркости стоит в быстрых настройках и
-                // должна быть там с первого раскрытия, а не после того, как
-                // человек однажды заглянул в настройки экрана.
                 root.brightRefresh(false);
             }
         }
     }
 
-    // ---------------------------------------------------------- погода
-    // Числа держим строками ровно так, как их отдал сервис: округлять и
-    // подписывать — дело виджета, а здесь важно отличать «ноль градусов» от
-    // «ещё не спрашивали». Пустая строка и значит «нет данных».
     property string weatherTemp: ""
     property string weatherFeels: ""
     property string weatherHumidity: ""
@@ -2441,36 +1974,30 @@ PanelWindow {
     property string weatherWind: ""
     property string weatherClouds: ""
     property string weatherCond: ""      // Clouds, Rain, Clear …
-    property string weatherDesc: ""      // словами, на языке оболочки
-    property string weatherIcon: ""      // код вида 04d — по нему берётся значок
-    property string weatherPlace: ""     // как город назвал сам сервис
-    property string weatherErr: ""       // пусто — всё в порядке
+    property string weatherDesc: ""
+    property string weatherIcon: ""
+    property string weatherPlace: ""
+    property string weatherErr: ""
     property bool   weatherBusy: false
 
     readonly property bool weatherReady:
         root.weatherErr.length === 0 && root.weatherTemp.length > 0
-    // Градус в обеих системах пишется одинаково; различаются они шкалой, а
-    // не знаком, поэтому буква нужна только там, где её спрашивают явно.
     readonly property string weatherUnitLetter:
         root.cfg.weatherUnits === "imperial" ? "F" : "C"
-    // Единица скорости ветра — она же подпись под числом в кружке, поэтому
-    // переводится здесь, а не остаётся латиницей на русском интерфейсе.
     readonly property string weatherWindUnit:
-        root.cfg.weatherUnits === "imperial" ? (root.languageCode === "ru" ? "миль/ч" : "mph")
-                                             : (root.languageCode === "ru" ? "м/с" : root.languageCode === "tr" ? "m/sn" : "m/s")
+        root.cfg.weatherUnits === "imperial" ? "mph"
+                                             : (root.languageCode === "tr" ? "m/sn" : "m/s")
 
-    // Значок погоды знаком шрифта — для тем, где точечных значков нет.
-    // Разбор кода тот же, что в DotIcon: первые две цифры — сама погода.
     readonly property string weatherGlyph: {
         var k = String(root.weatherIcon).slice(0, 2);
         return String.fromCodePoint(
-              k === "01" ? 0xF0599                        // солнце
-            : k === "02" ? 0xF0595                        // солнце за облаком
-            : (k === "03" || k === "04") ? 0xF0590         // облако
-            : (k === "09" || k === "10") ? 0xF0597         // дождь
-            : k === "11" ? 0xF0593                        // гроза
-            : k === "13" ? 0xF0598                        // снег
-            : k === "50" ? 0xF0591                        // туман
+              k === "01" ? 0xF0599
+            : k === "02" ? 0xF0595
+            : (k === "03" || k === "04") ? 0xF0590
+            : (k === "09" || k === "10") ? 0xF0597
+            : k === "11" ? 0xF0593
+            : k === "13" ? 0xF0598
+            : k === "50" ? 0xF0591
                          : 0xF0590);
     }
 
@@ -2479,8 +2006,6 @@ PanelWindow {
         stdout: StdioCollector {
             onStreamFinished: {
                 root.weatherBusy = false;
-                // Сборщик копит вывод всех запусков подряд: берём последнюю
-                // порцию, а не начало текста.
                 var txt = String(text);
                 var cut = txt.lastIndexOf("temp=");
                 var errCut = txt.lastIndexOf("err=");
@@ -2519,15 +2044,12 @@ PanelWindow {
         pWeather.command = ["sh", "-c",
             root.scriptDir + "/weather.sh \"$1\" \"$2\" \"$3\" \"$4\"", "_",
             String(root.cfg.weatherKey), String(root.cfg.weatherCity),
-            String(root.cfg.weatherUnits), ["ru", "tr"].indexOf(root.languageCode) >= 0 ? root.languageCode : "en"];
+            String(root.cfg.weatherUnits), root.languageCode === "tr" ? "tr" : "en"];
         pWeather.running = false;
         pWeather.running = true;
         root.refreshWeatherForecast();
     }
 
-    // Раз в четверть часа. Чаще незачем: погода столько и не меняется, а у
-    // бесплатного ключа есть предел обращений в минуту, который делят между
-    // собой все программы, куда его вписали.
     Timer {
         interval: 900000
         running: (root.cfg.featWidgets || root.cfg.weatherOnIsland)
@@ -2537,7 +2059,6 @@ PanelWindow {
         onTriggered: root.refreshWeather()
     }
 
-    // ------------------------------------------------ детальный прогноз
     property bool weatherDetailsOpen: false
     property var  weatherForecastData: null
 
@@ -2565,16 +2086,11 @@ PanelWindow {
         pWeatherForecast.command = ["sh", "-c",
             root.scriptDir + "/weather_forecast.sh \"$1\" \"$2\" \"$3\" \"$4\"", "_",
             String(root.cfg.weatherKey), String(root.cfg.weatherCity),
-            String(root.cfg.weatherUnits), ["ru", "tr"].indexOf(root.languageCode) >= 0 ? root.languageCode : "en"];
+            String(root.cfg.weatherUnits), root.languageCode === "tr" ? "tr" : "en"];
         pWeatherForecast.running = false;
         pWeatherForecast.running = true;
     }
 
-    // --------------------------------------------------------- нагрузка
-    // Сводка для быстрых настроек на теме Nothing. Минус означает «измерить
-    // не вышло»: строка тогда прячется, а не показывает ноль. Ноль здесь врёт
-    // слишком убедительно — «видеокарта простаивает» и «датчика нет» на глаз
-    // неразличимы.
     property int loadCpu:  -1
     property int loadMem:  -1
     property int loadGpu:  -1
@@ -2582,9 +2098,6 @@ PanelWindow {
     property int loadTempGpu: -1
     property int loadDisk: -1
 
-    // Опрашиваем пока панель раскрыта или включены настольные виджеты.
-    // На рабочем столе скрипт вызывается с флагом --fast без задержки сна
-    // и nvidia-smi, снимая только RAM и Disk за несколько миллисекунд.
     readonly property bool loadWanted: root.expanded || root.cfg.featWidgets || root.cfg.systemLoadOnIsland
 
     Connections {
@@ -2602,8 +2115,6 @@ PanelWindow {
         command: ["sh", "-c", Quickshell.env("HOME") + "/.config/panacea/scripts/sysload.sh" + ((root.expanded || root.cfg.systemLoadOnIsland) ? "" : " --fast")]
         stdout: StdioCollector {
             onStreamFinished: {
-                // Сборщик копит вывод всех запусков подряд, поэтому берём
-                // последнюю законченную строку, а не начало текста.
                 var recs = String(text).trim().split("\n").filter(r => r.indexOf("|") >= 0);
                 if (!recs.length) return;
                 var a = recs[recs.length - 1].split("|");
@@ -2631,16 +2142,9 @@ PanelWindow {
         running: root.loadWanted
         repeat: true
         triggeredOnStart: true
-        // Перезапуск через сброс: присваивание running = true, пока процесс
-        // ещё не отметился завершённым, ничего не делает, и показания
-        // замирали бы на первом снимке.
         onTriggered: { pLoad.running = false; pLoad.running = true; }
     }
 
-    // ------------------------------------------------------------- яркость
-    // [{ id, name, pct }] — экраны, у которых яркость вообще управляется.
-    // Пустой список на ПК означает «монитор не отвечает по DDC/CI», и вкладка
-    // Display говорит об этом словами вместо мёртвого ползунка.
     property var brightList: []
     property bool brightBusy: false
 
@@ -2673,21 +2177,12 @@ PanelWindow {
         pBrightList.running = true;
     }
 
-    // Запись по DDC идёт по I2C и занимает десятки миллисекунд, а ползунок
-    // шлёт значения на каждое движение мыши. Без сдерживания шина забивается
-    // очередью, монитор отстаёт от ручки и догоняет её через секунду после
-    // отпускания. Копим последнее значение и отправляем не чаще, чем шина
-    // успевает переварить.
     Process { id: pBrightSet }
     property string brightPendingId: ""
     property int    brightPendingPct: -1
 
     Timer {
         id: brightFlush
-        // Ждём паузы в движении, а не шлём каждые N мс. Одна запись по DDC
-        // занимает десятки миллисекунд, монитор на неё моргает подсветкой, и
-        // очередь из промежуточных значений превращала протяжку ползунка в
-        // мигание с отставанием. Уходит только то, на чём ручка остановилась.
         interval: 180
         repeat: false
         onTriggered: {
@@ -2703,8 +2198,6 @@ PanelWindow {
 
     function brightSet(id, pct) {
         pct = Math.max(1, Math.min(100, Math.round(pct)));
-        // Показываем сразу, не дожидаясь монитора: ползунок под рукой обязан
-        // ходить без задержки, даже когда шина отвечает медленно.
         var l = root.brightList.slice();
         for (var i = 0; i < l.length; i++)
             if (l[i].id === id) l[i] = { id: id, name: l[i].name, pct: pct };
@@ -2715,10 +2208,6 @@ PanelWindow {
         brightFlush.restart();
     }
 
-    // Подробности для страницы «Батарея»: ёмкость, износ и текущий расход.
-    // Прогнозов «сколько осталось» здесь намеренно нет — UPower пересчитывает
-    // их рывками, и цифра прыгала на глазах.
-    // Локальная история заряда и параметры, доступные в sysfs.
     property var batteryDetails: ({})
     Process {
         id: batteryInfoProcess
@@ -2743,7 +2232,7 @@ PanelWindow {
         id: batteryThresholdProcess
         onExited: (code, status) => {
             root.refreshBatteryDetails();
-            if (code !== 0) root.sayToast(root.tr("Батарея"), root.tr("Не удалось изменить порог зарядки"));
+            if (code !== 0) root.sayToast(root.tr("Battery"), root.tr("Could not change the charge threshold"));
         }
     }
     function setBatteryThreshold(start, end) {
@@ -2759,27 +2248,19 @@ PanelWindow {
         battDev && battDev.ready ? Math.round(battDev.healthPercentage) : 0
     readonly property real batteryCapacity:
         battDev && battDev.ready ? battDev.energyCapacity : 0
-    // Вт: положительная — заряд, отрицательная — разряд
     readonly property real batteryRate:
         battDev && battDev.ready ? battDev.changeRate : 0
 
     readonly property string batteryIcon: {
-        // Заряжается — молния. От сети без зарядки — обычная батарея,
-        // отличается только цветом (зелёный), без иконки розетки.
         if (batteryCharging) return String.fromCodePoint(0xF0241);
         var step = Math.max(0, Math.min(10, Math.round(batteryPct / 10)));
         return String.fromCodePoint(battIcons[step]);
     }
 
     // ---------------------------------------------------------------- polkit
-    // Запрос пароля при установке пакетов и прочих привилегированных
-    // действиях рисуется в пилюле, а не отдельным окном агента.
     property var authFlow: null
     readonly property bool authActive: authFlow !== null && !authFlow.isCompleted
 
-    // Агент polkit — тоже в Loader: выключен установщиком, значит остров не
-    // регистрируется агентом и место остаётся за уже установленным
-    // (hyprpolkitagent и т.п.); polkit допускает только одного на сессию.
     Loader {
         active: root.cfg.featPolkit
         sourceComponent: PolkitAgent {
@@ -2804,9 +2285,6 @@ PanelWindow {
         }
     }
 
-    // ---------------------------------------------------------------- не спать
-    // Пока тумблер включён, systemd-inhibit держит блокировку: система не
-    // уснёт и не погасит экран. Quickshell сам убивает процесс при выключении.
     property bool keepAwake: false
     Process {
         running: root.keepAwake
@@ -2814,8 +2292,6 @@ PanelWindow {
                   "--who=Panacea", "--why=Keep awake", "sleep", "infinity"]
     }
 
-    // ------------------------------------------------------- звук: устройства и приложения
-    // Список выходов и переключение между ними.
     readonly property var audioSinks: {
         var out = [];
         var all = Pipewire.nodes ? Pipewire.nodes.values : [];
@@ -2825,7 +2301,6 @@ PanelWindow {
         }
         return out;
     }
-    // Список активных аудиопотоков приложений (раздельный микшер)
     readonly property var audioStreams: {
         var out = [];
         var all = Pipewire.nodes ? Pipewire.nodes.values : [];
@@ -2850,31 +2325,19 @@ PanelWindow {
         Pipewire.preferredDefaultAudioSink = node;
     }
 
-    // Прогрев кеша миниатюр обоев при старте, чтобы страница тем
-    // открывалась мгновенно уже с первого раза.
     Process {
         running: true
         command: ["sh", "-c", Quickshell.env("HOME")
                   + "/.config/panacea/scripts/thumbs.sh all"]
     }
 
-    // ------------------------------------------------------------ системный трей
     readonly property var trayItems: SystemTray.items
 
-    // ---------------------------------------------------------- уведомления
-    // Пилюля сама работает демоном уведомлений: в системе его не было вовсе,
-    // и всё, что присылали программы, молча пропадало.
-    // «Не беспокоить» — состояние, а не настройка: его переключает кнопка в
-    // быстрых настройках, но живёт оно в файле, чтобы переживать перезапуск и
-    // совпадать с тем, что показывает окно настроек.
     property bool dnd: cfg.notifDnd
     function toggleDnd() { cfg.notifDnd = !cfg.notifDnd; root.saveCfg(); }
-    property var  notifCurrent: null         // то, что показывается сейчас
-    ListModel { id: notifModel }             // история
+    property var  notifCurrent: null
+    ListModel { id: notifModel }
     readonly property var notifications: notifModel
-    // Демон уведомлений живёт в Loader: если функция выключена установщиком,
-    // сервер не создаётся и остров не регистрируется как daemon — тогда
-    // работает уже установленный mako/dunst без спора за шину.
     readonly property bool hasNotifications: cfg.featNotifications
     property var notifServer: notifLoader.item
     Loader {
@@ -2882,18 +2345,12 @@ PanelWindow {
         active: root.cfg.featNotifications
         sourceComponent: notifServerComp
     }
-    // живые уведомления, которые ещё не закрыты программой или пользователем
     readonly property var activeNotifications:
         notifServer ? notifServer.trackedNotifications : null
 
-    // Живые объекты уведомлений по id. Нужны, чтобы нажатие открывало сам
-    // повод: у мессенджеров есть действие «default», и именно оно
-    // разворачивает нужный чат — угадать его снаружи невозможно.
     property var notifObjs: ({})
 
     Process { id: pFocusApp }
-    // Переводим фокус на приложение: Hyprland сам перелистнёт на его стол,
-    // а если окна нет — скрипт запустит приложение.
     function focusApp(hint) {
         var h = String(hint || "").trim();
         if (h.length === 0) return;
@@ -2903,22 +2360,10 @@ PanelWindow {
         pFocusApp.running = true;
     }
 
-    // Раскрытие по наведению после клика по уведомлению только мешает: курсор
-    // остаётся над пилюлей, и она тут же разворачивается в «Быстрые
-    // настройки» — а там сверху часы с подписью «Календарь» и своей областью
-    // нажатия, поэтому следующий же щелчок уводил в календарь.
     //
-    // Поэтому взводим наведение заново только когда курсор уйдёт с пилюли:
-    // по времени было ненадёжно, курсор ведь остаётся на месте.
     property bool hoverExpandArmed: true
 
-    // Нажали на уведомление: сначала просим приложение показать повод
-    // (действие «default»), потом уходим к его окну и убираем карточку.
     //
-    // Принимает либо сам объект уведомления (карточка знает его напрямую),
-    // либо id из истории. По id раньше промахивались: ключи в notifObjs
-    // приводились к числу неодинаково, и действие «default» не вызывалось —
-    // приложение не открывалось вовсе.
     function activateNotification(what) {
         var n = null;
         var id = -1;
@@ -2939,11 +2384,8 @@ PanelWindow {
                     acts[i].invoke(); used = true; break;
                 }
             }
-            // одно действие без имени — тоже почти всегда «открыть»
             if (!used && acts.length === 1) acts[0].invoke();
         }
-        // Своё уведомление об обновлении ведёт не в приложение, а в настройки:
-        // кнопка «Обновить» живёт там, и искать её после нажатия странно.
         if (id >= 0 && id === root.updNotifId) {
             root.updNotifId = -1;
             root.dismissToast();
@@ -2952,8 +2394,7 @@ PanelWindow {
             return;
         }
 
-        if (root.lastShotPath.length > 0 && n && (String(n.summary || "").indexOf("Скриншот") >= 0
-                                              || String(n.summary || "").indexOf("Screenshot") >= 0
+        if (root.lastShotPath.length > 0 && n && (String(n.summary || "").indexOf(root.tr("Screenshot")) >= 0
                                               || (String(n.appName || "") === "Panacea" && String(n.image || "").indexOf(".png") >= 0))) {
             var shotToOpen = root.lastShotPath;
             root.dismissToast();
@@ -2965,8 +2406,6 @@ PanelWindow {
         root.focusApp(hint);
         root.dismissToast();
         if (id >= 0) root.dropNotification(id);
-        // не раскрываемся под курсором после клика — до тех пор, пока курсор
-        // не уйдёт с пилюли
         root.hoverExpandArmed = false;
         capsuleHover.markArmPoint();
         root.collapse();
@@ -2978,22 +2417,12 @@ PanelWindow {
     readonly property string notifApp:     notifCurrent ? String(notifCurrent.appName || "") : ""
     readonly property string notifImage:   notifCurrent ? root.notifIconFor(notifCurrent) : ""
 
-    // notify-send -i отдаёт ИМЯ значка из темы оформления, а не путь к файлу.
-    // Image такое имя открыть не может и рисует на его месте «битую картинку»
-    // в клеточку. Имена разворачиваем через тему; не нашлось — отдаём пусто,
-    // и карточка нарисует свой значок колокольчика.
     function notifIconFor(n) {
         var img = String(n.image || "");
         if (img.length === 0) img = String(n.appIcon || "");
         if (img.length === 0) return "";
-        // Значок из темы оформления Quickshell отдаёт как image://icon/ИМЯ,
-        // и если темы в системе нет, провайдер молча возвращает клетчатую
-        // заглушку со статусом Ready — поймать её по статусу нельзя. Поэтому
-        // разворачиваем имя сами: iconPath со вторым true отдаёт пустую
-        // строку, когда значка нет, и карточка рисует свой колокольчик.
         if (img.indexOf("image://icon/") === 0)
             return Quickshell.iconPath(img.substring(13).split("?")[0], true);
-        // путь, file://, data: — отдаём как есть
         if (img.indexOf("/") >= 0 || img.indexOf(":") >= 0) return img;
         return Quickshell.iconPath(img, true);
     }
@@ -3021,11 +2450,8 @@ PanelWindow {
                 root.islandAgentEvents = events.slice(0, 20);
             }
             var isTransient = (app === "Panacea"
-                               || sum === root.tr("Скриншот")
-                               || sum === "Скриншот"
-                               || sum === "Screenshot"
-                               || sum.indexOf("Скриншот") >= 0
-                               || sum.indexOf("Screenshot") >= 0);
+                               || sum === root.tr("Screenshot")
+                               || sum.indexOf(root.tr("Screenshot")) >= 0);
             if (n.hints && (n.hints["transient"] === true || n.hints["transient"] === 1 || n.hints["transient"] === "1")) {
                 isTransient = true;
             }
@@ -3043,10 +2469,6 @@ PanelWindow {
                 while (notifModel.count > 50) notifModel.remove(notifModel.count - 1);
             }
 
-            // Программа сама закрывает уведомление, когда оно потеряло смысл:
-            // Telegram делает это, как только сообщение прочитано в самом
-            // мессенджере. Раньше такая карточка всё равно висела в истории —
-            // теперь она уходит вместе с поводом.
             var nid = Number(n.id);
             var objs = root.notifObjs;
             objs[String(nid)] = n;
@@ -3059,7 +2481,6 @@ PanelWindow {
                 root.dropNotification(nid);
             });
 
-            // Критичные показываем даже в режиме «не беспокоить»
             if (root.dnd && n.urgency !== NotificationUrgency.Critical) return;
 
             root.enqueueToast(n);
@@ -3067,9 +2488,6 @@ PanelWindow {
     }
     }
 
-    // Очередь карточек. Раньше уведомление, пришедшее пока панель раскрыта
-    // или пока показывается предыдущая карточка, просто уходило в историю —
-    // и человек о нём не узнавал. Теперь оно дожидается своей очереди.
     property var toastQueue: []
     property double approvalToastEnd: 0
     property real approvalToastRemaining: 0
@@ -3099,7 +2517,6 @@ PanelWindow {
     }
 
     function pumpToasts() {
-        // занято текущей карточкой или панель раскрыта — подождём
         if (root.notifCurrent !== null || root.expanded) return;
         if (root.toastQueue.length === 0) return;
 
@@ -3107,7 +2524,6 @@ PanelWindow {
         var item = q.shift();
         root.toastQueue = q;
 
-        // протухшие (больше минуты в очереди) не показываем: они уже в истории
         if (Date.now() - item.at > 60000) { root.pumpToasts(); return; }
 
         var n = item.notif;
@@ -3116,8 +2532,6 @@ PanelWindow {
         if (isApproval && Date.now() - item.at >= 30000) { n.dismiss(); root.pumpToasts(); return; }
         root.notifCurrent = n;
         if (isApproval) { root.approvalToastEnd = item.at + 30000; root.approvalToastRemaining = root.approvalToastEnd - Date.now(); }
-        // Своё время приложения уважаем, но верхнюю и нижнюю границу задаёт
-        // человек: важные с нулевым сроком висят до ответа.
         var crit = n.urgency === NotificationUrgency.Critical;
         var want = crit ? root.cfg.notifCritTimeout : root.cfg.notifTimeout;
         var ms = n.expireTimeout > 0 ? (n.expireTimeout < 100 ? n.expireTimeout * 1000 : n.expireTimeout) : want;
@@ -3131,15 +2545,12 @@ PanelWindow {
 
     Timer {
         id: toastTimer
-        // если курсор на карточке — не убираем, ждём решения пользователя
         onTriggered: {
             if (root.approvalToast) { if (root.notifCurrent) root.notifCurrent.dismiss(); root.dismissToast(); return; }
             if (capsuleHover.hovered) { toastTimer.interval = 1200; restart(); return; }
             root.dismissToast();
         }
     }
-    // Крестик в истории: убираем строку и заодно говорим программе, что
-    // уведомление закрыто, — иначе оно так и висит у неё «непрочитанным».
     function forgetNotification(index) {
         var e = notifModel.get(index);
         var nid = e ? Number(e.nId) : -1;
@@ -3152,12 +2563,10 @@ PanelWindow {
         if (root.notifCurrent && Number(root.notifCurrent.id) === nid) root.dismissToast();
     }
 
-    // Убрать уведомление из истории (и с экрана, если оно сейчас показывается)
     function dropNotification(nid) {
         for (var i = 0; i < notifModel.count; i++) {
             if (Number(notifModel.get(i).nId) === nid) { notifModel.remove(i); break; }
         }
-        // и из очереди карточек, до которой оно могло не дойти
         var q = root.toastQueue.filter(function (it) {
             return !it.notif || Number(it.notif.id) !== nid;
         });
@@ -3173,7 +2582,6 @@ PanelWindow {
     }
     function clearNotifications() {
         notifModel.clear();
-        // активные тоже закрываем — иначе «Очистить» убирает лишь половину
         if (!notifServer) return;
         var live = notifServer.trackedNotifications.values;
         for (var i = live.length - 1; i >= 0; i--) {
@@ -3181,18 +2589,13 @@ PanelWindow {
         }
     }
 
-    // ------------------------------------------------------- менеджер паролей
-    // Записи лежат в ~/.local/share/panacea/vault.enc, зашифрованные на пароле
-    // пользователя. Пилюля держит расшифрованный список и сам пароль в памяти,
-    // пока хранилище открыто, и забывает всё через 15 минут без обращений.
     property bool   vaultUnlocked: false
-    property string vaultKey: ""            // пароль-ключ, только в памяти
+    property string vaultKey: ""
     property var    vaultEntries: []        // [{id,label,login,pw,at}]
     property string vaultError: ""
     property bool   vaultBusy: false
     readonly property int vaultIdleMs: 15 * 60 * 1000
 
-    // окно ввода пароля от хранилища держит его открытым, пока им пользуются
     Timer {
         id: vaultIdle
         interval: root.vaultIdleMs
@@ -3200,8 +2603,6 @@ PanelWindow {
     }
     function touchVault() { if (root.vaultUnlocked) vaultIdle.restart(); }
 
-    // Закрывается сразу, но ключ и записи держим до конца недописанного
-    // сохранения: иначе правка, сделанная за секунду до блокировки, пропадала.
     property bool vaultLockPending: false
     function finishLockVault() {
         root.vaultLockPending = false;
@@ -3222,8 +2623,6 @@ PanelWindow {
 
     PamContext {
         id: vaultPam
-        // тот же профиль, что у экрана блокировки: проверяет пароль
-        // пользователя — тот, который спрашивает sudo
         config: "swaylock"
         onPamMessage: {
             if (responseRequired) respond(root.vaultKey);
@@ -3234,13 +2633,11 @@ PanelWindow {
             } else {
                 root.vaultKey = "";
                 root.vaultBusy = false;
-                root.vaultError = root.tr("Неверный пароль");
+                root.vaultError = root.tr("Wrong password");
             }
         }
     }
 
-    // Открыть хранилище: сначала PAM подтверждает пароль, затем на нём же
-    // расшифровывается файл.
     function unlockVault(password) {
         if (root.vaultBusy) return;
         root.vaultError = "";
@@ -3250,7 +2647,7 @@ PanelWindow {
         if (!vaultPam.start()) {
             root.vaultBusy = false;
             root.vaultKey = "";
-            root.vaultError = root.tr("Не удалось проверить пароль");
+            root.vaultError = root.tr("Could not verify the password");
         }
     }
 
@@ -3272,8 +2669,8 @@ PanelWindow {
                 root.vaultError = "";
             } else {
                 root.vaultKey = "";
-                root.vaultError = code === 2 ? root.tr("Хранилище не открылось")
-                                             : root.tr("Ошибка хранилища");
+                root.vaultError = code === 2 ? root.tr("The vault did not open")
+                                             : root.tr("Vault error");
             }
         }
     }
@@ -3289,19 +2686,12 @@ PanelWindow {
         id: pVaultSave
         stdinEnabled: true
         onExited: code => {
-            if (code !== 0) root.vaultError = root.tr("Не удалось сохранить");
-            // за время записи список мог измениться ещё раз — пишем снова
+            if (code !== 0) root.vaultError = root.tr("Could not save");
             if (root.vaultDirty) vaultSaveTimer.restart();
             else if (root.vaultLockPending) root.finishLockVault();
         }
     }
 
-    // Запись идёт через один процесс, поэтому подряд идущие правки нельзя
-    // отправлять «в лоб». Раньше «Добавить все» вызывал vaultSave() на каждую
-    // запись: первый вызов запускал openssl, остальные видели running === true,
-    // ничего не запускали, а их write() уходил в уже закрытый stdin. На диск
-    // попадала одна первая запись — отсюда «пароли не сохраняются».
-    // Теперь правки копятся и уходят одним файлом.
     property bool vaultDirty: false
     Timer {
         id: vaultSaveTimer
@@ -3315,10 +2705,7 @@ PanelWindow {
         vaultSaveTimer.restart();
     }
     function vaultFlush() {
-        // Не по vaultUnlocked: закрытие хранилища ждёт именно этой записи,
-        // а к тому моменту флаг уже снят.
         if (root.vaultKey.length === 0) return;
-        // предыдущая запись ещё идёт — подождём и попробуем снова
         if (pVaultSave.running) { vaultSaveTimer.restart(); return; }
         root.vaultDirty = false;
         pVaultSave.stdinEnabled = true;
@@ -3334,7 +2721,7 @@ PanelWindow {
         var a = root.vaultEntries.slice();
         a.unshift({
             id: String(Date.now()) + "-" + Math.floor(Math.random() * 1e6),
-            label: String(label || root.tr("Без названия")),
+            label: String(label || root.tr("Untitled")),
             login: String(login || ""),
             pw: String(pw || ""),
             at: Qt.formatDateTime(new Date(), "dd.MM.yyyy HH:mm")
@@ -3363,13 +2750,9 @@ PanelWindow {
         return false;
     }
 
-    // --- импорт из браузеров
-    // browser_pw.py читает профили установленных браузеров и печатает
-    // найденное JSON-ом. Ничего сам не сохраняет: список показывается в
-    // хранилище, а переносит записи уже человек — кнопкой.
     property var    browserFound: []      // [{url, login, pw, browser}]
     property bool   browserScanning: false
-    property bool   browserScanned: false // был ли хоть один поиск в этом сеансе
+    property bool   browserScanned: false
     property string browserError: ""
 
     function browserScan() {
@@ -3387,8 +2770,6 @@ PanelWindow {
             onStreamFinished: {
                 var a = [];
                 try { a = JSON.parse(text); } catch (e) { a = []; }
-                // Уже сохранённые не показываем: список должен состоять из
-                // того, что действительно можно добавить.
                 root.browserFound = a.filter(function (e) {
                     return String(e.pw || "").length > 0 && !root.vaultHas(String(e.pw));
                 });
@@ -3404,14 +2785,13 @@ PanelWindow {
             root.browserScanning = false;
             root.browserScanned = true;
             if (code !== 0 && root.browserError.length === 0)
-                root.browserError = root.tr("Не удалось прочитать браузеры");
+                root.browserError = root.tr("Could not read the browsers");
         }
     }
 
-    // Перенос одной найденной записи в хранилище.
     function browserImport(item) {
         if (!root.vaultUnlocked || !item) return;
-        root.vaultAdd(String(item.url || item.browser || root.tr("Из браузера")),
+        root.vaultAdd(String(item.url || item.browser || root.tr("From a browser")),
                       String(item.login || ""), String(item.pw || ""));
         root.browserFound = root.browserFound.filter(function (e) {
             return !(e.pw === item.pw && e.login === item.login && e.url === item.url);
@@ -3424,17 +2804,12 @@ PanelWindow {
         for (var i = 0; i < list.length; i++) {
             var e = list[i];
             if (root.vaultHas(String(e.pw))) continue;
-            root.vaultAdd(String(e.url || e.browser || root.tr("Из браузера")),
+            root.vaultAdd(String(e.url || e.browser || root.tr("From a browser")),
                           String(e.login || ""), String(e.pw || ""));
         }
         root.browserFound = [];
     }
 
-    // --- предложение сохранить пароль
-    // Подсмотреть, что человек печатает в чужом окне, нельзя (и не нужно —
-    // это был бы кейлоггер). Зато пароль почти всегда проходит через буфер
-    // обмена: из менеджера, из письма, из генератора. Пилюля замечает такую
-    // строку и спрашивает, сохранить ли её.
     property var vaultPrompt: null           // {pw, label}
 
     function looksLikePassword(s) {
@@ -3443,9 +2818,9 @@ PanelWindow {
         if (/\s/.test(s)) return false;
         if (/^(https?|ftp|file|magnet):/i.test(s)) return false;
         if (s.indexOf("/") === 0 || s.indexOf("~/") === 0) return false;
-        if (/^[0-9]+$/.test(s)) return false;          // номера, коды, счета
-        if (/^[a-z]+$/.test(s)) return false;          // просто слово
-        if (/@[^@]+\.[a-z]{2,}$/i.test(s)) return false; // почта
+        if (/^[0-9]+$/.test(s)) return false;
+        if (/^[a-z]+$/.test(s)) return false;
+        if (/@[^@]+\.[a-z]{2,}$/i.test(s)) return false;
         var classes = 0;
         if (/[a-z]/.test(s)) classes++;
         if (/[A-Z]/.test(s)) classes++;
@@ -3457,7 +2832,6 @@ PanelWindow {
     Process {
         id: pClipWatch
         running: root.cfg.featVault
-        // печатаем только первую строку: многострочный текст паролем не бывает
         command: ["sh", "-c",
             "wl-paste --type text --watch sh -c "
             + "'printf \"%s\\n\" \"$(wl-paste -n -t text 2>/dev/null | head -1)\"'"]
@@ -3473,7 +2847,6 @@ PanelWindow {
             }
         }
     }
-    // чьё окно сейчас активно — подставим как название записи
     Process {
         id: pVaultWhere
         command: ["sh", "-c",
@@ -3489,8 +2862,6 @@ PanelWindow {
             }
         }
     }
-    // Копируем пароль в буфер. wl-copy запускаем с --sensitive-data, чтобы
-    // строка не осела в истории cliphist, и очищаем буфер через минуту.
     Process { id: pVaultCopy }
     function vaultCopy(pw) {
         touchVault();
@@ -3509,8 +2880,6 @@ PanelWindow {
     }
 
     // ------------------------------------------------------------------ OSD
-    // При изменении громкости или яркости пилюля на пару секунд превращается
-    // в полоску уровня и возвращается обратно.
     property string osdKind: ""          // "vol" | "mic" | "bright"
     property real   osdValue: 0          // 0..1
     property bool   osdMuted: false
@@ -3530,17 +2899,15 @@ PanelWindow {
     }
 
     readonly property string osdIcon: {
-        if (osdKind === "bright") return String.fromCodePoint(0xF00DE);       // солнце
+        if (osdKind === "bright") return String.fromCodePoint(0xF00DE);
         if (osdKind === "mic")
-            return String.fromCodePoint(osdMuted ? 0xF036D : 0xF036C);        // микрофон
+            return String.fromCodePoint(osdMuted ? 0xF036D : 0xF036C);
         if (osdMuted || osdValue <= 0.001) return String.fromCodePoint(0xF075F);
         if (osdValue < 0.34) return String.fromCodePoint(0xF057F);
         if (osdValue < 0.67) return String.fromCodePoint(0xF0580);
         return String.fromCodePoint(0xF057E);
     }
 
-    // --- громкость и микрофон берём из Pipewire: реагируем на любое изменение,
-    //     не только на нажатие мультимедийной клавиши
     PwObjectTracker {
         objects: [Pipewire.defaultAudioSink, Pipewire.defaultAudioSource]
     }
@@ -3549,13 +2916,9 @@ PanelWindow {
     readonly property var srcAudio:
         Pipewire.defaultAudioSource ? Pipewire.defaultAudioSource.audio : null
 
-    property bool osdReady: false        // не показывать OSD при старте оболочки
+    property bool osdReady: false
     Timer { interval: 1500; running: true; onTriggered: root.osdReady = true }
 
-    // Смена устройства вывода (подключились Bluetooth-наушники, воткнули
-    // джек) перепривязывает sinkAudio, и onVolumeChanged срабатывает начальной
-    // громкостью нового устройства — на миг всплывал OSD с полосой громкости,
-    // хотя никто её не трогал. Гасим OSD на короткое окно вокруг переключения.
     property bool sinkSwitching: false
     onSinkAudioChanged: { root.sinkSwitching = true; sinkSettleTimer.restart(); }
     Timer { id: sinkSettleTimer; interval: 700; onTriggered: root.sinkSwitching = false }
@@ -3580,7 +2943,6 @@ PanelWindow {
         }
     }
 
-    // ------------------------------------------------------- профиль питания
     readonly property string powerScript:
         Quickshell.env("HOME") + "/.config/panacea/scripts/power.sh"
 
@@ -3602,19 +2964,16 @@ PanelWindow {
         id: pPowerSet
         onRunningChanged: if (!running) pPowerGet.running = true
     }
-    // Режим питания меняется человеком и почти всегда через саму панель,
-    // поэтому в закрытом виде его достаточно сверять раз в полминуты.
     Timer {
         interval: root.expanded ? 10000 : 30000
         running: true; repeat: true
         onTriggered: pPowerGet.running = true
     }
 
-    // Человеческое имя текущего режима питания — для подписи плитки батареи
     readonly property string profileLabel:
-        powerProfile === "power-saver" ? tr("Экономия")
-      : powerProfile === "performance" ? tr("Максимум")
-                                       : tr("Баланс")
+        powerProfile === "power-saver" ? tr("Power saver")
+      : powerProfile === "performance" ? tr("Performance")
+                                       : tr("Balanced")
 
     function setPowerProfile(name) {
         if (pPowerSet.running) return;
@@ -3622,14 +2981,10 @@ PanelWindow {
         pPowerSet.running = true;
     }
 
-    // ------------------------------------------------------- рабочий стол
     readonly property int wsId:
         Compositor.isNiri ? Compositor.focusedWorkspace
                           : (Hyprland.focusedWorkspace ? Hyprland.focusedWorkspace.id : 1)
 
-    // Столы по порядку номеров — для точек в свёрнутом острове. Спецстолы
-    // (отрицательные) пропускаем: на них не переходят подряд с остальными,
-    // и точка под них сбивала бы счёт.
     readonly property var wsRaw: {
         var out = [];
         if (Compositor.isNiri) {
@@ -3646,15 +3001,7 @@ PanelWindow {
         return out;
     }
 
-    // Список столов держим отдельно и меняем, только когда он вправду стал
-    // другим.
     //
-    // Вычисление выше пересчитывается на каждое событие Hyprland — а их при
-    // одном переключении приходит несколько, — и каждый раз отдаёт новый
-    // массив. Repeater судит по самому объекту, а не по его содержимому, и
-    // на новый массив уничтожает и создаёт заново все точки разом. Отсюда и
-    // мигание при переходе на пустой стол: точка текущего успевала родиться
-    // полосой и тут же исчезнуть вместе со всем рядом.
     property var wsList: []
     onWsRawChanged: {
         var a = root.wsRaw, b = root.wsList;
@@ -3667,7 +3014,6 @@ PanelWindow {
         root.wsList = a;
     }
 
-    // -------------------------------------------------- раскладка клавиатуры
     property string kbLayout: Compositor.keyboardLayout
     Process {
         id: pKbLayout
@@ -3682,7 +3028,6 @@ PanelWindow {
             }
         }
     }
-    // Hyprland шлёт activelayout при каждом переключении Alt+Shift
     Connections {
         target: Hyprland
         enabled: !Compositor.isNiri
@@ -3691,7 +3036,6 @@ PanelWindow {
         }
     }
 
-    // ------------------------------------------------------------------ часы
     property string timeText: ""
     property string dayText: ""
     property string dateLong: ""
@@ -3718,7 +3062,7 @@ PanelWindow {
                 ? (hr12 + ":" + mm + secStr + " " + ampm)
                 : Qt.formatDateTime(d, "HH:mm" + (root.cfg.clockSeconds ? ":ss" : ""));
             root.secText = Qt.formatDateTime(d, "ss");
-            var dateLocale = Qt.locale(root.cfg.lang === "en" ? "en_US" : root.cfg.lang === "ru" ? "ru_RU" : root.cfg.lang === "tr" ? "tr_TR" : root.cfg.lang);
+            var dateLocale = Qt.locale(root.cfg.lang === "en" ? "en_US" : root.cfg.lang === "tr" ? "tr_TR" : root.cfg.lang);
             root.dateLong = (root.cfg.clockWeekday ? d.toLocaleDateString(dateLocale, "dddd") + ", " : "")
                 + d.toLocaleDateString(dateLocale, root.cfg.clockDateFmt || "d MMMM");
             root.dayText = dateLocale.dayName(d.getDay(), Locale.ShortFormat);
@@ -3739,9 +3083,6 @@ PanelWindow {
     property string wifiConnectingSsid: ""
     property bool   wifiConnecting: false
 
-    // ---- Тост «Wi-Fi подключён / отключён» -----------------------------
-    // Аналогично Bluetooth-устройствам: при успешном подключении остров
-    // показывает карточку с именем сети, значком Wi-Fi и уровнем сигнала.
     property bool   wifiToastShown: false
     property string wifiToastSsid: ""
     property int    wifiToastQuality: 0
@@ -3779,15 +3120,13 @@ PanelWindow {
         }
     }
 
-    // Сеть со страницей входа: проверяем после каждого подключения, и если
-    // нас перехватили — уведомление с кнопкой, открывающей страницу входа.
     function checkCaptive(ssid) {
         pCaptive.running = false;
         pCaptive.command = ["sh", "-c", root.scriptDir + "/captive.sh \"$1\"", "_", ssid];
         pCaptive.environment = {
-            PANACEA_CAPTIVE_TITLE: root.tr("Требуется вход в сеть"),
-            PANACEA_CAPTIVE_BODY: root.tr("Откройте страницу входа, чтобы получить доступ к интернету"),
-            PANACEA_CAPTIVE_BTN: root.tr("Войти")
+            PANACEA_CAPTIVE_TITLE: root.tr("Network sign-in required"),
+            PANACEA_CAPTIVE_BODY: root.tr("Open the sign-in page to get internet access"),
+            PANACEA_CAPTIVE_BTN: root.tr("Sign in")
         };
         captiveDelay.restart();
     }
@@ -3813,7 +3152,6 @@ PanelWindow {
         root.wifiToastQuality = quality || root.wifiQuality || 0;
         root.wifiToastDisconnected = isDisconnect || false;
         root.wifiToastShown = true;
-        // открытую намеренно страницу (настройки и т.п.) карточка не закрывает
         if (root.expanded && !root.holdOpen) root.collapse();
         wifiToastTimer.interval = 2500;
         wifiToastTimer.restart();
@@ -3831,7 +3169,6 @@ PanelWindow {
     }
 
     ListModel { id: wifiModel }
-    // отдаём модель наружу: ControlsView лежит в другом файле
     readonly property var wifiNetworks: wifiModel
 
     Process {
@@ -3856,15 +3193,10 @@ PanelWindow {
             }
         }
     }
-    // Присваивание running = true работающему процессу не делает ничего:
-    // опрос молча пропускается, и состояние застывает до следующего раза.
-    // Перезапускаем явно.
     function refreshWifiStatus() {
         pWifiStatus.running = false;
         pWifiStatus.running = true;
     }
-    // Свёрнутый остров показывает только значок сети: там хватает редкого
-    // опроса. Частый нужен, когда открыт список сетей.
     Timer {
         interval: root.expanded ? 4000 : 15000
         running: true; repeat: true
@@ -3907,7 +3239,7 @@ PanelWindow {
             if (running) return;
             root.wifiBusy = false;
             if (exitCode !== 0) {
-                root.wifiError = "Не удалось подключиться";
+                root.wifiError = "Could not connect";
                 root.wifiConnectingSsid = "";
                 root.wifiConnecting = false;
             } else {
@@ -3918,19 +3250,11 @@ PanelWindow {
                 root.page = "main";
             }
             root.refreshWifiStatus();
-            // iwctl возвращается раньше, чем соединение поднялось: сразу после
-            // него `iw dev link` ещё пуст, и панель показывала подключённую
-            // сеть без имени. Спрашиваем ещё раз, когда связь устоялась.
             wifiSettleTimer.begin();
             root.refreshWifiList();
         }
     }
 
-    // Связь поднимается не мгновенно и не за одинаковое время: у одной точки
-    // это доли секунды, у другой — несколько. Поэтому после подключения не
-    // один отложенный опрос, а несколько подряд, и прекращаются они, как
-    // только имя сети появилось. Иначе панель показывала подключённую сеть
-    // без имени до ближайшего общего опроса — или до ручного сканирования.
     Timer {
         id: wifiSettleTimer
         interval: 800
@@ -3950,10 +3274,6 @@ PanelWindow {
         function begin() { wifiSettleTimer.tries = 0; wifiSettleTimer.restart(); }
     }
 
-    // Отключиться от сети и забыть её. Забывание — не то же самое, что
-    // отключение: пока сеть сохранена, iwd подключится к ней сам при первой
-    // возможности, и «отключился» держится ровно до следующего появления
-    // этой точки в эфире.
     Process { id: pWifiDisconnect }
     function disconnectWifi() {
         pWifiDisconnect.running = false;
@@ -4018,16 +3338,13 @@ PanelWindow {
         pWifiConnect.running = true;
     }
 
-    // --------------------------------------------------------- запись экрана
-    // Всё состояние держит scripts/record.sh: пилюлю можно перезапустить
-    // прямо во время записи, и она подхватит её обратно.
     property bool   recActive: false
     property bool   recPaused: false
-    property int    recStarted: 0        // unix-время старта
-    property int    recPausedTotal: 0    // сколько секунд простояли на паузе
+    property int    recStarted: 0
+    property int    recPausedTotal: 0
     property string recFile: ""
     property string recError: ""
-    property int    recNow: 0            // «сейчас» для таймера, тикает раз в секунду
+    property int    recNow: 0
 
     readonly property int recSeconds:
         recActive ? Math.max(0, recNow - recStarted - recPausedTotal) : 0
@@ -4040,17 +3357,9 @@ PanelWindow {
 
     readonly property string recScript: root.scriptDir + "/record.sh"
 
-    // ------------------------------------------------- длительная работа
-    // Всё, что идёт дольше пары секунд, показывает свёрнутый остров: копирование
-    // папки в несколько гигабайт, обновление оболочки, прогрев миниатюр. Раньше
-    // они шли молча, и отличить работу от зависания было нельзя.
     //
-    // Проценты знает не всякая работа, поэтому busyProgress < 0 означает
-    // «идёт, сколько осталось — неизвестно»: там, где считать нечего, полоска
-    // просто ходит из стороны в сторону.
     property string busyLabel: ""
     property int    busyProgress: -1
-    // значок слева от подписи: у копирования свой, у обновления свой
     property string busyGlyph: ""
 
     function beginBusy(label, glyph, progress) {
@@ -4064,13 +3373,7 @@ PanelWindow {
         root.busyProgress = -1;
     }
 
-    // ------------------------------------------ длительная файловая операция
-    // Процесс живёт здесь, а не в проводнике, нарочно: панель закрывают сразу
-    // после того, как перетащили файлы, и вместе с ней умирал бы и Loader, и
-    // копирование на середине. Теперь оно доживает до конца само, а остров
-    // показывает, сколько осталось.
     property var fileOpQueue: []
-    // Состояние текущей операции — его рисует окно прогресса.
     property bool   fileOpActive: false
     property string fileOpLabel: ""
     property string fileOpFile: ""
@@ -4078,14 +3381,13 @@ PanelWindow {
     property real   fileOpDone: 0
     property real   fileOpTotal: 0
     property int    fileOpPct: 0
-    property real   fileOpSpeed: 0       // байт/с, сглаженная
+    property real   fileOpSpeed: 0
     property real   fileOpSyncLeft: 0
     property string fileOpError: ""
     property bool   fileOpCancelled: false
     property real   _fileOpT: 0
     property real   _fileOpD: 0
 
-    // Вторая операция, начатая пока идёт первая, встаёт в очередь.
     function runFileOp(args, label) {
         if (pFileOp.running) {
             var q = root.fileOpQueue.slice();
@@ -4110,7 +3412,6 @@ PanelWindow {
         root._fileOpD = 0;
         root.fileOpActive = true;
         root.beginBusy(label, "󰆏", 0);
-        // exec — чтобы TERM при отмене получил сам скрипт, а не обёртка sh
         var a = args.slice();
         if (a[0] === "sh" && a[1] === "-c" && String(a[2]).indexOf("exec ") !== 0)
             a[2] = "exec " + a[2];
@@ -4125,14 +3426,14 @@ PanelWindow {
 
     function fileOpErrorText(code, rest) {
         switch (code) {
-            case "no-space": return root.tr("Недостаточно места на носителе");
-            case "no-write": return root.tr("Нет прав на запись в эту папку");
-            case "no-dir":   return root.tr("Папка назначения не найдена");
-            case "into-self":return root.tr("Нельзя положить папку внутрь самой себя");
-            case "fat-4g":   return root.tr("Файл больше 4 ГБ не помещается на FAT32: ") + rest;
-            case "busy":     return root.tr("Носитель занят — закройте открытые с него файлы");
+            case "no-space": return root.tr("Not enough space on the drive");
+            case "no-write": return root.tr("No permission to write to this folder");
+            case "no-dir":   return root.tr("Destination folder not found");
+            case "into-self":return root.tr("Can't put a folder inside itself");
+            case "fat-4g":   return root.tr("Files over 4 GB don't fit on FAT32: ") + rest;
+            case "busy":     return root.tr("Drive is busy — close files opened from it");
         }
-        return root.tr("Ошибка: ") + rest;
+        return root.tr("Error: ") + rest;
     }
 
     Process {
@@ -4172,7 +3473,6 @@ PanelWindow {
         }
         onRunningChanged: {
             if (running) return;
-            // все открытые проводники перечитывают списки
             root.filesChanged();
             if (root.fileOpQueue.length > 0 && !root.fileOpError.length) {
                 var q = root.fileOpQueue.slice();
@@ -4186,14 +3486,11 @@ PanelWindow {
         }
     }
 
-    // ------------------------------------------- общий буфер проводника
-    // Один на все окна: скопировали в одном, вставили в другом.
     property var    filesClipPaths: []
     property string filesClipMode: ""     // "copy" | "cut"
     function setFilesClip(paths, mode) {
         root.filesClipPaths = paths;
         root.filesClipMode = mode;
-        // и в системный буфер — чтобы вставить можно было и в другие программы
         var uris = paths.map(function (p) { return "file://" + String(p).split("/").map(encodeURIComponent).join("/"); }).join("\r\n");
         pClipOut.command = ["sh", "-c", "printf '%s' \"$1\" | wl-copy --type text/uri-list", "_", uris];
         pClipOut.running = false;
@@ -4201,9 +3498,6 @@ PanelWindow {
     }
     Process { id: pClipOut }
 
-    // ------------------------------------------------- носители: USB
-    // Вместо опроса раз в пару секунд слушаем udev: флешка появляется в
-    // проводнике сразу, как только ядро её увидело, и сразу монтируется.
     signal disksChanged()
     Process {
         id: pUdev
@@ -4251,8 +3545,6 @@ PanelWindow {
             }
         }
     }
-    // Пока запись не идёт, секундная стрелка никому не нужна: таймер сам
-    // переходит на редкий шаг и перестаёт будить процессор каждую секунду.
     Timer {
         interval: root.recActive ? 1000 : 15000
         running: true; repeat: true; triggeredOnStart: true
@@ -4269,9 +3561,9 @@ PanelWindow {
             onRead: line => {
                 var t = line.trim();
                 if (!t.length) return;
-                root.recError = t === "already" ? root.tr("Запись уже идёт")
-                              : t === "no-recorder" ? root.tr("wf-recorder не найден")
-                              : t === "failed"  ? root.tr("Не удалось начать запись")
+                root.recError = t === "already" ? root.tr("Already recording")
+                              : t === "no-recorder" ? root.tr("wf-recorder not found")
+                              : t === "failed"  ? root.tr("Could not start recording")
                                                 : t;
                 recErrorClear.restart();
             }
@@ -4279,8 +3571,6 @@ PanelWindow {
     }
     Timer { id: recErrorClear; interval: 4000; onTriggered: root.recError = "" }
 
-    // Выбор экрана для записи. Несколько мониторов (ноутбук + HDMI) — wf-recorder
-    // без -o спрашивает, какой писать, и в фоне падал. Спрашиваем сами карточкой.
     property bool recPick: false
     property var  recPickMons: []
     readonly property bool recPickActive: recPick && !expanded
@@ -4314,7 +3604,6 @@ PanelWindow {
         pRecCmd.running = true;
     }
     function cancelRecPick() { root.recPick = false; }
-    // Не оставляем карточку выбора висеть вечно, если передумали.
     Timer { id: recPickTimer; interval: 8000; running: root.recPickActive
             onTriggered: root.cancelRecPick() }
     function stopRecord() {
@@ -4329,17 +3618,9 @@ PanelWindow {
     }
     function toggleRecord() { if (root.recActive) stopRecord(); else startRecord(); }
 
-    // ---------------------------------------------------- голос в текст (voxtype)
-    // Пока зажат правый Alt — остров показывает индикатор: «Слушаю…» во время
-    // записи, «Расшифровываю…» пока voxtype печатает текст. Ведёт индикатор
-    // scripts/voxtype.sh (его дёргает Hyprland на нажатие/отпускание клавиши)
-    // через IPC voxListening/voxTranscribing/voxDone. Само распознавание и
-    // вставку текста в активное поле делает voxtype.
     property string voxState: ""     // "" | "listening" | "transcribing"
     readonly property bool voxActive: voxState.length > 0 && !expanded
 
-    // Страховка: если «Расшифровываю…» почему-то не закрылось (voxtype упал и
-    // не прислал voxDone) — прячем сами через несколько секунд.
     Timer {
         id: voxGuard
         interval: 8000
@@ -4347,7 +3628,6 @@ PanelWindow {
         onTriggered: root.voxState = ""
     }
 
-    // список микрофонов для выбора в пульте записи
     ListModel { id: micModel }
     readonly property var recMics: micModel
     Process {
@@ -4371,7 +3651,6 @@ PanelWindow {
     function openRecordDir() {
         var d = String(root.cfg.recDir);
         if (d.indexOf("~") === 0) d = Quickshell.env("HOME") + d.slice(1);
-        // папки может ещё не быть: создаём, иначе проводник покажет пустоту
         pMkRecDir.command = ["sh", "-c", "mkdir -p \"$1\"", "_", d];
         pMkRecDir.running = true;
         root.filesDir = d;
@@ -4390,29 +3669,27 @@ PanelWindow {
         return null;
     }
     readonly property string btConnectedName: {
-        if (btConnectedDevice) return btConnectedDevice.name || "Устройство";
+        if (btConnectedDevice) return btConnectedDevice.name || "Device";
         return "";
     }
     readonly property string btConnectedType: {
         if (!btConnectedDevice) return "earbuds";
         var icon = String(btConnectedDevice.icon || "").toLowerCase();
         var name = String(btConnectedDevice.name || "").toLowerCase();
-        if (icon === "input-mouse" || name.indexOf("mouse") >= 0 || name.indexOf("мышь") >= 0) return "mouse";
-        if (icon === "input-keyboard" || name.indexOf("keyboard") >= 0 || name.indexOf("клави") >= 0) return "keyboard";
+        if (icon === "input-mouse" || name.indexOf("mouse") >= 0) return "mouse";
+        if (icon === "input-keyboard" || name.indexOf("keyboard") >= 0) return "keyboard";
         if (icon === "input-gaming" || name.indexOf("controller") >= 0 || name.indexOf("gamepad") >= 0 || name.indexOf("dualsense") >= 0 || name.indexOf("xbox") >= 0) return "gamepad";
         if (icon === "phone" || name.indexOf("phone") >= 0 || name.indexOf("iphone") >= 0 || name.indexOf("android") >= 0) return "phone";
-        if (icon === "audio-speakers" || icon === "audio-speaker" || name.indexOf("speaker") >= 0 || name.indexOf("колонк") >= 0) return "speaker";
-        if (icon === "watch" || name.indexOf("watch") >= 0 || name.indexOf("часы") >= 0) return "watch";
+        if (icon === "audio-speakers" || icon === "audio-speaker" || name.indexOf("speaker") >= 0) return "speaker";
+        if (icon === "watch" || name.indexOf("watch") >= 0) return "watch";
         return "earbuds";
     }
-    // Заряд подключённого устройства (наушников). -1, если батарею не сообщают.
     readonly property int btConnectedBattery: {
         if (btConnectedDevice && btConnectedDevice.batteryAvailable)
             return Math.round(btConnectedDevice.battery * 100);
         return -1;
     }
 
-    // ---- Тост «Bluetooth-устройство подключено / отключено / низкий заряд» --
     property string btToastName: ""
     property string btToastType: "earbuds"
     property bool   btToastDisconnected: false
@@ -4461,7 +3738,6 @@ PanelWindow {
         root.btToastDisconnected = isDisconnect || false;
         root.btToastLowBatt = false;
         root.btToastShown = true;
-        // открытую намеренно страницу (настройки и т.п.) карточка не закрывает
         if (root.expanded && !root.holdOpen) root.collapse();
         btToastTimer.interval = 2500;
         btToastTimer.restart();
@@ -4474,7 +3750,6 @@ PanelWindow {
         root.btToastDisconnected = false;
         root.btToastLowBatt = true;
         root.btToastShown = true;
-        // открытую намеренно страницу (настройки и т.п.) карточка не закрывает
         if (root.expanded && !root.holdOpen) root.collapse();
         btToastTimer.interval = 3500;
         btToastTimer.restart();
@@ -4491,12 +3766,6 @@ PanelWindow {
         onTriggered: root.dismissBtToast()
     }
 
-    // ---- Тост «зарядка подключена» ---------------------------------------
-    // При подключении блока питания к ноутбуку остров на пару секунд
-    // сворачивается в такую же карточку: значок зарядки, «Заряжается» и заряд.
-    // Фон карточки — плавная волна, расходящаяся из центра. Ловим переход
-    // питания от сети из false в true; только на ноутбуке (на десктопе сеть
-    // есть всегда). Уступает Bluetooth-тосту, если тот показывается.
     property bool acToastShown: false
     readonly property bool acToastActive:
         acToastShown && !expanded && root.isLaptop && !root.btToastActive
@@ -4510,7 +3779,6 @@ PanelWindow {
     function showAcToast(kind) {
         root.acToastKind = kind || "charge";
         root.acToastShown = true;
-        // открытую намеренно страницу (настройки и т.п.) карточка не закрывает
         if (root.expanded && !root.holdOpen) root.collapse();
         acToastTimer.restart();
         root.playSound(root.acToastKind === "lowbatt" ? "disconnect" : "charge");
@@ -4526,16 +3794,12 @@ PanelWindow {
         onTriggered: root.dismissAcToast()
     }
 
-    // rfkill может держать адаптер программно заблокированным (после
-    // предыдущей сессии, гибернации, ядра). Пока он заблокирован, BlueZ не даёт
-    // включить питание, и плитка «щёлкала» вхолостую. Снимаем блокировку перед
-    // включением. rfkill без root снимает только soft-block — этого достаточно.
     Process { id: pBtUnblock; command: ["rfkill", "unblock", "bluetooth"] }
     function toggleBt() {
         if (!btAdapter) return;
         if (!btAdapter.enabled) {
             pBtUnblock.running = true;
-            btPowerOn.restart();           // дать rfkill вступить в силу
+            btPowerOn.restart();
         } else {
             btAdapter.enabled = false;
         }
@@ -4547,8 +3811,6 @@ PanelWindow {
     }
     function scanBt() {
         if (!btAdapter || !btAdapter.enabled) return;
-        // без pairable сопряжение нового устройства не начиналось, и наушники
-        // зависали в цикле «подключилось — отвалилось»
         btAdapter.pairable = true;
         btAdapter.discovering = true;
         btScanStop.restart();
@@ -4558,7 +3820,6 @@ PanelWindow {
     // -------------------------------------------------------------------- IPC
     IpcHandler {
         target: "pill"
-        // индикатор голосового ввода: зовёт voxtype.sh на разных этапах
         function voxListening(): void {
             root.voxState = "listening";
             root.playSound("voice_start");
@@ -4570,12 +3831,11 @@ PanelWindow {
         }
         function voxUnavailable(): void {
             root.voxState = "";
-            root.recError = root.tr("voxtype не установлен");
+            root.recError = root.tr("voxtype is not installed");
         }
         function launcher(): void { root.toggleLauncher(); }
         function overview(): void { root.toggleOverview(); }
         function launchpad(): void { root.toggleLaunchpad(); }
-        // Всегда плитки Wi-Fi/Bluetooth, даже когда играет музыка
         function controls(): void { root.togglePage("main"); }
         function chat(): void { root.page = "chat"; root.expanded = true; root.holdOpen = true; }
         function chatService(name: string): void { if (["chat", "gemini", "chatgpt", "deepseek"].indexOf(name) < 0) return; root.islandChatService = name; root.page = "chat"; root.expanded = true; root.holdOpen = true; }
@@ -4599,8 +3859,6 @@ PanelWindow {
             root.showWifiToast(ssid || "Wi-Fi Network", parseInt(quality) || 85, false);
         }
         function settings(): void { root.settingsTab = 0; root.togglePage("settings"); }
-        // открыть окно настроек сразу на нужном разделе: удобно вешать на
-        // сочетание клавиш и незаменимо при проверке самих настроек
         function settingsAt(tab: string): void {
             root.settingsTab = parseInt(tab) || 0;
             if (root.page !== "settings" || !root.expanded) root.togglePage("settings");
@@ -4629,7 +3887,6 @@ PanelWindow {
             return "none";
         }
         function cancelCapture(): void { root.cancelCaptureRequested(); }
-        // Стоп-кадр под выделение области, см. scripts/shot.sh
         function freeze(path: string): void { root.freezeShot = "file://" + path; }
         function unfreeze(): void { root.freezeShot = ""; }
         function shotCopied(path: string): void { root.shotCopied(path); }
@@ -4640,23 +3897,14 @@ PanelWindow {
         function widgets(): void { root.cfg.featWidgets = !root.cfg.featWidgets; root.saveCfg(); }
         function record(): void { root.togglePage("record"); }
         function files(): void { root.togglePage("files"); }
-        // Открыть проводник сразу в нужном каталоге. Нужно, чтобы система
-        // могла назначить его обработчиком inode/directory: без пути «открыть
-        // папку» приводило бы всегда в один и тот же каталог.
         function filesAt(path: string): void { root.openFilesAt(path); }
         function passwords(): void { root.togglePage("vault"); }
         function agents(): void { root.openAgents(); }
         function media(path: string): void { root.openMedia(path); }
-        // переключить выделение области в плеере (то же, что кнопка «Кроп»)
         function mediaCrop(): void { root.mediaCropToggle(); }
         function recordToggle(): void { root.toggleRecord(); }
         function dnd(): void { root.toggleDnd(); }
-        // Яркость приходит от smart_brightness.sh: службы для неё нет.
         //
-        // Помимо накладки двигаем и сам ползунок в быстрых настройках. Он
-        // читает список экранов, а тот наполняется только по запросу — от
-        // клавиш ноутбука список не обновлялся, и ползунок оставался там,
-        // где его бросили в прошлый раз, показывая неправду.
         function brightness(pct: string): void {
             var v = parseFloat(pct);
             root.showOsd("bright", v / 100.0, false);
@@ -4664,21 +3912,14 @@ PanelWindow {
             var l = root.brightList.slice();
             var hit = false;
             for (var i = 0; i < l.length; i++) {
-                // Клавиши правят подсветку встроенного экрана — у него в
-                // списке признак «bl:», — а внешние мониторы висят на DDC, и
-                // до них эти клавиши не достают.
                 if (String(l[i].id).indexOf("bl:") === 0 || l.length === 1) {
                     l[i] = { id: l[i].id, name: l[i].name, pct: Math.round(v) };
                     hit = true;
                 }
             }
             if (hit) root.brightList = l;
-            // Список ещё не собран — соберём: без него ползунка нет вовсе.
             else if (l.length === 0) root.brightRefresh(false);
         }
-        // Режим энергосбережения гасит движение и в оболочке: анимации —
-        // самое дорогое, что она делает без спроса. Настройка та же, что на
-        // вкладке Motion, поэтому режим её честно возвращает при выходе.
         function motion(on: string): void {
             root.cfg.reduceMotion = (on !== "on");
             root.saveCfg();
@@ -4686,11 +3927,6 @@ PanelWindow {
         function close(): void { root.collapse(); }
     }
 
-    // ----------------------------------------------------------------- окно
-    // Экран, на котором висит остров. Слой Wayland пересоздаётся при смене,
-    // поэтому вычисляем аккуратно: имя из настроек — только если такой выход
-    // сейчас подключён, иначе (и в режиме "auto") идём за фокусом. Если
-    // Hyprland ещё не ответил, отдаём null — Quickshell возьмёт экран сам.
     screen: root.pickScreen
 
     readonly property var pickScreen: {
@@ -4708,35 +3944,19 @@ PanelWindow {
         return (fm && fm.screen) ? fm.screen : null;
     }
 
-    // Прижимаемся тремя кромками: свободной остаётся та, в сторону которой
-    // раскрывается панель. Иначе слой занял бы весь экран и exclusiveZone
-    // (место под остров) считался бы не от той кромки.
     anchors.top:    !root.pillAtBottom
     anchors.bottom: !root.pillAtTop
     anchors.left:   !root.pillAtRight
     anchors.right:  !root.pillAtLeft
-    // Высота окна ПОСТОЯННА и равна экрану.
     //
-    // Раньше она переключалась 560 <-> 1080 при закреплении панели, и слой
-    // Wayland пересоздавался прямо посреди анимации: содержимое успевало
-    // схлопнуться и разложиться заново. Именно это выглядело как рывок при
-    // открытии календаря по клику на часы.
     //
-    // Постоянная высота ничего не ломает: пока панель не закреплена, ввод
-    // ограничен маской по капсуле, и клики проходят сквозь окно как раньше.
     implicitHeight: root.screen ? root.screen.height : 1080
-    // для боковых положений свободна вертикальная кромка, и размер по ширине
-    // окно тоже должно задать само
     implicitWidth: root.screen ? root.screen.width : 1920
     color: "transparent"
-    // зазор между пилюлей и окнами (0 в режиме оверлея или при скрытии)
     exclusiveZone: (root.cfg.pillOverlay || root.pillHidden || (root.fullscreenActive && !root.expanded))
                    ? 0 : pillH + gap
     WlrLayershell.layer: WlrLayer.Overlay
 
-    // Пока поверх экрана развёрнутое окно, пилюли не видно совсем.
-    // Показываем её обратно, если панель раскрыли клавишами или если
-    // нужно показать уровень громкости/яркости.
     visible: !root.fullscreenActive || root.expanded || root.osdActive
 
     Process {
@@ -4751,29 +3971,17 @@ PanelWindow {
         pCloseWin.running = true;
     }
 
-    // клики ловим только там, где нарисована пилюля
-    // Пока открыта закреплённая страница, ввод принимает всё окно:
-    // иначе клики по панели (особенно по центрированным настройкам)
-    // проваливались мимо, и ползунки не реагировали.
-    // Спрятан ли остров прямо сейчас. Всё, ради чего его вообще показывают —
-    // раскрытая панель, перетаскивание, громкость — держит его на экране.
     readonly property bool pillHidden: root.cfg.pillAutoHide
                                        && !root.expanded && !root.holdOpen
                                        && !root.osdActive && !root.pillDragging
                                        && !revealHover.hovered && !capsuleHover.hovered
 
-    // Появление из-за кромки — не повод раскрываться. Остров выезжает прямо
-    // под неподвижный курсор, и раскрытие по наведению срабатывало само:
-    // человек хотел увидеть часы, а получал панель. Взводим раскрытие
-    // заново, только когда курсор после этого действительно двинется.
     onPillHiddenChanged: {
         if (root.pillHidden) return;
         root.hoverExpandArmed = false;
         capsuleHover.markArmPoint();
     }
 
-    // Полоска у самой кромки: спрятанный остров курсором не поймать, и
-    // вернуть его нечем — кроме узкой зоны, которая ловит наведение.
     Item {
         id: revealStrip
         visible: root.cfg.pillAutoHide
@@ -4789,7 +3997,6 @@ PanelWindow {
     Region {
         id: capsuleRegion
         item: capsule
-        // спрятанный остров вне экрана, и без полоски его не позвать
         Region {
             item: root.cfg.pillAutoHide ? revealStrip : null
             intersection: Intersection.Combine
@@ -4800,16 +4007,11 @@ PanelWindow {
         }
     }
     mask: root.holdOpen && !root.chatFilePickerOpen ? null : capsuleRegion
-    // Лаунчер забирает клавиатуру сразу (Exclusive), чтобы можно было
-    // печатать без клика. OnDemand отдаёт фокус только после клика мышью.
     WlrLayershell.keyboardFocus: root.holdOpen && !root.chatFilePickerOpen ? WlrKeyboardFocus.Exclusive
                                               : WlrKeyboardFocus.None
 
     readonly property var activePanel: (root.cfg.pillKeepVisible && root.expanded && !root.settingsMode) ? detachedPanel : capsule
 
-    // Клик мимо закреплённой панели — закрыть.
-    // Области лежат строго ВОКРУГ активной панели, поэтому клики по элементам
-    // и тумблерам внутри панели физически до них не доходят и панель не сбрасывается.
     Repeater {
         model: 4
         MouseArea {
@@ -4817,7 +4019,6 @@ PanelWindow {
             enabled: root.holdOpen
             visible: enabled
             z: 5
-            // 0 — сверху, 1 — снизу, 2 — слева, 3 — справа от активной панели
             x: index === 3 ? root.activePanel.x + root.activePanel.width : 0
             y: index === 1 ? root.activePanel.y + root.activePanel.height
              : index >= 2 ? root.activePanel.y : 0
@@ -4831,18 +4032,11 @@ PanelWindow {
         }
     }
 
-    // Снимок прежних обоев: лежит ниже пилюли и выше рабочего стола,
-    // клики не ловит — маска окна всё равно пропускает их насквозь.
     Image {
         anchors.fill: parent
         z: -5
-        // Пока кроссфейда нет, снимок не нужен и в памяти его быть не должно:
-        // распакованные обои во весь экран — это десяток мегабайт, которые
-        // висели круглые сутки ради семисот миллисекунд перехода.
         source: (root.themeFading || opacity > 0.01) ? root.themeFadeWall : ""
         fillMode: Image.PreserveAspectCrop
-        // у обоев бывает 75 мегапикселей: без ограничения Qt отказывается их
-        // декодировать (лимит 256 МБ на картинку) и кроссфейд не появлялся
         sourceSize.width: root.screen ? root.screen.width : 1920
         asynchronous: false
         cache: false
@@ -4853,8 +4047,6 @@ PanelWindow {
         }
     }
 
-    // Подсветка кромки, к которой прицепится остров. Пока тянут по пустоте,
-    // ничего не горит — значит отпускать некуда, вернётся на место.
     Repeater {
         model: ["top", "bottom", "left", "right"]
         Rectangle {
@@ -4875,19 +4067,16 @@ PanelWindow {
         }
     }
 
-    // ------------------------------------------------------------- сама пилюля
     Rectangle {
         id: capsule
         scale: 1 - root.fileAbsorb * 0.05
         Behavior on scale { NumberAnimation { duration: root.noMotion ? 0 : 150; easing.type: Easing.OutCubic } }
-        // Во время переноса весь остров становится областью приёма.
         Rectangle {
             anchors.fill: parent
             z: 499
             visible: (root.fileOverIsland || fileAbsorbAnimation.running) && !root.expanded
             color: root.colBg
             radius: Math.min(18, height / 2)
-            // Один скруглённый контур: штрихи продолжаются и на углах.
             Shape {
                 id: dropOutline
                 anchors.fill: parent; anchors.margins: 6
@@ -4926,12 +4115,12 @@ PanelWindow {
                 ColumnLayout {
                     spacing: 1
                     Text {
-                        text: root.tr("Отпустите файл")
+                        text: root.tr("Drop file here")
                         color: root.colFg
                         font { family: root.fontFam; pixelSize: 12; bold: true }
                     }
                     Text {
-                        text: root.tr("Быстрые действия")
+                        text: root.tr("Quick actions")
                         color: root.colMuted
                         font { family: root.fontFam; pixelSize: 10 }
                     }
@@ -4952,8 +4141,6 @@ PanelWindow {
             onDropped: drop => { root.fileOverIsland = false; if (drop.hasUrls) { drop.accept(Qt.CopyAction); root.openDroppedFile(drop.urls); } }
         }
 
-        // Прижата к своей кромке и растёт от неё — поэтому «раскрытие к
-        // центру» получается само, без отдельной анимации направления.
         anchors.top:    root.pillAtTop    ? parent.top    : undefined
         anchors.bottom: root.pillAtBottom ? parent.bottom : undefined
         anchors.left:   root.pillAtLeft   ? parent.left   : undefined
@@ -4961,17 +4148,10 @@ PanelWindow {
         anchors.horizontalCenter: root.pillSide ? undefined : parent.horizontalCenter
         anchors.verticalCenter:   root.pillSide ? parent.verticalCenter : undefined
 
-        // у кромки — 0, в режиме настроек — по центру экрана
-        // Вне режима выреза остров отходит от кромки на islandGap: он
-        // перестаёт быть продолжением края экрана и становится отдельной
-        // капсулой, висящей рядом с ним.
         readonly property real freeGap: root.cfg.notchMode ? 0 : root.cfg.islandGap
-        // Спрятанный остров уходит за кромку целиком: отрицательный отступ
-        // выносит его за границу окна, и на экране не остаётся ничего.
         readonly property real edgeMargin: root.settingsMode && !root.pillSide
                                            ? Math.max(24, (root.height - targetH) / 2)
                                            : root.pillHidden ? -(targetH + 4) : freeGap
-        // у боковых положений от кромки отрывает уже горизонтальный отступ
         readonly property real sideMargin: root.settingsMode && root.pillSide
                                            ? Math.max(24, (root.width - width) / 2)
                                            : root.pillHidden ? -(width + 4) : freeGap
@@ -4992,27 +4172,9 @@ PanelWindow {
             NumberAnimation { duration: root.animMs; easing.type: Easing.InOutCubic }
         }
 
-        // Свёрнутый остров измеряется вдоль своей кромки и поперёк неё: у
-        // боковых положений он стоит вертикально, поэтому длина уходит в
-        // высоту, а толщина — в ширину.
-        // collapsedW задаёт нижнюю границу, а не саму ширину: содержимое
-        // свёрнутого острова меняется (часы, трек, всплеск громкости), и
-        // жёсткая ширина обрезала бы его.
-        // Nothing носит остров заметно длиннее: там по краям стоят точки
-        // столов и три показателя сразу, и на общей нижней границе всё это
-        // жалось к часам вплотную.
         readonly property int collapsedMin: Math.max(root.cfg.collapsedW, 420)
 
-        // Округляем до чётного числа пикселей. Остров стоит по центру экрана,
-        // то есть его x равен половине разности ширин: при нечётной или
-        // дробной длине он попадает на полпикселя, и вогнутые уголки по бокам
-        // — отдельные элементы со своими координатами — приезжают на ту же
-        // половину. На стыке остаётся сглаженная серая щель, и правый уголок
-        // начинает читаться как приклеенный отдельно.
         //
-        // Раньше до этого не доходило: содержимое было уже нижней границы, и
-        // длиной работало ровное число из настроек. Точечные цифры шире, и
-        // дробная ширина содержимого стала попадать наружу.
         function evenUp(v) { return Math.round(v / 2) * 2; }
 
         readonly property real idleLen: root.fileOverIsland || fileAbsorbAnimation.running
@@ -5044,17 +4206,8 @@ PanelWindow {
              : (root.expanded && !root.cfg.pillKeepVisible) ? root.panelW
              : root.pillSide     ? idleThick
                                  : idleLen
-        // целевая высота — к ней анимируется height и по ней же сразу
-        // рассчитывается центрирование, чтобы движение было одноэтапным
-        // Высота содержимого держится отдельно: при смене страницы новый вид
-        // на первом кадре ещё не разложен и его implicitHeight равен нулю.
-        // Раньше капсула успевала схлопнуться до нуля и разложиться заново —
-        // отсюда рывок при переходе, например, из плиток в календарь.
         property real contentH: 220
 
-        // Раскладка новой страницы идёт в несколько проходов: сетка календаря
-        // из 42 ячеек успевает отдать промежуточные высоты. Если применять
-        // каждую, капсула дёргается. Собираем их в один шаг через таймер.
         Timer {
             id: contentSettle
             interval: 24
@@ -5065,12 +4218,6 @@ PanelWindow {
             var it = contentLoader.item;
             if (!it || it.implicitHeight <= 40) return;
             var target = it.implicitHeight + ((root.page === "main" || root.page === "chat" || root.page === "vpn") && !root.settingsMode ? 75 : 30);
-            // Мелкие колебания раскладки цель не двигают. Высота идёт через
-            // Behavior, а тот на каждое изменение цели начинает анимацию
-            // заново — с текущей точки и на полную длительность. Пока страница
-            // доразмечается, цель успевает поменяться несколько раз, и вместо
-            // одного плавного роста капсула идёт ступеньками. Разница в
-            // несколько пикселей глазу не видна, а перезапуск — виден.
             if (Math.abs(target - capsule.contentH) < 8) return;
             capsule.contentH = target;
         }
@@ -5084,19 +4231,12 @@ PanelWindow {
             function onImplicitHeightChanged() { capsule.refreshContentH(); }
         }
 
-        // Раскрытая панель не выше expandedH: страницы бывают длинные, но
-        // их высоту ограничивает уже своя прокрутка, а не остров.
         readonly property real targetH: root.settingsMode ? Math.min(contentH, root.height - 48)
                 : (root.expanded && !root.cfg.pillKeepVisible) ? Math.min(contentH, root.cfg.expandedH)
                 : root.pillSide ? idleLen
                                 : idleThick
-        // Не выше экрана: у боковых кромок вертикальная раскладка страницы
-        // отдавала такую высоту, что остров разворачивался во весь экран.
         height: Math.min(targetH, root.height - root.gap * 2)
 
-        // Перенос: капсула сдвигается от своего места на dragDX/dragDY. Пока
-        // тянут — без анимации, чтобы шла точно за курсором; на отпускании
-        // смещение сбрасывается в ноль и она сама доезжает до кромки.
         transform: Translate {
             x: root.dragDX
             y: root.dragDY
@@ -5119,19 +4259,11 @@ PanelWindow {
             root.pillRectW = capsule.width;  root.pillRectH = capsule.height;
         }
 
-        // Пока карусель обоев открыта, остров спрятан: она выросла из него,
-        // и два острова на экране разом смотрелись бы как две панели.
         opacity: root.wallsOpen ? 0 : 1
         visible: opacity > 0.01
         Behavior on opacity { NumberAnimation { duration: root.animFast } }
 
         color: root.colBg
-        // Углы у прижатой кромки срезаны, у смотрящей в экран — скруглены:
-        // так остров выглядит выросшим из края, а не приклеенным к нему.
-        // В режиме настроек капсула отрывается от кромки, и круглыми
-        // становятся все четыре.
-        // Оторванная от кромки капсула круглая со всех сторон: срезать ей
-        // углы не от чего, кромка её больше не держит.
         readonly property real edgeR: (root.settingsMode || !root.cfg.notchMode)
                                       ? (root.cfg.islandRadius > 0 ? root.cfg.islandRadius : 26)
                                       : 0
@@ -5154,10 +4286,6 @@ PanelWindow {
         // cambiasse all'apertura.
         border.width: 0
 
-        // Bounce со вкладки Motion живёт здесь: остров меняет размер по
-        // кривой с перелётом, и ползунок задаёт, насколько сильно он
-        // проскакивает цель, прежде чем осесть. На нуле перелёта нет и
-        // кривая обычная — движение просто останавливается.
         Behavior on width {
             NumberAnimation {
                 duration: root.animMs
@@ -5178,20 +4306,11 @@ PanelWindow {
 
         clip: true
 
-        // --- курсор отслеживаем поверх всего содержимого
         HoverHandler {
             id: capsuleHover
             acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
 
-            // Где стоял курсор, когда раскрытие по наведению запретили.
-            // Запрет ставится после переноса острова и после клика по
-            // уведомлению, а снимался он только уходом курсора с острова.
-            // Если остров вставал ровно под неподвижным курсором (а после
-            // переноса к кромке так и происходит), уходить было нечему:
-            // запрет оставался навсегда, и панель больше не открывалась.
-            // Поэтому его снимает ещё и осмысленный сдвиг мыши.
             property point armPos: Qt.point(-9999, -9999)
-            // точку отсчёта ставят те места, что запрещают раскрытие
             function markArmPoint() {
                 capsuleHover.armPos = capsuleHover.hovered
                         ? capsuleHover.point.scenePosition : Qt.point(-9999, -9999);
@@ -5206,7 +4325,6 @@ PanelWindow {
             }
 
             onHoveredChanged: {
-                // курсор снова на острове — считать сдвиг заново от этой точки
                 if (hovered && !root.hoverExpandArmed)
                     capsuleHover.armPos = capsuleHover.point.scenePosition;
                 if (hovered) {
@@ -5216,22 +4334,11 @@ PanelWindow {
                 } else {
                     expandTimer.stop();
                     collapseTimer.restart();
-                    // Курсор ушёл — разрешаем раскрытие снова, но не сразу.
-                    // При переезде к другой кромке остров на кадр выскакивает
-                    // из-под курсора, и мгновенное возвращение разрешения
-                    // означало, что у новой кромки он тут же раскрывался под
-                    // тем же самым курсором.
                     rearmTimer.restart();
                 }
             }
         }
-        // Раскрыть плитки. Страницу трогаем только если панель ещё закрыта:
-        // иначе наведение сбрасывало бы уже открытый список сетей.
         //
-        // Открываются всегда плитки. Ни музыка, ни идущая запись своей
-        // страницы не подсовывают: трек живёт карточкой прямо здесь, а до
-        // пульта записи один клик по плитке — зато не приходится гадать,
-        // что откроется.
         function openPanel() {
             if (!root.expanded) {
                 pageResetTimer.stop();
@@ -5245,18 +4352,11 @@ PanelWindow {
             onTriggered: {
                 if (!capsuleHover.hovered || root.launcherOpen || root.fileOverIsland || fileDrag.Drag.active) return;
                 if (!root.hoverExpandArmed) return;
-                // пока висит уведомление, наведение не раскрывает панель:
-                // иначе до крестика не добраться
                 if (root.toastActive || root.btToastActive || root.wifiToastActive || root.acToastActive || root.recPickActive || root.voxActive) return;
-                // При автопрятании наведением остров только показывают. Он и
-                // выезжает-то из-за кромки под этот самый курсор, так что
-                // раскрытие следом означало бы: хотел посмотреть время —
-                // получи панель во весь экран. Разворачивает клик.
                 if (root.cfg.pillAutoHide) return;
                 capsule.openPanel();
             }
         }
-        // курсор должен побыть в стороне, а не просто мигнуть мимо
         Timer {
             id: rearmTimer
             interval: 450
@@ -5270,7 +4370,6 @@ PanelWindow {
             }
         }
 
-        // Клик по свёрнутому острову разворачивает его
         MouseArea {
             anchors.fill: parent
             z: 0
@@ -5280,7 +4379,6 @@ PanelWindow {
             onClicked: capsule.openPanel()
         }
 
-        // В режиме pillKeepVisible при открытой отдельной панели клик по фону острова закрывает её
         MouseArea {
             anchors.fill: parent
             z: -1
@@ -5290,14 +4388,7 @@ PanelWindow {
             onClicked: root.collapse()
         }
 
-        // Клик по карточке открывает историю. Отдельным слоем под ней:
-        // внутри RowLayout якоря ломают раскладку.
-        // Нажатие открывает сам повод: чат, письмо, загрузку. Раньше карточка
-        // уводила в список уведомлений — оттуда всё равно приходилось искать
-        // приложение руками.
         //
-        // z поверх всего содержимого капсулы: пока висит карточка, ни одна
-        // область под ней не должна перехватывать щелчок.
         MouseArea {
             anchors.fill: parent
             z: 100
@@ -5310,12 +4401,8 @@ PanelWindow {
 
         Mascot { id: mascot; sys: root; anchors.centerIn: parent; z: 10; visible: active && !root.pillSide }
 
-        // ------------------------------------------ свёрнутое: уведомление
         RowLayout {
             id: toastCapsule
-            // Выше области нажатия карточки: сама она щелчки не перехватывает
-            // (это просто текст и иконки), зато крестик внутри остаётся
-            // доступным — иначе его накрыло бы прозрачной областью.
             z: 110
             anchors.left: parent.left
             anchors.right: parent.right
@@ -5328,7 +4415,6 @@ PanelWindow {
             opacity: visible ? 1 : 0
             Behavior on opacity { NumberAnimation { duration: root.animFast } }
 
-            // значок программы, если прислали
             Rectangle {
                 Layout.preferredWidth: 34
                 Layout.preferredHeight: 34
@@ -5342,8 +4428,6 @@ PanelWindow {
                     anchors.fill: parent
                     anchors.margins: 5
                     source: root.notifImage
-                    // не Ready — значит не открылась: пусть лучше будет свой
-                    // значок, чем клетчатый прямоугольник «битой картинки»
                     visible: source != "" && status === Image.Ready
                     fillMode: Image.PreserveAspectFit
                     smooth: true
@@ -5380,18 +4464,12 @@ PanelWindow {
 
                 Text {
                     Layout.fillWidth: true
-                    // «Показывать текст в карточке» из настроек: выключено —
-                    // видно только приложение и заголовок
                     visible: root.notifBody.length > 0 && (root.cfg.notifPreview || root.approvalToast)
                     text: root.notifBody
                     color: root.colMuted
                     wrapMode: Text.WordWrap
                     maximumLineCount: 3
                     elide: Text.ElideRight
-                    // Спецификация разрешает в теле подмножество разметки
-                    // (<b>, <i>, <u>, <a>), и мы заявляем её поддержку в
-                    // bodyMarkupSupported. PlainText показывал теги как есть —
-                    // Telegram присылал «<b>Паша брат</b>» прямо текстом.
                     textFormat: Text.StyledText
                     font { family: root.fontFam; pixelSize: root.fontSize - 3 }
                 }
@@ -5414,7 +4492,6 @@ PanelWindow {
                 }
             }
 
-            // закрыть тост
             Text {
                 visible: !root.approvalToast
                 Layout.alignment: Qt.AlignTop
@@ -5446,9 +4523,6 @@ PanelWindow {
             Rectangle { width: parent.width * Math.max(0, Math.min(1, root.approvalToastRemaining / 30000)); height: parent.height; radius: 2; color: root.colFg }
         }
 
-        // ---------------------------------- свёрнутое: Bluetooth устройство
-        // Слева иконка устройства (наушники, мышь, клавиатура, геймпад и т.д.),
-        // по центру статус (Подключено / Отключено) и имя, справа кольцо с зарядом.
         RowLayout {
             id: btCapsule
             z: 110
@@ -5486,9 +4560,9 @@ PanelWindow {
                 transform: Translate { y: -2 }
 
                 Text {
-                    text: root.btToastLowBatt ? root.tr("Низкий заряд батареи")
-                        : root.btToastDisconnected ? root.tr("Отключено")
-                        : root.tr("Подключено")
+                    text: root.btToastLowBatt ? root.tr("Low battery")
+                        : root.btToastDisconnected ? root.tr("Disconnected")
+                        : root.tr("Connected")
                     color: (root.btToastDisconnected || root.btToastLowBatt) ? root.colCrit : root.colMuted
                     transform: Translate { y: 2 }
                     font { family: root.fontFam; pixelSize: root.fontSize - 4 }
@@ -5502,14 +4576,12 @@ PanelWindow {
                 }
             }
 
-            // Правая часть: кольцо заряда или иконка состояния
             Item {
                 Layout.preferredWidth: 28
                 Layout.preferredHeight: 28
                 Layout.alignment: Qt.AlignVCenter
                 Layout.leftMargin: 48
 
-                // Кольцо заряда при наличии батареи
                 Canvas {
                     id: btRing
                     anchors.fill: parent
@@ -5561,13 +4633,11 @@ PanelWindow {
                         ctx.lineWidth = lineW;
                         ctx.lineCap = "round";
 
-                        // бледный контур
                         ctx.beginPath();
                         ctx.arc(cx, cy, r, 0, 2 * Math.PI);
                         ctx.strokeStyle = Qt.rgba(c.r, c.g, c.b, 0.22);
                         ctx.stroke();
 
-                        // дуга заряда
                         if (fill > 0) {
                             var start = -Math.PI / 2;
                             ctx.beginPath();
@@ -5585,7 +4655,6 @@ PanelWindow {
                     }
                 }
 
-                // Иконка без батареи
                 Rectangle {
                     anchors.fill: parent
                     visible: !root.btToastDisconnected && root.btConnectedBattery < 0
@@ -5599,7 +4668,6 @@ PanelWindow {
                     }
                 }
 
-                // Индикатор отключения
                 Rectangle {
                     anchors.fill: parent
                     visible: root.btToastDisconnected
@@ -5615,9 +4683,6 @@ PanelWindow {
             }
         }
 
-        // ---------------------------------- свёрнутое: Wi-Fi подключение
-        // Слева иконка Wi-Fi, по центру статус (Подключено / Отключено) и имя сети,
-        // справа кружок с качеством сигнала или иконка состояния.
         RowLayout {
             id: wifiCapsule
             z: 110
@@ -5649,7 +4714,7 @@ PanelWindow {
                 transform: Translate { y: -2 }
 
                 Text {
-                    text: root.wifiToastDisconnected ? root.tr("Отключено") : root.tr("Подключено")
+                    text: root.wifiToastDisconnected ? root.tr("Disconnected") : root.tr("Connected")
                     color: root.wifiToastDisconnected ? root.colCrit : root.colMuted
                     transform: Translate { y: 2 }
                     font { family: root.fontFam; pixelSize: root.fontSize - 4 }
@@ -5663,14 +4728,12 @@ PanelWindow {
                 }
             }
 
-            // Правая часть: кольцо качества связи или иконка состояния
             Item {
                 Layout.preferredWidth: 28
                 Layout.preferredHeight: 28
                 Layout.alignment: Qt.AlignVCenter
                 Layout.leftMargin: 48
 
-                // Кольцо качества связи (как btRing у наушников)
                 Canvas {
                     id: wifiRing
                     anchors.fill: parent
@@ -5722,13 +4785,11 @@ PanelWindow {
                         ctx.lineWidth = lineW;
                         ctx.lineCap = "round";
 
-                        // бледный контур
                         ctx.beginPath();
                         ctx.arc(cx, cy, r, 0, 2 * Math.PI);
                         ctx.strokeStyle = Qt.rgba(c.r, c.g, c.b, 0.22);
                         ctx.stroke();
 
-                        // дуга качества связи
                         if (fill > 0) {
                             var start = -Math.PI / 2;
                             ctx.beginPath();
@@ -5746,7 +4807,6 @@ PanelWindow {
                     }
                 }
 
-                // Индикатор отключения
                 Rectangle {
                     anchors.fill: parent
                     visible: root.wifiToastDisconnected
@@ -5762,12 +4822,6 @@ PanelWindow {
             }
         }
 
-        // ---- свёрнутое: зарядка подключена ------------------------------
-        // Фон карточки — та же волна заряда, что на кнопке батареи в быстрых
-        // настройках (ControlsView.ChargeWave): две бегущие синусоиды цветом
-        // заряда, налитые до уровня батареи. Рисуется под содержимым (z ниже
-        // капсул с z:110) и обрезается клипом пилюли; идёт, пока карточка на
-        // экране.
         Canvas {
             id: acWave
             anchors.fill: parent
@@ -5792,9 +4846,6 @@ PanelWindow {
                 ctx.reset();
                 if (width <= 0 || height <= 0) return;
 
-                // Клип по скруглению пилюли: у капсулы прямоугольный clip, и
-                // без этого волна вылезала в скруглённые углы полупрозрачными
-                // острыми уголками. Радиусы берём у самой капсулы.
                 var mr = Math.min(width, height) / 2;
                 var tl = Math.min(capsule.topLeftRadius, mr);
                 var tr = Math.min(capsule.topRightRadius, mr);
@@ -5809,8 +4860,6 @@ PanelWindow {
                 ctx.closePath();
                 ctx.clip();
 
-                // Уровень держим в стороне от краёв: у самого верха волна
-                // срезалась бы и выглядела ровной полосой.
                 var base = height * (1 - Math.max(0.12, Math.min(0.92, level)));
                 var amp = 3.2;
 
@@ -5832,8 +4881,6 @@ PanelWindow {
             }
         }
 
-        // Значок зарядки, «Заряжается» и процент — одной строкой по центру
-        // пилюли, без кольца.
         RowLayout {
             id: acCapsule
             z: 110
@@ -5852,8 +4899,8 @@ PanelWindow {
             }
             Text {
                 Layout.alignment: Qt.AlignVCenter
-                text: root.acToastKind === "lowbatt" ? root.tr("Низкий заряд батареи")
-                                                      : root.tr("Заряжается")
+                text: root.acToastKind === "lowbatt" ? root.tr("Low battery")
+                                                      : root.tr("Charging")
                 color: root.acToastKind === "lowbatt" ? root.colCrit : root.colFg
                 font { family: root.fontFam; pixelSize: root.fontSize; bold: true }
             }
@@ -5865,11 +4912,6 @@ PanelWindow {
             }
         }
 
-        // ---- свёрнутое: выбор экрана для записи -------------------------
-        // Несколько мониторов — спрашиваем, какой писать: значок записи,
-        // подпись и по чипу на каждый экран. Клик по чипу запускает запись
-        // именно этого выхода; × отменяет. z выше остальных капсул — карточка
-        // интерактивная, клики должны доходить до чипов.
         RowLayout {
             id: recPickCapsule
             z: 130
@@ -5887,7 +4929,7 @@ PanelWindow {
             }
             Text {
                 Layout.alignment: Qt.AlignVCenter
-                text: root.tr("Записать экран")
+                text: root.tr("Record screen")
                 color: root.colFg
                 font { family: root.fontFam; pixelSize: root.fontSize; bold: true }
             }
@@ -5934,9 +4976,6 @@ PanelWindow {
             }
         }
 
-        // ---- свёрнутое: голосовой ввод (voxtype) ------------------------
-        // Пока зажата кнопка/клавиша — «Слушаю…» с живым эквалайзером микрофона (cava);
-        // после отпускания, пока voxtype печатает текст, — «Расшифровываю…».
         RowLayout {
             id: voxCapsule
             z: 120
@@ -5948,7 +4987,7 @@ PanelWindow {
 
             Text {
                 Layout.alignment: Qt.AlignVCenter
-                text: String.fromCodePoint(0xF036C)   // микрофон
+                text: String.fromCodePoint(0xF036C)
                 color: root.voxState === "listening" ? root.colCrit : root.colFg
                 font { family: root.fontFam; pixelSize: root.iconSize + 3 }
 
@@ -5963,8 +5002,8 @@ PanelWindow {
 
             Text {
                 Layout.alignment: Qt.AlignVCenter
-                text: root.voxState === "transcribing" ? root.tr("Расшифровываю…")
-                                                       : root.tr("Слушаю…")
+                text: root.voxState === "transcribing" ? root.tr("Transcribing…")
+                                                       : root.tr("Listening…")
                 color: root.colFg
                 font { family: root.fontFam; pixelSize: root.fontSize; bold: true }
             }
@@ -5981,7 +5020,6 @@ PanelWindow {
             }
         }
 
-        // ------------------------------------------- свёрнутое: уровень (OSD)
         RowLayout {
             id: osdCapsule
             anchors.centerIn: parent
@@ -5994,8 +5032,6 @@ PanelWindow {
             Text {
                 text: root.osdIcon
                 color: root.osdMuted ? root.colMuted : root.colFg
-                // Ширина зафиксирована: глифы громкости, микрофона и солнца
-                // разной ширины, из-за чего пилюля дёргалась при смене уровня.
                 Layout.preferredWidth: mOsdIcon.width + 4
                 horizontalAlignment: Text.AlignHCenter
                 font { family: root.fontFam; pixelSize: root.iconSize }
@@ -6030,14 +5066,9 @@ PanelWindow {
             }
         }
 
-        // Эталоны ширины: числа в пилюле занимают место по самому широкому
-        // варианту, поэтому капсула не растягивается и не сужается на ходу.
         TextMetrics {
             id: mClock
             font { family: root.fontFam; pixelSize: root.fontSize; bold: true }
-            // Эталон под самый широкий вариант ИМЕННО текущего формата:
-            // с секундами строка длиннее, а место под неё резервировалось
-            // старое — часы налезали на соседей, и остров стоял впритык.
             text: (root.cfg.clock12 ? "12:00" : "00:00")
                   + (root.cfg.clockSeconds ? ":00" : "")
                   + (root.cfg.clock12 ? " PM" : "")
@@ -6050,13 +5081,11 @@ PanelWindow {
         TextMetrics {
             id: mBattIcon
             font { family: root.fontFam; pixelSize: root.iconSize }
-            // глифы заряда моноширинные между собой, хватит одного образца
             text: String.fromCodePoint(0xF0079)
         }
         TextMetrics {
             id: mOsdIcon
             font { family: root.fontFam; pixelSize: root.iconSize }
-            // самый широкий из используемых глифов уровня
             text: String.fromCodePoint(0xF057E)
         }
         TextMetrics {
@@ -6065,10 +5094,6 @@ PanelWindow {
             text: "10"
         }
 
-        // ------------------------------------------ свёрнутое: Nothing
-        // Часы стоят ровно по центру острова, столы — слева, состояние
-        // машины — справа. Края разведены по якорям, а под них резервируется
-        // одинаковое место — часы стоят намертво по центру.
         Item {
             id: nothingCapsule
             anchors.left: parent.left
@@ -6082,32 +5107,23 @@ PanelWindow {
             opacity: root.pillSide ? 0 : (visible ? 1 : 0)
             Behavior on opacity { NumberAnimation { duration: root.animFast } }
 
-            // просвет между часами и крайними группами
             readonly property real armGap: 22
 
-            // Место под точки столов: пять слотов по шесть пикселей, просветы
-            // между ними и надбавка на текущий стол — он растекается в полосу
-            // и шире остальных.
             readonly property int wsSlots: 5
             readonly property real wsReserve:
                 nothingCapsule.wsSlots * 6
                 + (nothingCapsule.wsSlots - 1) * nLeft.spacing
                 + (17 - 6)
-            // Обе группы получают ширину по большей из них: без этого часы
-            // считались бы центром пустого места, а не острова.
             readonly property real arm:
                 Math.max(nLeft.implicitWidth, nRight.implicitWidth)
             implicitWidth: (weatherrow.visible ? weatherrow.implicitWidth : 0) + nClock.implicitWidth + 2 * (nothingCapsule.arm + nothingCapsule.armGap)
 
-            // ------------------------------------------- слева: столы
             RowLayout {
                 id: nLeft
                 anchors.left: parent.left
                 anchors.verticalCenter: parent.verticalCenter
                 spacing: weatherrow.visible ? 2 : 8
 
-                // Запись важнее столов и потому стоит первой: пока идёт
-                // съёмка, об этом надо знать раньше всего остального.
                 Rectangle {
                     Layout.preferredWidth: 7
                     Layout.preferredHeight: 7
@@ -6124,17 +5140,7 @@ PanelWindow {
                     onVisibleChanged: if (!visible) opacity = 1
                 }
 
-                // Точки столов. Текущий — короткая белая полоса: номер стола
-                // на острове всё равно никто не читал как число, важно лишь
-                // «который по счёту из скольких», а это точки показывают
-                // прямо, без чтения.
                 //
-                // Под них резервируется место на пять столов, даже когда их
-                // меньше. Hyprland заводит и убирает столы на ходу, а от
-                // числа точек зависела длина всего острова: часы стоят по его
-                // центру, правая группа прижата к его краю — и на каждом
-                // открытии четвёртого стола весь остров переставлялся. Пока
-                // столов не больше пяти, теперь не меняется ничего.
                 Item {
                     Layout.preferredWidth: Math.max(wsRow.implicitWidth, nothingCapsule.wsReserve)
                     Layout.preferredHeight: 6
@@ -6152,15 +5158,8 @@ PanelWindow {
                     Rectangle {
                         required property var modelData
                         readonly property bool here: modelData === root.wsId
-                        // Ширину держим своим свойством: Behavior не вешается
-                        // на присоединённые Layout.*, а растекание точки в
-                        // полосу без анимации — просто подмена картинки.
                         property real len: here ? 17 : 6
 
-                        // Анимация включается после того, как точка встала на
-                        // место. Иначе появление нового стола проигрывается
-                        // как выезжающая полоса — а это не изменение, это
-                        // первый кадр, и показывать его движением не за чем.
                         property bool settled: false
                         Component.onCompleted: settled = true
 
@@ -6183,8 +5182,6 @@ PanelWindow {
                         MouseArea {
                             id: wsMa
                             anchors.fill: parent
-                            // по точке в шесть пикселей не попасть мышью,
-                            // поэтому цель шире самой точки
                             anchors.margins: -5
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
@@ -6195,9 +5192,6 @@ PanelWindow {
                     }
                 }
 
-                // Погода сразу за точками. Значок и градусы, без города и
-                // слов: город человек и так знает, а описание словами на
-                // острове не помещается — оно есть в карточке на обоях.
 
                 Item  {
                     id: weatheritem
@@ -6225,10 +5219,6 @@ PanelWindow {
                             size: root.dotHClock
                             color: islWthMa2.containsMouse ? root.colOn : root.colFg
                         }
-                        // Градусы обычным шрифтом. Точки оставлены часам и
-                        // столам — тому, что на этой теме и должно быть набрано
-                        // ими. Знак градуса в точечной сетке выходит квадратным
-                        // кружком из четырёх точек, а он должен быть гладким.
                         Text {
                             Layout.alignment: Qt.AlignVCenter
                             text: root.weatherTemp + "°"
@@ -6247,7 +5237,6 @@ PanelWindow {
                 }
             }
 
-            // --------------------------------------------- центр: часы
             DotText {
                 id: nClock
                 anchors.centerIn: parent
@@ -6255,19 +5244,11 @@ PanelWindow {
                 Behavior on anchors.horizontalCenterOffset { enabled: !root.expanded && capsule.height <= root.pillH + 2; NumberAnimation { duration: root.animMs; easing.type: Easing.InOutCubic } }
                 value: root.timeText
                 size: root.dotHClock
-                // Жирность у точечной цифры — это плотность точек, а не
-                // толщина линии: рисовать нечем, кроме них. Просвет ужат до
-                // десятой доли, точки почти смыкаются, и цифра читается
-                // плотной и ярко-белой.
                 //
-                // Так она догоняет по насыщенности крупные часы в панели, не
-                // вырастая следом за ними: там та же цифра вдвое выше, и
-                // яркой она выглядит просто из-за размера.
                 gapRatio: 0.1
                 color: root.colFg
             }
 
-            // ------------------------------- справа: сеть, звук, заряд
             RowLayout {
                 id: nRight
                 anchors.right: parent.right
@@ -6282,17 +5263,7 @@ PanelWindow {
                     font { family: root.fontFam; pixelSize: root.fontSize - 5 }
                 }
 
-                // Кабель вытесняет антенну: связь идёт по нему, и значок
-                // Wi-Fi поверх работающего кабеля только сбивал бы с толку.
                 //
-                // Кабель нарисован фигурой, а не взят из шрифта: дерево сети
-                // в Nerd Font идёт с перекладиной шире самих квадратов, и на
-                // этом размере она читается полосой поперёк значка.
-                // Размер задаётся через Layout.*, а не width/height: в
-                // раскладке своя ширина элемента ничего не решает, её ставит
-                // сама раскладка — по preferred, а без него по implicit.
-                // Отсюда значок и оставался прежним, сколько ему ни
-                // прописывай width.
                 LanGlyph {
                     Layout.alignment: Qt.AlignVCenter
                     Layout.preferredWidth: root.iconSize - 6
@@ -6309,17 +5280,8 @@ PanelWindow {
                     font { family: root.fontFam; pixelSize: root.iconSize - 2 }
                 }
 
-                // Раскладка сразу за сетью. Буквами, а не точками: точечная
-                // сетка знает цифры, а «RU» на ней пришлось бы рисовать
-                // отдельно ради двух знаков.
                 //
-                // Текущая — в полную яркость, вторая приглушена: цветом их
-                // на этой теме не развести, а разница нужна беглая.
                 //
-                // FlipText, а не обычная надпись: раскладку переключают
-                // вслепую, посреди набора, и подтверждение нужно заметить
-                // краем глаза. Подмена буквы без движения незаметна — здесь
-                // она перелистывается, как и в обычном острове.
                 FlipText {
                     Layout.alignment: Qt.AlignVCenter
                     value: root.kbLayout
@@ -6354,8 +5316,6 @@ PanelWindow {
                     }
                 }
 
-                // Заряда на настольной машине не существует — там этой пары
-                // нет совсем, а не «ноль процентов».
                 RowLayout {
                     spacing: 6
                     visible: root.batteryPresent
@@ -6379,9 +5339,6 @@ PanelWindow {
             }
         }
 
-            // Текст столбиком: каждая буква на своей строке. Повёрнутый на
-            // 90° текст пришлось бы читать с наклонённой головой, а так
-            // вертикальный остров остаётся читаемым.
             component VertText: Column {
                 id: vt
                 property string value: ""
@@ -6407,11 +5364,6 @@ PanelWindow {
                 }
             }
 
-            // ------------------------------------- вертикальный остров
-            // У боковых кромок содержимое стоит столбиком и НЕ повёрнуто:
-            // повёрнутый текст читается только с наклонённой головой. Поэтому
-            // здесь свой набор — короткие значения, которые влезают в толщину
-            // острова: часы двумя строками, стол, раскладка, заряд.
             ColumnLayout {
                 id: vertCapsule
                 anchors.centerIn: parent
@@ -6421,9 +5373,6 @@ PanelWindow {
                 opacity: root.pillSide ? 1 : 0
                 Behavior on opacity { NumberAnimation { duration: root.animFast } }
 
-                // Играет музыка: обложка и эквалайзер. Названию в толщину
-                // острова не поместиться, а повёрнутый текст не читается —
-                // поэтому оно показывается подписью при наведении.
                 Item {
                     Layout.alignment: Qt.AlignHCenter
                     Layout.preferredWidth: 22
@@ -6476,7 +5425,6 @@ PanelWindow {
                         }
                     }
 
-                    // название трека столбиком: коротко, но читаемо
                     VertText {
                         Layout.alignment: Qt.AlignHCenter
                         value: root.player ? String(root.player.trackTitle || "") : ""
@@ -6486,8 +5434,6 @@ PanelWindow {
                         maxChars: 10
                     }
 
-                    // Тот же эквалайзер, что и в горизонтальном виде, только
-                    // повёрнутый: полосы абстрактные, читать их не нужно.
                     Item {
                         Layout.alignment: Qt.AlignHCenter
                         Layout.preferredWidth: 16
@@ -6504,8 +5450,6 @@ PanelWindow {
 
                 }
 
-                    // Клик открывает плеер, наведение показывает название:
-                    // подпись рисует корень, поэтому текст остаётся прямым.
                     MouseArea {
                         anchors.fill: parent
                         hoverEnabled: true
@@ -6522,7 +5466,6 @@ PanelWindow {
                     }
                 }
 
-                // идёт запись экрана
                 Rectangle {
                     Layout.alignment: Qt.AlignHCenter
                     Layout.preferredWidth: 8
@@ -6532,8 +5475,6 @@ PanelWindow {
                     color: root.recPaused ? root.colWarn : root.colCrit
                 }
 
-                // Черта отделяет музыку от постоянной части — как в
-                // горизонтальном виде она стоит между cava и днём недели.
                 Rectangle {
                     Layout.alignment: Qt.AlignHCenter
                     Layout.preferredWidth: 14
@@ -6542,7 +5483,6 @@ PanelWindow {
                     color: Qt.rgba(1, 1, 1, 0.18)
                 }
 
-                // день недели столбиком
                 VertText {
                     Layout.alignment: Qt.AlignHCenter
                     value: root.dayText
@@ -6551,7 +5491,6 @@ PanelWindow {
                     bold: true
                 }
 
-                // часы: часы и минуты отдельными строками
                 Text {
                     Layout.alignment: Qt.AlignHCenter
                     text: root.timeText.split(":")[0] || ""
@@ -6602,10 +5541,6 @@ PanelWindow {
                 }
             }
 
-        // ------------------------------------------------------- ручка переноса
-        // Полоса над содержимым: тянут за неё, а не за всю панель — иначе
-        // любое движение по плиткам таскало бы остров. Видна только когда
-        // перенос разрешён и открыты быстрые настройки.
         Item {
             id: dragHandle
             anchors.top: parent.top
@@ -6667,7 +5602,7 @@ PanelWindow {
             spacing: 6
             visible: root.expanded && !root.settingsMode && (root.page === "main" || root.page === "chat" || root.page === "vpn")
             Repeater {
-                model: [{page:"main", title:root.tr("Главная"), icon:0xF02DC}, {page:"chat", title:root.tr("Чат"), icon:0xF0181}]
+                model: [{page:"main", title:root.tr("Home"), icon:0xF02DC}, {page:"chat", title:root.tr("Chat"), icon:0xF0181}]
                 delegate: Rectangle {
                     required property var modelData
                     width: root.page === modelData.page ? tabText.implicitWidth + 48 : 40
@@ -6707,7 +5642,6 @@ PanelWindow {
             }
         }
 
-        // --------------------------------------------------- раскрытая панель
         Loader {
             id: contentLoader
             z: 10
@@ -6715,28 +5649,13 @@ PanelWindow {
             anchors.top: parent ? parent.top : undefined
             anchors.topMargin: (root.page === "main" || root.page === "chat" || root.page === "vpn") && !root.settingsMode ? 55 : 15
             anchors.horizontalCenter: parent ? parent.horizontalCenter : undefined
-            // Ширина берётся у ЦЕЛЕВОЙ панели, а не у анимируемой капсулы:
-            // иначе содержимое переливалось по ширине на каждом кадре
-            // сворачивания и выглядело как размазанная краска.
             width: (root.settingsMode ? root.settingsW : root.panelW) - 30
-            // Пока показывается карточка выбора экрана (или тост), контент
-            // раскрытой панели не рисуем: при старте записи из quick settings
-            // панель сворачивается, а её содержимое иначе видно ещё пару кадров
-            // позади карточки — экраны «проблёскивали».
             active: (root.expanded || capsule.height > root.pillH + 4 || (root.cfg.pillKeepVisible && detachedPanel.opacity > 0.005))
                     && !root.recPickActive && !root.btToastActive && !root.wifiToastActive
                     && !root.acToastActive && !root.voxActive
             visible: !root.recPickActive && !root.btToastActive && !root.wifiToastActive && !root.acToastActive && !root.voxActive
-            // без этого клавиатура не доходила до содержимого страницы:
-            // сам Loader фокуса не имел, и forceActiveFocus() внутри вида
-            // ни к чему не приводил
             focus: true
             onLoaded: if (item) item.forceActiveFocus()
-            // Esc закрывает любую страницу: если сам вид его не обработал
-            // (или обработал только на подстранице), событие всплывает сюда.
-            // Сначала спрашиваем вид, есть ли ему куда вернуться: со списка
-            // сетей или устройств Escape должен уводить к плиткам, а не
-            // захлопывать панель целиком.
             Keys.onEscapePressed: {
                 var it = contentLoader.item;
                 if (it && typeof it.goBack === "function" && it.goBack()) return;
@@ -6797,11 +5716,6 @@ PanelWindow {
         Component { id: agentsComp;    AgentsView { sys: root } }
     }
 
-    // ------------------------------------------------ отдельная плавающая панель
-    // При включённом «Остров виден при раскрытии» (pillKeepVisible):
-    // верхний остров остаётся в свёрнутом виде, а раскрытая панель страниц
-    // (быстрые настройки, календарь, лаунчер и т.д.) открывается отдельной
-    // плавающей карточкой под ним.
     Rectangle {
         id: detachedPanel
         z: 50
@@ -6908,10 +5822,6 @@ PanelWindow {
         }
     }
 
-    // ------------------------------------------------------- общий тултип
-    // Панель настроек обрезается капсулой (clip), и подпись, выходящая за её
-    // левый край, там просто исчезала. Поэтому тултип рисует сам корень:
-    // вид сообщает текст и точку, от которой раскрываться влево.
     property string tipText: ""
     property real   tipX: 0
     property real   tipY: 0
@@ -6947,15 +5857,8 @@ PanelWindow {
         }
     }
 
-    // ------------------------------------ плавное примыкание к кромке экрана
-    // Два вогнутых уголка по бокам: переход от кромки к пилюле без ступеньки.
-    // Вогнутые уголки примыкания: цепляются к той же кромке, что и остров, и
-    // стоят с двух его сторон. Форма выбирается по кромке: у вертикального
-    // острова та же четверть круга, только развёрнутая — заливка должна
-    // прижиматься к краю экрана и к торцу капсулы.
     NotchCorner {
         id: notchBefore
-        // «до» острова: слева от него, а у боковых кромок — над ним
         side: root.pillSide ? (root.pillAtLeft ? "right" : "left") : "left"
         fill: root.colBg
         r: root.cornerR
@@ -6963,21 +5866,16 @@ PanelWindow {
             origin.y: root.cornerR / 2
             yScale: root.pillSide ? -1 : (root.pillAtBottom ? -1 : 1)
         }
-        // Округляем: уголок — отдельный элемент со своими координатами, и на
-        // полпикселя от капсулы он расходится с ней сглаженной серой щелью.
         x: root.pillAtLeft  ? 0
          : root.pillAtRight ? parent.width - width
                             : Math.round(capsule.x) - width
         y: root.pillSide ? capsule.y - height
          : root.pillAtBottom ? parent.height - height : 0
-        // Уголки уходят вместе с островом: в настройках он отрывается от
-        // кромки, а на карусели обоев прячется целиком.
         opacity: root.cornersOn ? 1 : 0
         Behavior on opacity { NumberAnimation { duration: root.animFast } }
     }
     NotchCorner {
         id: notchAfter
-        // «после» острова: справа от него, а у боковых кромок — под ним
         side: root.pillSide ? (root.pillAtLeft ? "right" : "left") : "right"
         fill: root.colBg
         r: root.cornerR
@@ -6985,8 +5883,6 @@ PanelWindow {
             origin.y: root.cornerR / 2
             yScale: root.pillSide ? 1 : (root.pillAtBottom ? -1 : 1)
         }
-        // Здесь дробность копится вдвое — из x капсулы и из её ширины, —
-        // поэтому именно правый уголок и отходил заметнее левого.
         x: root.pillAtLeft  ? 0
          : root.pillAtRight ? parent.width - width
                             : Math.round(capsule.x + capsule.width)
@@ -6997,8 +5893,6 @@ PanelWindow {
     }
 }
 
-// Обзор рабочих столов — отдельный полноэкранный слой: пилюля тут ни при
-// чём, а клавиатура нужна целиком.
 LazyLoader {
     activeAsync: root.overviewOpen
 
@@ -7019,11 +5913,6 @@ LazyLoader {
             Behavior on opacity { NumberAnimation { duration: 160 } }
         }
 
-        // Обзор столов создаётся сразу и живёт вместе с оболочкой.
-        // Ленивая загрузка тут не прижилась: слой всплывает по Super+Tab, и
-        // отдавать его создание на момент нажатия — значит рисковать самим
-        // нажатием ради пары мегабайт. Тяжёлые превью окон и так живые только
-        // пока слой открыт.
         OverviewView {
             anchors.fill: parent
             sys: root
@@ -7031,11 +5920,6 @@ LazyLoader {
     }
 }
 
-// Launchpad — полноэкранный слой с сеткой приложений поверх размытого
-// рабочего стола. Окно остаётся видимым, пока сетка не догаснет: иначе она
-// пропадала бы рывком, без анимации закрытия.
-// Грузим синхронно, не activeAsync: при асинхронной сборке повторители
-// внутри сетки так и не создавали свои плитки — слой открывался пустым.
 LazyLoader {
     active: root.launchpadWarm
 
@@ -7048,13 +5932,6 @@ LazyLoader {
         WlrLayershell.namespace: "panacea-launchpad"
         WlrLayershell.keyboardFocus: root.launchpadOpen ? WlrKeyboardFocus.Exclusive
                                                         : WlrKeyboardFocus.None
-        // Окно держим поднятым всё время, а закрытое делаем прозрачным и
-        // неосязаемым (пустая маска ввода). Прятать его дороже: при каждом
-        // показе Qt заново собирал сцену и грузил текстуры всех иконок —
-        // это и были те ~200 мс до появления сетки.
-        // Исключение — приложение на весь экран: прозрачный слой поверх
-        // него мешал бы композитору отдавать кадр прямо на экран (игры,
-        // видео). Там окно снимаем, и открытие просто чуть медленнее.
         visible: !root.fullscreenActive || root.launchpadOpen || launchpad.fade > 0.01
         mask: (root.launchpadOpen || launchpad.fade > 0.01) ? null : launchpadNoInput
         Region { id: launchpadNoInput }
@@ -7069,12 +5946,7 @@ LazyLoader {
     }
 }
 
-// Обои — тоже свой полноэкранный слой: карусель раскрывается по центру
-// экрана, а клавиатура нужна ей целиком (стрелки, Enter, Esc).
 LazyLoader {
-    // Собираем слой заранее — как только прочитан список обоев. Иначе первое
-    // открытие уходило на создание трёх сотен карточек, и полсекунды экран
-    // был пустым.
     activeAsync: root.wallsOpen || root.wallListReady
 
     PanelWindow {
@@ -7085,7 +5957,6 @@ LazyLoader {
         WlrLayershell.layer: WlrLayer.Overlay
         WlrLayershell.keyboardFocus: root.wallsOpen ? WlrKeyboardFocus.Exclusive
                                                     : WlrKeyboardFocus.None
-        // окно живёт всё время, но показывается только на открытии
         visible: root.wallsOpen || wallsFade.opacity > 0.01
 
         Rectangle {
@@ -7096,12 +5967,6 @@ LazyLoader {
             Behavior on opacity { NumberAnimation { duration: root.animMs } }
         }
 
-        // Раскрывается из острова: точка роста — та кромка, где он висит,
-        // поэтому карусель выглядит развернувшейся пилюлей, а не отдельным
-        // окном, приехавшим со стороны.
-        // Карусель обоев. Слой над ней уже ленивый (LazyLoader выше строит
-        // его только когда прочитан список обоев), а сами картинки грузятся
-        // по мере показа — второй уровень ленивости лишь ломал открытие.
         WallpapersView {
             anchors.fill: parent
             sys: root
@@ -7109,8 +5974,6 @@ LazyLoader {
     }
 }
 
-// Клавиши (Super + /) — свой полноэкранный слой, а не тайлящееся окно:
-// раскрывается из острова по центру экрана и так же складывается обратно.
 LazyLoader {
     activeAsync: root.keysWindowOpen
 
@@ -7132,15 +5995,11 @@ LazyLoader {
             Behavior on opacity { NumberAnimation { duration: root.animMs } }
         }
 
-        // клик мимо карточки закрывает — как у обзора столов и карусели обоев
         MouseArea {
             anchors.fill: parent
             onClicked: root.keysWindowOpen = false
         }
 
-        // Карточка начинает ровно в геометрии капсулы и растёт до своего
-        // размера по центру: получается развернувшийся остров, а не окно,
-        // приехавшее со стороны.
         Rectangle {
             id: keysCard
             readonly property real fullW: Math.min(1280, parent.width - 80)
@@ -7160,17 +6019,11 @@ LazyLoader {
             Behavior on height { NumberAnimation { duration: root.animMs; easing.type: Easing.OutQuint } }
             Behavior on radius { NumberAnimation { duration: root.animMs; easing.type: Easing.OutQuint } }
 
-            // Прокрутки нет: список разложен в три колонки и целиком
-            // помещается в карточку, а сама она занимает почти весь экран.
-            // За сочетанием заглядывают на секунду, посреди другой работы —
-            // искать его колесом дольше, чем вспоминать самому.
             SetKeys {
                 id: keysBody
                 anchors.fill: parent
                 anchors.margins: 26
                 sys: root
-                // содержимое проявляется вслед за карточкой: на первых кадрах
-                // она ещё размером с пилюлю, и список в неё не влезает
                 opacity: root.keysWindowOpen ? 1 : 0
                 Behavior on opacity { NumberAnimation { duration: root.animMs } }
             }
@@ -7178,8 +6031,6 @@ LazyLoader {
     }
 }
 
-// Экран «что нового» после обновления. Отдельным слоем поверх всего: его
-// показывают один раз, и он должен перехватывать клавиатуру.
 PanelWindow {
     visible: root.whatsNewOpen
     anchors { top: true; bottom: true; left: true; right: true }
@@ -7200,13 +6051,9 @@ PanelWindow {
 }
 
 
-// Окно прогресса копирования и переноса. Отдельный слой, а не часть
-// проводника: операция переживает закрытие проводника, и следить за ней
-// надо откуда угодно. Экран не блокирует — висит внизу по центру.
 PanelWindow {
     id: fileOpWin
     screen: root.screen
-    // короткие операции не мигают окном: показываемся через 400 мс
     property bool shown: false
     visible: shown || fileOpCard.opacity > 0.01
     anchors.bottom: true
@@ -7249,7 +6096,7 @@ PanelWindow {
         var s = Math.round((root.fileOpTotal - root.fileOpDone) / root.fileOpSpeed);
         if (s < 1) return "";
         var m = Math.floor(s / 60);
-        return "~" + (m > 0 ? m + " " + root.tr("мин") + " " : "") + (s % 60) + " " + root.tr("с");
+        return "~" + (m > 0 ? m + " " + root.tr("min") + " " : "") + (s % 60) + " " + root.tr("s");
     }
 
     Rectangle {
@@ -7287,10 +6134,10 @@ PanelWindow {
                     spacing: 1
                     Text {
                         Layout.fillWidth: true
-                        text: root.fileOpError.length ? root.tr("Операция не выполнена")
-                            : root.fileOpCancelled ? root.tr("Отменено")
-                            : !root.fileOpActive ? root.tr("Готово")
-                            : root.fileOpPhase === "sync" ? root.tr("Запись на носитель…")
+                        text: root.fileOpError.length ? root.tr("Operation failed")
+                            : root.fileOpCancelled ? root.tr("Cancelled")
+                            : !root.fileOpActive ? root.tr("Done")
+                            : root.fileOpPhase === "sync" ? root.tr("Writing to drive…")
                             : root.fileOpLabel
                         color: root.colFg
                         elide: Text.ElideMiddle
@@ -7300,7 +6147,7 @@ PanelWindow {
                         Layout.fillWidth: true
                         text: root.fileOpError.length ? root.fileOpError
                             : root.fileOpPhase === "sync"
-                              ? root.tr("Не извлекайте носитель. Осталось: ") + fileOpWin.hsize(root.fileOpSyncLeft)
+                              ? root.tr("Don't remove the drive. Left: ") + fileOpWin.hsize(root.fileOpSyncLeft)
                             : root.fileOpTotal > 0
                               ? fileOpWin.hsize(root.fileOpDone) + " / " + fileOpWin.hsize(root.fileOpTotal)
                                 + (root.fileOpSpeed > 0 ? "  ·  " + fileOpWin.hsize(root.fileOpSpeed) + "/s" : "")
@@ -7323,7 +6170,7 @@ PanelWindow {
                     Text {
                         id: fileOpBtnTxt
                         anchors.centerIn: parent
-                        text: root.fileOpActive ? root.tr("Отмена") : root.tr("Закрыть")
+                        text: root.fileOpActive ? root.tr("Cancel") : root.tr("Close")
                         color: root.colFg
                         font { family: root.fontFam; pixelSize: root.fontSize - 4 }
                     }
@@ -7340,7 +6187,6 @@ PanelWindow {
                 }
             }
 
-            // полоса: при записи на носитель она «бежит», а не стоит на 99%
             Rectangle {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 5
@@ -7374,7 +6220,7 @@ PanelWindow {
 
             Text {
                 visible: root.fileOpActive && root.fileOpQueue.length > 0
-                text: root.tr("В очереди: ") + root.fileOpQueue.length
+                text: root.tr("Queued: ") + root.fileOpQueue.length
                 color: root.colMuted
                 font { family: root.fontFam; pixelSize: root.fontSize - 5 }
             }
@@ -7382,29 +6228,24 @@ PanelWindow {
     }
 }
 
-// Проводник отдельным окном. Живёт на уровне ShellRoot, а не внутри
-// пилюли: окно не может быть ребёнком другого окна.
 Instantiator {
     model: filesWindows
 
     FloatingWindow {
         id: floatingwin
         required property var model
-        title: "Panacea · " + root.tr("Проводник")
+        title: "Panacea · " + root.tr("File manager")
         color: root.colBg
         minimumSize.width: 720
         minimumSize.height: 460
         visible: true
-        // крестик в заголовке — окно должно уйти и из списка
         onVisibleChanged: if (!visible) root.closeFilesWindow(floatingwin.model.wid)
 
         FilesView {
             anchors.fill: parent
             anchors.margins: 15
             sys: root
-            // папка, с которой окно открылось (пусто — домашняя)
             dir: floatingwin.model.startDir
-            // в оконном режиме закрывать надо своё окно, а не пилюлю
             windowMode: true
             windowId: floatingwin.model.wid
         }
@@ -7416,7 +6257,7 @@ LazyLoader {
     active: root.chatFilePickerOpen
     FloatingWindow {
     id: chatPickerWindow
-    title: "Panacea · " + root.tr("Выберите файл")
+    title: "Panacea · " + root.tr("Choose a file")
     color: root.colBg
     minimumSize.width: 720; minimumSize.height: 500
     visible: true
@@ -7434,7 +6275,7 @@ LazyLoader {
         anchors.right: parent.right; anchors.bottom: parent.bottom; anchors.margins: 15
         spacing: 10; height: 34
         Repeater {
-            model: [{text:root.tr("Отмена"), accept:false},{text:root.tr("Прикрепить"), accept:true}]
+            model: [{text:root.tr("Cancel"), accept:false},{text:root.tr("Attach"), accept:true}]
             delegate: Rectangle {
                 required property var modelData
                 width: 112; height: 34; radius: 17
@@ -7448,17 +6289,8 @@ LazyLoader {
     }
 }
 
-// Стоп-кадр под выделение области скриншота.
 //
-// Обычное «выдели область и сними» выделяет по живому экрану, и снять то,
-// что закрывается от первого движения мыши — меню, всплывающую подсказку,
-// список автодополнения — нечем: пока тянешь рамку, снимать уже нечего.
-// Поэтому shot.sh сначала снимает экран целиком, показывает снимок этим
-// слоем поверх всего, и только потом запускает выделение. Итоговый кадр
-// снимается с замершего слоя, так что обрезать исходный файл не нужно —
-// иначе понадобился бы ещё и ImageMagick.
 //
-// Окно детального прогноза погоды на несколько дней
 PanelWindow {
     id: weatherDetailsWin
     visible: root.weatherDetailsOpen || weatherScrim.opacity > 0.01
@@ -7469,7 +6301,6 @@ PanelWindow {
     WlrLayershell.keyboardFocus: root.weatherDetailsOpen ? WlrKeyboardFocus.Exclusive
                                                          : WlrKeyboardFocus.None
 
-    // Затемнение фона при клике на которое окно закрывается
     Rectangle {
         id: weatherScrim
         anchors.fill: parent
@@ -7501,14 +6332,7 @@ PanelWindow {
     }
 }
 
-// ---------------------------------------------------- настольные виджеты
-// Карточки на обоях: дата, погода, часы. Раскладка у них общая для тем, а
-// начертание своё: на Nothing числа точками, на остальных обычным шрифтом.
-// Выбирает его сама карточка — слою достаточно знать, включены ли виджеты.
 //
-// Слой Bottom: над обоями, но под окнами.
-// Область ввода ограничена карточками виджетов: клик по карточке погоды
-// открывает подробный прогноз, а пустой рабочий стол остаётся свободным.
 PanelWindow {
     id: widgetsWin
 
@@ -7529,14 +6353,10 @@ PanelWindow {
         anchors.left: parent.left
         anchors.top: parent.top
         anchors.leftMargin: 28
-        // ниже острова: тот стоит по центру верхней кромки и до левого
-        // угла не достаёт, но запас нужен под его вогнутый уголок
         anchors.topMargin: 28
     }
 }
 
-// Пока редактируются заметки, прозрачный слой над обоями ловит щелчок по
-// пустому рабочему столу. Окна и сами карточки остаются выше этого слоя.
 PanelWindow {
     visible: root.cfg.featWidgets && widgets.scratchpadActive
     screen: root.screen
@@ -7551,9 +6371,6 @@ PanelWindow {
     }
 }
 
-// Слой на каждый экран, а не один на root.screen: grim снимает всю раскладку
-// одной картинкой, и каждое окно показывает свой её кусок, сдвинув снимок на
-// начало своего экрана.
 Variants {
     model: root.freezeShot !== "" ? Quickshell.screens : []
 
@@ -7566,20 +6383,10 @@ Variants {
         color: "black"
         exclusionMode: ExclusionMode.Ignore
         WlrLayershell.layer: WlrLayer.Overlay
-        // Кадр только показывается. Клавиатура и мышь целиком достаются
-        // выделению: с непустой областью ввода клики уходили бы в этот слой,
-        // и рамку было бы нечем тянуть.
         WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
         mask: Region {}
 
         Image {
-            // grim снимает раскладку в физических пикселях, а поверхности
-            // экранов — логические (при масштабе 200% вдвое меньше). Рисовать
-            // кадр «пиксель в пиксель» нельзя: на масштабированном экране виден
-            // был бы только верхний левый угол — экран будто «зумило», и снять
-            // весь экран не получалось. Поэтому растягиваем весь кадр в
-            // логические границы раскладки и сдвигаем на начало своего экрана —
-            // получается ровно 1:1 с тем, что на экране, при любом масштабе.
             x: root.freezeBounds.x - freezeWin.modelData.x
             y: root.freezeBounds.y - freezeWin.modelData.y
             width: root.freezeBounds.width
@@ -7587,8 +6394,6 @@ Variants {
             source: root.freezeShot
             fillMode: Image.Stretch
             smooth: true
-            // Файл временный и каждый раз новый, но имя может повториться —
-            // кэш отдал бы прошлый снимок.
             cache: false
         }
     }

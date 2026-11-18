@@ -6,12 +6,7 @@ import QtQuick.Layouts
 import QtQuick.Controls
 import Quickshell
 
-// Лаунчер приложений: поиск, иконки, навигация стрелками, Enter — запуск.
-// Живёт внутри той же пилюли, поэтому раскрывается той же анимацией.
 //
-// Корень именно FocusScope, а не Item: панель отдаёт фокус загруженному виду
-// целиком, и обычный Item забирал бы его СЕБЕ, оставляя поле ввода мёртвым.
-// Область фокуса переадресует его тому ребёнку, у которого focus: true.
 FocusScope {
     id: view
     property var sys
@@ -22,8 +17,6 @@ FocusScope {
     property int index: 0
     readonly property int maxRows: 6
 
-    // Недавно запущенные: список идентификаторов, свежие в начале.
-    // Хранится в ~/.cache/panacea/recent-apps, поэтому переживает перезапуск.
     property var recent: []
     readonly property string recentFile:
         (Quickshell.env("XDG_CACHE_HOME") || (Quickshell.env("HOME") + "/.cache"))
@@ -57,34 +50,17 @@ FocusScope {
         return i < 0 ? 999 : i;
     }
 
-    // Свои строки лаунчера: не приложения из системы, а страницы острова.
-    // Живут в общем списке и ищутся вместе со всем остальным — иначе про них
-    // пришлось бы помнить отдельно.
     //
-    // keys — то, по чему строка находится, помимо имени: и по-русски, и
-    // по-английски, и по именам самих агентов, чтобы «claude» тоже приводил
-    // сюда.
     readonly property var builtins: [{
         builtin: "agents",
-        // Ключ для списка недавних задан явно и по-английски: он же имя строки
-        // в файле, а имя переводится. Через язык интерфейса «Агенты» и «Agents»
-        // стали бы двумя разными записями, и недавнее терялось при переключении.
         id: "panacea:agents",
         glyph: String.fromCodePoint(0xF1719),      // md-robot_outline
-        name: view.sys.tr("Агенты"),
-        genericName: view.sys.tr("Тарифы и лимиты установленных ИИ-агентов"),
-        keys: "agents agent ai claude codex gemini copilot cursor limits usage plan "
-              + "агенты агент лимиты тариф подписка нагрузка"
+        name: view.sys.tr("Agents"),
+        genericName: view.sys.tr("Plans and limits of the AI agents you have installed"),
+        keys: "agents agent ai claude codex gemini copilot cursor limits usage plan"
     }]
 
-    // ------------------------------------------------- другие системы на диске
-    // Появляются в списке только если они на машине действительно есть:
-    // bootos.sh ищет их сам, и пустой ответ означает пустой список. На машине
-    // с одной системой в лаунчере не будет ни одной такой строки — ни серой,
-    // ни отключённой, никакой.
     //
-    // Список не фиксирован двумя пунктами: сколько систем нашлось, столько
-    // строк и появится.
     property var systems: []
 
     Process {
@@ -101,15 +77,11 @@ FocusScope {
                     out.push({
                         builtin: "bootos",
                         bootId: p[0],
-                        // Недавние помнят систему по её идентификатору в
-                        // загрузчике, а не по названию: название приходит от
-                        // os-prober и меняется вместе с ним.
                         id: "panacea:bootos:" + p[0],
                         glyph: view.osGlyph(p[2]),
                         name: p[1],
-                        genericName: view.sys.tr("Перезагрузиться в эту систему"),
+                        genericName: view.sys.tr("Restart into this system"),
                         keys: "reboot restart boot " + p[1].toLowerCase() + " " + p[2]
-                              + " перезагрузка загрузиться система"
                     });
                 }
                 view.systems = out;
@@ -127,52 +99,34 @@ FocusScope {
     }
 
     function bootInto(app) {
-        // Сам запуск живёт в корне оболочки, а не здесь. Лаунчер закрывается
-        // следующей строкой, и всё, что объявлено в нём, уничтожается вместе с
-        // видом — pkexec не успевал даже показать окно с паролем.
         //
-        // Пароль здесь заодно и есть подтверждение: перезагрузка необратима, а
-        // отдельного «вы уверены?» на пути к ней быть не должно — человек
-        // попросил перезагрузиться, а не поговорить об этом.
         sys.bootIntoSystem(app.bootId);
         sys.closeLauncher();
     }
 
-    // Всё, что лаунчер показывает помимо приложений.
     readonly property var extras: view.builtins.concat(view.systems)
 
     function builtinMatches(b, q) {
-        if (q.length === 0) return false;   // с пустым запросом список — приложения
+        if (q.length === 0) return false;
         if (String(b.name).toLowerCase().indexOf(q) >= 0) return true;
         return String(b.keys).toLowerCase().indexOf(q) >= 0;
     }
 
-    // Отбор и сортировка: сперва совпадения с начала имени, потом остальные.
     readonly property var results: {
         var q = query.trim().toLowerCase();
-        // «?вопрос» — вопрос ИИ, а не поиск приложений
         if (view.isAsk) return [{
             builtin: "ai", id: "panacea:ai",
             glyph: String.fromCodePoint(0xF1719),
-            name: view.sys.tr("Спросить ИИ: ") + view.askText,
-            genericName: view.sys.tr("Ответ появится здесь же"),
+            name: view.sys.tr("Ask AI: ") + view.askText,
+            genericName: view.sys.tr("The answer appears right here"),
             keys: ""
         }];
         var all = DesktopEntries.applications ? DesktopEntries.applications.values : [];
         var starts = [], contains = [];
-        // Свои строки держим отдельным списком, а не в starts: тот в конце
-        // сортируется по алфавиту, и «Агенты» уехали бы в середину выдачи.
-        // Их спрашивают по имени, прицельно, поэтому место у них первое.
         var pinned = [];
         for (var b = 0; b < view.extras.length; b++) {
             var bi = view.extras[b];
-            // С пустым запросом своя строка идёт в общий список и встаёт по
-            // давности наравне с приложениями: открыли её последней — она и
-            // первая. С запросом место у неё всегда первое.
             //
-            // Кроме систем: их в списке «всё подряд» нет вовсе. Там их строка
-            // стояла бы вплотную к браузеру, и промах по Enter уводил бы в
-            // перезагрузку. Систему вызывают намеренно, набрав её имя.
             if (q.length === 0) { if (bi.builtin !== "bootos") starts.push(bi); }
             else if (view.builtinMatches(bi, q)) pinned.push(bi);
         }
@@ -189,8 +143,6 @@ FocusScope {
         var byName = function (x, y) {
             return String(x.name || "").localeCompare(String(y.name || ""));
         };
-        // Пустой запрос — сверху то, что запускали недавно: курсор сразу
-        // стоит на последнем открытом приложении.
         if (q.length === 0) {
             starts.sort(function (x, y) {
                 var d = view.recentRank(x) - view.recentRank(y);
@@ -200,20 +152,16 @@ FocusScope {
         }
         starts.sort(byName); contains.sort(byName);
         var out = pinned.concat(starts, contains);
-        // Веб-поиск — последней строкой, а если ничего не нашлось, то
-        // единственной: Enter сразу уходит в браузер.
         out.push({
             builtin: "web", id: "panacea:web",
             glyph: String.fromCodePoint(0xF059F),          // md-web
-            name: view.sys.tr("Искать в интернете: ") + query.trim(),
+            name: view.sys.tr("Search the web: ") + query.trim(),
             genericName: view.engineName(),
             keys: ""
         });
         return out;
     }
 
-    // ------------------------------------------------------ веб и ИИ
-    // ИИ работает, только если человек сам подключил провайдера
     readonly property bool aiOn: String(view.sys.cfg.aiUrl || "").length > 0
     readonly property bool isAsk: false
     readonly property string askText: query.trim().substring(1).trim()
@@ -233,7 +181,6 @@ FocusScope {
     function webSearch() {
         var q = query.trim();
         if (!q.length) return;
-        // ссылку открываем как есть, остальное — поиском
         var url = /^(https?:\/\/|www\.)\S+$/.test(q) ? (q.indexOf("http") === 0 ? q : "https://" + q)
                 : view.engine().u + encodeURIComponent(q);
         sys.openFileWith(url, "");
@@ -241,7 +188,7 @@ FocusScope {
     }
     function ask() {
         if (view.aiBusy || !view.askText.length) return;
-        if (view.aiAnswer.length) {          // второй Enter — копировать ответ
+        if (view.aiAnswer.length) {
             pCopyCalc.command = ["sh", "-c", "printf '%s' \"$1\" | wl-copy", "_", view.aiAnswer];
             pCopyCalc.running = true;
             sys.closeLauncher();
@@ -258,22 +205,18 @@ FocusScope {
                 view.aiBusy = false;
                 var t = String(text).trim();
                 if (t.indexOf("ERROR not-configured") === 0 || t.indexOf("ERROR no-model") === 0)
-                    t = view.sys.tr("ИИ не настроен — укажите адрес и модель в Настройки → Лаунчер");
+                    t = view.sys.tr("AI isn't set up — add the URL and model in Settings → Launcher");
                 else if (t.indexOf("ERROR") === 0)
-                    t = view.sys.tr("Ошибка: ") + t.substring(6);
-                view.aiAnswer = t.length ? t : view.sys.tr("Пустой ответ");
+                    t = view.sys.tr("Error: ") + t.substring(6);
+                view.aiAnswer = t.length ? t : view.sys.tr("Empty answer");
             }
         }
     }
 
-    // ------------------------------------------------------------ калькулятор
-    // Если в строке только числа и знаки — считаем и показываем ответ первым.
-    // Enter копирует результат. Разрешён строго безопасный набор символов,
-    // чтобы в вычисление не попало ничего постороннего.
     readonly property bool isMath: {
         var q = query.trim();
         if (q.length < 3) return false;
-        if (!/[+\-*/^%]/.test(q)) return false;         // должен быть хоть один знак
+        if (!/[+\-*/^%]/.test(q)) return false;
         return /^[0-9\s+\-*/().,%^]+$/.test(q);
     }
 
@@ -283,7 +226,6 @@ FocusScope {
             var e = query.trim().replace(/,/g, ".").replace(/\^/g, "**");
             var r = Function('"use strict"; return (' + e + ')')();
             if (typeof r !== "number" || !isFinite(r)) return "";
-            // убираем хвост из-за плавающей точки: 0.1+0.2 -> 0.3
             return String(parseFloat(r.toFixed(10)));
         } catch (err) {
             return "";
@@ -305,15 +247,7 @@ FocusScope {
         if (view.mathResult.length > 0) { copyResult(); return; }
         var app = results[index];
         if (!app) return;
-        // Свою строку не запускаем как программу — она открывает страницу
-        // острова. Но в недавние попадает наравне с приложениями: её открыли
-        // из того же списка и тем же Enter, и в следующий раз она должна
-        // ждать сверху, а не на своём месте по алфавиту.
         if (app.builtin === "agents") { rememberApp(app); sys.openAgents(); return; }
-        // Систему в недавние НЕ записываем. Недавние — это «чем я пользуюсь»,
-        // а перезагрузка в другую систему случается раз в неделю и после неё
-        // висела бы первой строкой в пустом лаунчере до конца времён. Причём
-        // первой строкой, которую легче всего задеть случайным Enter.
         if (app.builtin === "bootos") { bootInto(app); return; }
         if (app.builtin === "web") { webSearch(); return; }
         if (app.builtin === "ai") { ask(); return; }
@@ -327,8 +261,6 @@ FocusScope {
         list.positionViewAtIndex(index, ListView.Contain);
     }
 
-    // фокус сразу, плюс несколько повторов: слой получает клавиатуру
-    // на кадр-другой позже создания компонента
     FocusGrabber { target: input }
 
     ColumnLayout {
@@ -336,7 +268,6 @@ FocusScope {
         width: parent.width
         spacing: 10
 
-        // ------------------------------------------------------------ поиск
         Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: 42
@@ -353,7 +284,7 @@ FocusScope {
                 spacing: 9
 
                 Text {
-                    text: String.fromCodePoint(0xF0349)   // лупа
+                    text: String.fromCodePoint(0xF0349)
                     color: view.sys.colMuted
                     font { family: view.sys.fontFam; pixelSize: 14 }
                 }
@@ -361,7 +292,7 @@ FocusScope {
                     id: input
                     focus: true
                     Layout.fillWidth: true
-                    placeholderText: view.sys.tr("Поиск приложений…")
+                    placeholderText: view.sys.tr("Search apps…")
                     color: view.sys.colFg
                     placeholderTextColor: view.sys.colMuted
                     font { family: view.sys.fontFam; pixelSize: 13 }
@@ -384,8 +315,6 @@ FocusScope {
             }
         }
 
-        // ------------------------------------------------------------ список
-        // результат вычисления — первой строкой
         Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: 52
@@ -430,7 +359,6 @@ FocusScope {
             }
         }
 
-        // ответ ИИ
         Rectangle {
             Layout.fillWidth: true
             visible: view.isAsk && (view.aiBusy || view.aiAnswer.length > 0)
@@ -447,7 +375,7 @@ FocusScope {
                 Text {
                     id: aiText
                     width: parent.width
-                    text: view.aiBusy ? view.sys.tr("Думаю…") : view.aiAnswer
+                    text: view.aiBusy ? view.sys.tr("Thinking…") : view.aiAnswer
                     color: view.aiBusy ? view.sys.colMuted : view.sys.colFg
                     wrapMode: Text.Wrap
                     textFormat: Text.PlainText
@@ -462,9 +390,6 @@ FocusScope {
             visible: view.mathResult.length === 0
             Layout.preferredHeight: view.mathResult.length > 0 ? 0
                                   : Math.min(view.results.length, view.maxRows) * 46
-            // Высоту анимирует капсула. Своя анимация здесь стартовала с нуля
-            // и накладывалась на неё: панель сперва растягивалась, потом
-            // «доразворачивалась» — те самые два этапа.
             clip: true
             model: view.results
             currentIndex: view.index
@@ -496,7 +421,6 @@ FocusScope {
                     anchors.rightMargin: 12
                     spacing: 11
 
-                    // иконка приложения из системной темы
                     Item {
                         Layout.preferredWidth: 26
                         Layout.preferredHeight: 26
@@ -512,14 +436,11 @@ FocusScope {
                             sourceSize.height: 52
                             visible: status === Image.Ready
                         }
-                        // запасной значок, если иконки нет в теме
                         Rectangle {
                             anchors.fill: parent
                             visible: !appIcon.visible
                             radius: 7
                             color: Qt.rgba(1, 1, 1, 0.10)
-                            // у своих строк иконки в теме нет и быть не может —
-                            // рисуем глиф, а буквой обходятся только приложения
                             Glyph {
                                 anchors.centerIn: parent
                                 visible: String(row.modelData.glyph || "").length > 0
@@ -584,7 +505,7 @@ FocusScope {
         Text {
             Layout.fillWidth: true
             visible: false
-            text: view.sys.tr("Ничего не найдено")
+            text: view.sys.tr("Nothing found")
             color: view.sys.colMuted
             horizontalAlignment: Text.AlignHCenter
             font { family: view.sys.fontFam; pixelSize: 11 }

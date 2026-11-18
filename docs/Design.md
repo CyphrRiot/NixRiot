@@ -64,10 +64,10 @@ NixRiot/
       theme.nix              # fonts, cursors, icons
       sddm.nix               # login theme
     apps/
-      shell.nix              # fish, starship, eza, zoxide, ripgrep, btop
-      editors.nix            # Helix, Zed, Kate, Crush
+      shell.nix              # fish, starship, zoxide, ripgrep, btop
+      editors.nix            # Helix, gnome-text-editor, Crush
       media.nix              # mpv, mpd, rmpc, transmission, yt-dlp
-      office.nix             # LibreOffice, zathura, Firefox, Thunderbird
+      office.nix             # LibreOffice, zathura, Firefox
       games.nix              # optional curated game set (off by default)
     crypto/
       monero.nix             # monero-gui
@@ -95,11 +95,13 @@ NixRiot/
 ### Installer flow
 
 1. Build the ISO with `nix build .#iso`.
-2. Boot it. The live session is the NixOS graphical installer with the repo at
-   `/etc/nixriot`.
-3. Run `nixriot-install`. It partitions the chosen disk (512M ESP labeled
-   `BOOT`, remainder LUKS), formats the encrypted root, mounts `/mnt`, and runs
-   `nixos-install --root /mnt --flake /etc/nixriot#installed`.
+2. Boot it. It comes up as the NixRiot desktop (Panacea), autologged in as
+   `nixos`, and opens `nixriot-install` in a terminal by itself. The repo for
+   the install is at `/etc/nixriot`.
+3. `nixriot-install` partitions the chosen disk (512M ESP labeled `BOOT`,
+   remainder LUKS), formats the encrypted root, mounts `/mnt`, copies the
+   image's own tree to `/mnt/etc/nixriot` with the chosen username, and runs
+   `nixos-install --root /mnt --flake /mnt/etc/nixriot#installed`.
 4. First boot applies Home Manager, which installs Panacea and the OpenRiot
    user configuration.
 5. Updates are `nixos-rebuild switch --flake` or `nix flake update` plus a
@@ -138,8 +140,7 @@ declaratively. "Reuse" means the existing config or asset is copied.
 | mpv, mpd, rmpc | **Port** | nixpkgs |
 | Proton Drive sync | **Port** | `rclone` systemd user timer |
 | Signal (gurk) | **Port** | nixpkgs `gurk-rs` |
-| LibreOffice, Firefox, Zed, Kate | **Port** | nixpkgs |
-| 3D printing | **Port** | PrusaSlicer and OrcaSlicer |
+| LibreOffice, Firefox | **Port** | nixpkgs |
 | Backup and restore | **Port** | `restic` |
 | Disk manager | **Port** | `gnome-disks` or `gparted` |
 | MAC randomization | **Port** | NetworkManager setting |
@@ -159,6 +160,7 @@ declaratively. "Reuse" means the existing config or asset is copied.
 | `openriot` Go binary installer paths | Nix modules replace imperative install |
 | OpenBSD-specific hardware notes | NixOS hardware profiles replace them |
 | GRUB and its theme | NixRiot boots with systemd-boot |
+| 3D printing (PrusaSlicer, OrcaSlicer) | Cut; not part of the desktop |
 
 ## Open work
 
@@ -167,8 +169,7 @@ Ordered by priority.
 1. Verify the built ISO installs and boots to the desktop (UEFI, then BIOS).
 2. Offline ISO inputs, so the installer needs no network.
 3. SDDM theme may need a Qt5/Qt6 shim if this nixpkgs' greeter is Qt6.
-4. `voxtype` speech model (about 1.5 GB, not packaged).
-5. Runtime checks: gvfs MTP, tesseract languages, Quickshell version versus
+4. Runtime checks: gvfs MTP, tesseract (English), Quickshell version versus
    Panacea's expectations.
 
 ## Milestones
@@ -189,8 +190,6 @@ Ordered by priority.
   unit names. The Home Manager port is the largest single work item.
 - **Quickshell and Hyprland versions must match.** Panacea tracks Hyprland
   closely. NixRiot must pin both and test the pair.
-- **Some Panacea features need packaging.** `voxtype` is in nixpkgs; its model
-  is not.
 - **The ISO is large.** A graphical live image plus Panacea assets will exceed
   the stock 3.9 GB. Budget for a 5 to 6 GB USB.
 

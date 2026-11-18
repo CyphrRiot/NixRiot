@@ -14,7 +14,8 @@ a Home Manager module.
 - Copies the desktop entries, with Panacea's `@HOME@` placeholder substituted.
 - Ships the NixRiot wallpaper set in `hypr/wallpaper/`, with its manifest.
 - Runs `hypr/scripts/palette.sh` at activation, which lays the palette out
-  across foot, fish, zed, btop, neovim and obsidian.
+  across foot, fish and btop, and across zed, neovim and obsidian when those
+  configs are present.
 - Installs the runtime dependencies from nixpkgs at the system level.
 
 ## What it does not do yet

@@ -2,20 +2,14 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell.Io
 
-// Clock & Date. Часовой пояс по умолчанию берётся у системы — регион нужен
-// только тем, у кого он определился неверно. Дату и время меняем через
-// timedatectl: сначала приходится выключить синхронизацию, иначе система
-// вернёт своё через несколько секунд и правка будет выглядеть как сбой.
 ColumnLayout {
     id: page
 
     property var sys
 
-    // текущее состояние службы времени
     property string tzNow: ""
     property bool ntp: true
     property var zones: []
-    // черновик ручной установки: "ГГГГ-ММ-ДД ЧЧ:ММ"
     property string draft: ""
     property string note: ""
 
@@ -48,14 +42,13 @@ ColumnLayout {
         }
     }
 
-    // Смена пояса и времени — операции для root, поэтому через pkexec.
     Process {
         id: pApply
         property string args: ""
         command: ["sh", "-c", pApply.args]
         onExited: code => {
-            page.note = code === 0 ? page.sys.tr("Применено")
-                                   : page.sys.tr("Не удалось: нужен пароль администратора");
+            page.note = code === 0 ? page.sys.tr("Applied")
+                                   : page.sys.tr("Failed: an administrator password is required");
             noteTimer.restart();
             pStatus.running = true;
         }
@@ -63,22 +56,20 @@ ColumnLayout {
     Timer { id: noteTimer; interval: 4000; onTriggered: page.note = "" }
 
     function run(cmd) { pApply.args = cmd; pApply.running = true; }
-    // через помощника — один пароль на несколько минут; без него — как раньше
     function root(args, legacy) {
         if (!page.sys.rootHelperOk) return "pkexec " + legacy;
         return "pkexec " + page.sys.rootHelper + " "
              + args.map(function (a) { return "'" + String(a).replace(/'/g, "") + "'"; }).join(" ");
     }
 
-    // ------------------------------------------------------------- формат
     SetCard {
         sys: page.sys
 
-        SetLabel { sys: page.sys; text: page.sys.tr("Формат") }
+        SetLabel { sys: page.sys; text: page.sys.tr("Format") }
 
         SetSelect {
             sys: page.sys
-            label: page.sys.tr("Часы")
+            label: page.sys.tr("Clock")
             options: [
                 { id: "24", text: "13:45" },
                 { id: "12", text: "1:45 PM" }
@@ -89,21 +80,21 @@ ColumnLayout {
 
         SetToggle {
             sys: page.sys
-            label: page.sys.tr("Показывать секунды")
+            label: page.sys.tr("Show seconds")
             on: page.sys.cfg.clockSeconds
             onToggled: v => { page.sys.cfg.clockSeconds = v; page.sys.saveCfg(); }
         }
 
         SetToggle {
             sys: page.sys
-            label: page.sys.tr("День недели рядом с датой")
+            label: page.sys.tr("Weekday next to the date")
             on: page.sys.cfg.clockWeekday
             onToggled: v => { page.sys.cfg.clockWeekday = v; page.sys.saveCfg(); }
         }
 
         SetPick {
             sys: page.sys
-            label: page.sys.tr("Формат даты")
+            label: page.sys.tr("Date format")
             options: [
                 { id: "d MMMM",      text: Qt.formatDate(new Date(), "d MMMM") },
                 { id: "d MMM",       text: Qt.formatDate(new Date(), "d MMM") },
@@ -116,28 +107,27 @@ ColumnLayout {
         }
     }
 
-    // ------------------------------------------------------------- пояс
     SetCard {
         sys: page.sys
 
-        SetLabel { sys: page.sys; text: page.sys.tr("Регион") }
+        SetLabel { sys: page.sys; text: page.sys.tr("Region") }
 
         SetToggle {
             sys: page.sys
-            label: page.sys.tr("Синхронизировать время по сети")
-            sub: page.ntp ? page.sys.tr("Время приходит с сервера времени.")
-                          : page.sys.tr("Время стоит так, как выставили вручную.")
+            label: page.sys.tr("Sync time over the network")
+            sub: page.ntp ? page.sys.tr("Time comes from a network time server.")
+                          : page.sys.tr("Time stays as it was set by hand.")
             on: page.ntp
             onToggled: v => page.run(page.root(["ntp", v ? "true" : "false"], "timedatectl set-ntp " + (v ? "true" : "false")))
         }
 
         SetPick {
             sys: page.sys
-            label: page.sys.tr("Часовой пояс")
+            label: page.sys.tr("Time zone")
             visibleRows: 8
             options: page.zones.length ? page.zones.map(z => ({
                 id: z,
-                text: z === "auto" ? page.sys.tr("Автоматически") + " · " + page.tzNow : z
+                text: z === "auto" ? page.sys.tr("Automatic") + " · " + page.tzNow : z
             })) : []
             value: page.sys.cfg.clockTz
             onPicked: id => {
@@ -148,16 +138,15 @@ ColumnLayout {
         }
     }
 
-    // ------------------------------------------------------------- вручную
     SetCard {
         sys: page.sys
 
-        SetLabel { sys: page.sys; text: page.sys.tr("Дата и время вручную") }
+        SetLabel { sys: page.sys; text: page.sys.tr("Date and time by hand") }
 
         Text {
             Layout.fillWidth: true
             visible: page.ntp
-            text: page.sys.tr("Пока время синхронизируется по сети, ручная правка ничего не изменит — выключите синхронизацию выше.")
+            text: page.sys.tr("While the time syncs over the network, editing it by hand changes nothing — turn the sync off above.")
             color: page.sys.colMuted
             wrapMode: Text.WordWrap
             font { family: page.sys.fontBody; pixelSize: page.sys.fontSize - 4 }
@@ -213,7 +202,7 @@ ColumnLayout {
 
                 Text {
                     anchors.centerIn: parent
-                    text: page.sys.tr("Установить")
+                    text: page.sys.tr("Set")
                     color: page.sys.colFg
                     font { family: page.sys.fontBody; pixelSize: page.sys.fontSize - 3 }
                 }

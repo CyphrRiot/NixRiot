@@ -68,7 +68,6 @@ Rectangle {
         }
     }
 
-    // Пластинка вращается вместе с круглой этикеткой и замирает на паузе.
     Item {
         id: record
         x: 14; y: 39; width: 82; height: 82
@@ -136,7 +135,6 @@ Rectangle {
         }
     }
 
-    // Заголовок, метаданные и полоса не зависят от размеров анимации.
     Rectangle { x: 16; y: 17; width: 5; height: 5; radius: 3; color: card.playing ? "#e84343" : "#77777b" }
     Text {
         x: 28; y: 12; width: 164; height: 14
@@ -153,13 +151,13 @@ Rectangle {
     Rectangle { x: 15; y: 30; width: card.width - 30; height: 1; color: Qt.rgba(1, 1, 1, 0.08) }
     Text {
         x: 110; y: 40; width: card.width - 126; height: 22
-        text: card.hasTrack ? card.player.trackTitle : (card.sys ? card.sys.tr("Нет музыки") : "No media")
+        text: card.hasTrack ? card.player.trackTitle : (card.sys ? card.sys.tr("No media") : "No media")
         color: "#f5f5f5"; elide: Text.ElideRight
         font { family: card.sys ? card.sys.fontFam : "sans-serif"; pixelSize: 14; bold: true }
     }
     Text {
         x: 110; y: 63; width: card.width - 126; height: 17
-        text: card.hasTrack ? (card.player.trackArtist || "") : (card.sys ? card.sys.tr("Запустите плеер") : "Start playing")
+        text: card.hasTrack ? (card.player.trackArtist || "") : (card.sys ? card.sys.tr("Start player") : "Start playing")
         color: "#a1a1a6"; elide: Text.ElideRight
         font { family: card.sys ? card.sys.fontFam : "sans-serif"; pixelSize: 10 }
     }

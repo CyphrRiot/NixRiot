@@ -1,15 +1,14 @@
 #!/bin/bash
-# Детальный прогноз погоды (почасовой + на 7 дней) для Panacea
 #
 #   weather_forecast.sh KEY CITY UNITS LANG
 #
 #   UNITS  metric | imperial
-#   LANG   ru | en
+#   LANG   en
 
 KEY="$1"
 CITY="$2"
 UNITS="${3:-metric}"
-LANG_="${4:-ru}"
+LANG_="${4:-en}"
 
 fail() { printf '{"err":"%s"}\n' "$1"; exit 0; }
 
@@ -33,15 +32,9 @@ lon=""
 res_name=""
 admin1=""
 
-# 1. Попытка точных координат через OpenWeatherMap
 if [ -n "$KEY" ]; then
     case "$CITY" in
-        [0-9]*)
-            case "$CITY" in
-                *,*) OW_FIELD="zip=$CITY" ;;
-                *)   OW_FIELD="zip=$CITY,RU" ;;
-            esac
-            ;;
+        [0-9]*) OW_FIELD="zip=$CITY" ;;
         *) OW_FIELD="q=$CITY" ;;
     esac
 
@@ -57,19 +50,13 @@ if [ -n "$KEY" ]; then
         lon=$(printf '%s' "$ow_data" | jq -r '.coord.lon // empty')
         res_name=$(printf '%s' "$ow_data" | jq -r '.name // empty')
         ow_country=$(printf '%s' "$ow_data" | jq -r '.sys.country // empty')
-        if [ "$ow_country" = "RU" ] && { [ "$res_name" = "Гусев" ] || [ "$res_name" = "Gusev" ]; }; then
-            if [ "$LANG_" = "en" ]; then
-                admin1="Kaliningrad Oblast"
-                res_name="Gusev"
-            else
-                admin1="Калининградская область"
-                res_name="Гусев"
-            fi
+        if [ "$ow_country" = "RU" ] && [ "$res_name" = "Gusev" ]; then
+            admin1="Kaliningrad Oblast"
+            res_name="Gusev"
         fi
     fi
 fi
 
-# 2. Поиск через Open-Meteo Geocoding с фильтрацией по населению
 if [ -z "$lat" ] || [ -z "$lon" ]; then
     city_clean="${CITY%%,*}"
     geo=$(curl -sS --connect-timeout 5 --max-time 10 --get \
@@ -81,7 +68,7 @@ if [ -z "$lat" ] || [ -z "$lon" ]; then
 
     best=$(printf '%s' "$geo" | jq -r '
         .results // [] |
-        (map(select(.name == "Гусев" or .name == "Gusev")) | sort_by(-(.population // 0)) | .[0]) //
+        (map(select(.name == "Gusev")) | sort_by(-(.population // 0)) | .[0]) //
         (sort_by(-(.population // 0)) | .[0]) // empty
     ' 2>/dev/null)
 
@@ -115,18 +102,18 @@ raw=$(curl -sS --connect-timeout 5 --max-time 12 \
 
 out=$(printf '%s' "$raw" | jq --arg city "$display_city" --arg lang "$LANG_" --arg units "$UNITS" '
 def wmo_desc(c):
-    if c == 0 then (if $lang == "ru" then "Ясно" else "Clear sky" end)
-    elif c == 1 then (if $lang == "ru" then "В основном ясно" else "Mainly clear" end)
-    elif c == 2 then (if $lang == "ru" then "Переменная облачность" else "Partly cloudy" end)
-    elif c == 3 then (if $lang == "ru" then "Пасмурно" else "Overcast" end)
-    elif c == 45 or c == 48 then (if $lang == "ru" then "Туман" else "Fog" end)
-    elif c == 51 or c == 53 or c == 55 then (if $lang == "ru" then "Морось" else "Drizzle" end)
-    elif c == 61 or c == 63 or c == 65 then (if $lang == "ru" then "Дождь" else "Rain" end)
-    elif c == 71 or c == 73 or c == 75 or c == 77 then (if $lang == "ru" then "Снег" else "Snow" end)
-    elif c == 80 or c == 81 or c == 82 then (if $lang == "ru" then "Ливень" else "Rain showers" end)
-    elif c == 85 or c == 86 then (if $lang == "ru" then "Снегопад" else "Snow showers" end)
-    elif c == 95 or c == 96 or c == 99 then (if $lang == "ru" then "Гроза" else "Thunderstorm" end)
-    else (if $lang == "ru" then "Облачно" else "Cloudy" end)
+    if c == 0 then "Clear sky"
+    elif c == 1 then "Mainly clear"
+    elif c == 2 then "Partly cloudy"
+    elif c == 3 then "Overcast"
+    elif c == 45 or c == 48 then "Fog"
+    elif c == 51 or c == 53 or c == 55 then "Drizzle"
+    elif c == 61 or c == 63 or c == 65 then "Rain"
+    elif c == 71 or c == 73 or c == 75 or c == 77 then "Snow"
+    elif c == 80 or c == 81 or c == 82 then "Rain showers"
+    elif c == 85 or c == 86 then "Snow showers"
+    elif c == 95 or c == 96 or c == 99 then "Thunderstorm"
+    else "Cloudy"
     end;
 
 def wmo_icon(c):

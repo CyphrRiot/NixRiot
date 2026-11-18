@@ -1,13 +1,6 @@
 #!/bin/bash
-# Помощник для Wi-Fi: поддерживает NetworkManager (nmcli) и iwd (iwctl/iw).
 #
 #   status            -> RADIO|SSID|QUALITY      (RADIO = on|off)
-#   list              -> строки  connected|ssid|security|quality|known
-#   scan              -> запускает поиск сетей
-#   toggle            -> включает/выключает радио
-#   connect SSID [PW] -> подключение (PW нужен только для незнакомых сетей)
-#   disconnect        -> отключиться от текущей сети
-#   forget SSID       -> забыть сеть (и отключиться, если она сейчас активна)
 
 use_nm() {
     command -v nmcli >/dev/null 2>&1 && nmcli general status >/dev/null 2>&1
@@ -39,7 +32,6 @@ active_iface() {
     iface_list | head -1
 }
 
-# iwctl раскрашивает вывод — убираем escape-последовательности
 strip() { sed 's/\x1b\[[0-9;]*m//g'; }
 
 radio_state() {
@@ -327,14 +319,12 @@ list)
             } else {
                 sub(/^[[:space:]]*/, "", line)
             }
-            # строка сети: имя, затем защита и звёздочки сигнала
             if (match(line, /[[:space:]][[:space:]]+(psk|open|8021x|wep)[[:space:]]+\*+[[:space:]]*$/)) {
                 rest = substr(line, RSTART)
                 name = substr(line, 1, RSTART - 1)
                 split(rest, a, /[[:space:]]+/)
                 sec = a[2]; stars = a[3]
                 gsub(/[[:space:]]+$/, "", name)
-                # 1..4 звезды -> 25..100 %
                 quality = length(stars) * 25
                 print connected "|" name "|" sec "|" quality "|" (isKnown[name] ? "yes" : "no")
             }
@@ -409,7 +399,6 @@ connect)
         else
             iwctl station "$IFACE" connect "$SSID" >/dev/null 2>&1
         fi
-        # Ждём установления связи, чтобы вызывающий сразу увидел новую сеть
         for _ in $(seq 1 12); do
             sleep 0.5
             [ "$(current_ssid)" = "$SSID" ] && exit 0

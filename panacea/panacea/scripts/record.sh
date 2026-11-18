@@ -1,34 +1,14 @@
 #!/bin/bash
-# Запись экрана для пилюли (wf-recorder).
 #
-#   start FPS DIR SYS MIC MIC_DEV -> начать
-#       SYS/MIC — 0|1, писать ли звук системы и микрофон
-#       MIC_DEV — имя источника pactl ("" = источник по умолчанию)
-#   pause                         -> пауза/продолжить (SIGSTOP/SIGCONT)
-#   stop                          -> закончить, печатает путь к файлу
-#   status                        -> idle | rec|PID|СТАРТ|ПАУЗА|ФАЙЛ
-#                                         | paused|PID|СТАРТ|ПАУЗА|ФАЙЛ
-#   mics                          -> список микрофонов: имя|описание
 #
-# Пауза сделана остановкой процесса: своей паузы у wf-recorder нет.
-# Система+микрофон одновременно — через временный null-sink, в который
-# заворачиваются оба источника: wf-recorder умеет писать только одно
-# устройство.
 
 STATE_DIR="${XDG_RUNTIME_DIR:-/tmp}/panacea"
 STATE="$STATE_DIR/record.state"
 mkdir -p "$STATE_DIR"
 
-# Оболочка запускает нас через `sh -c`, и PATH при этом бывает урезанным —
-# тогда даже установленный wf-recorder (а с ним pactl, ffmpeg) не находится, и
-# запись «нажимается, но ничего не происходит». Дополняем PATH обычными
-# местами, где лежат бинарники.
 PATH="$PATH:/usr/bin:/usr/local/bin:$HOME/.local/bin:/bin:/usr/sbin:/sbin:/opt/bin"
 export PATH
 
-# Ищем wf-recorder где угодно: в PATH, в типичных каталогах, у flatpak, и в
-# последнюю очередь — полным (но ограниченным) поиском по диску. Путь кладём
-# в WF_REC. Так запись работает, где бы бинарник ни лежал.
 find_recorder() {
     local p
     p=$(command -v wf-recorder 2>/dev/null) && { printf '%s\n' "$p"; return 0; }
@@ -63,7 +43,6 @@ MODULES="$MODULES"
 EOF
 }
 
-# монитор текущего вывода = «звук системы»
 default_monitor() {
     local sink
     sink=$(pactl get-default-sink 2>/dev/null)
@@ -77,15 +56,8 @@ unload_modules() {
     for id in $ids; do pactl unload-module "$id" 2>/dev/null; done
 }
 
-# Доводка готового файла.
 #
-# Мессенджеры (Telegram и не только) считают mp4 БЕЗ звуковой дорожки не видео,
-# а анимацией, и показывают его как GIF: без звука, без плеера, зациклено.
-# Поэтому если писали без звука — подшиваем тишину. Видео не перекодируется
-# (-c:v copy), это быстро и без потери качества.
 #
-# Заодно moov-атом уезжает в начало (+faststart): без этого превью в чатах и
-# перемотка появляются только после полной загрузки файла.
 finalize() {
     f="$1"
     [ -s "$f" ] || return 0
@@ -117,7 +89,7 @@ case "$1" in
         WF_REC=$(find_recorder) || {
             echo "no-recorder" >&2
             command -v notify-send >/dev/null 2>&1 && notify-send -a Panacea \
-                -u critical "Запись недоступна" "wf-recorder не установлен"
+                -u critical "Recording unavailable" "wf-recorder is not installed"
             exit 1
         }
 
@@ -126,7 +98,7 @@ case "$1" in
         SYS="${4:-0}"
         MIC="${5:-0}"
         MIC_DEV="${6:-}"
-        OUTPUT="${7:-}"      # какой экран писать (eDP-1, HDMI-A-1); "" = спросит сам
+        OUTPUT="${7:-}"
 
         DIR="${DIR/#\~/$HOME}"
         mkdir -p "$DIR" || exit 1
@@ -139,7 +111,6 @@ case "$1" in
         AUDIO_DEV=""
 
         if [ "$SYS" = "1" ] && [ "$MIC" = "1" ]; then
-            # оба источника: сводим их в отдельный null-sink
             m=$(pactl load-module module-null-sink sink_name=panacea_mix \
                     sink_properties=device.description=PanaceaMix 2>/dev/null) || m=""
             if [ -n "$m" ]; then
@@ -150,7 +121,6 @@ case "$1" in
                         sink=panacea_mix latency_msec=40 2>/dev/null) && MODULES="$MODULES $l2"
                 AUDIO_DEV="panacea_mix.monitor"
             else
-                # микшер не поднялся — пишем хотя бы систему
                 AUDIO_DEV="$SYS_DEV"
             fi
         elif [ "$SYS" = "1" ]; then
@@ -161,14 +131,8 @@ case "$1" in
 
         base=(-f "$FILE" -r "$FPS")
         [ -n "$AUDIO_DEV" ] && base+=("--audio=$AUDIO_DEV")
-        # Несколько экранов (ноутбук + HDMI-телевизор): без -o wf-recorder
-        # спрашивает выбор в stdin, а мы запущены в фоне без ввода — он выходил
-        # с «Failed to select output». Панель передаёт сюда выбранный экран.
         [ -n "$OUTPUT" ] && base+=(-o "$OUTPUT")
 
-        # Запуск с проверкой, что процесс прожил полсекунды: wf-recorder при
-        # отказе (нет нужного кодека, не тот пиксельный формат, не завёлся
-        # захват) молча выходит сразу — и запись «нажимается впустую».
         attempt() {
             "$WF_REC" "${base[@]}" "$@" >"$STATE_DIR/record.log" 2>&1 &
             PID=$!
@@ -176,15 +140,11 @@ case "$1" in
             kill -0 "$PID" 2>/dev/null
         }
 
-        # Есть ли кодировщик в той сборке ffmpeg, с которой линкован wf-recorder.
         have_enc() {
             command -v ffmpeg >/dev/null 2>&1 || return 1
             ffmpeg -hide_banner -encoders 2>/dev/null | grep -qw "$1"
         }
 
-        # Перебор кодеков от лучшего к тому, что точно есть. libx264 (на Arch
-        # приходит с ffmpeg) — предпочтительно; нет его или не с теми опциями —
-        # берём следующий доступный, а в конце отдаём выбор самому wf-recorder.
         started=0
         if have_enc libx264; then
             attempt -c libx264 -p preset=veryfast -p crf=23 && started=1
@@ -196,18 +156,15 @@ case "$1" in
         if [ "$started" = 0 ] && have_enc libvpx; then
             attempt -c libvpx && started=1
         fi
-        # Последняя попытка — кодек по умолчанию сборки wf-recorder.
         [ "$started" = 0 ] && { attempt && started=1; }
 
         if [ "$started" = 0 ]; then
             unload_modules "$MODULES"
             echo "failed" >&2
             tail -4 "$STATE_DIR/record.log" >&2
-            # Показать реальную причину: панель — сама демон уведомлений, так
-            # что видно и из quick settings, а не только на странице записи.
             err=$(tail -2 "$STATE_DIR/record.log" 2>/dev/null | tr '\n' ' ')
             command -v notify-send >/dev/null 2>&1 && \
-                notify-send -a Panacea -u critical "Запись не началась" "$err"
+                notify-send -a Panacea -u critical "Recording did not start" "$err"
             exit 1
         fi
 
@@ -235,7 +192,6 @@ case "$1" in
         read_state || { echo "idle" >&2; exit 1; }
         [ -n "$PAUSED_AT" ] && kill -CONT "$PID"
         kill -INT "$PID" 2>/dev/null
-        # ждём, пока допишется контейнер: иначе файл окажется битым
         for _ in $(seq 1 50); do
             kill -0 "$PID" 2>/dev/null || break
             sleep 0.1
@@ -255,7 +211,6 @@ case "$1" in
                 echo "rec|$PID|$STARTED|$PAUSED_TOTAL|$FILE"
             fi
         else
-            # процесс умер сам (например, кончилось место) — чистим за ним
             if [ -f "$STATE" ]; then
                 # shellcheck disable=SC1090
                 . "$STATE"
@@ -275,7 +230,6 @@ except Exception:
     sys.exit(0)
 for s in data:
     name = s.get("name", "")
-    # мониторы выводов — это «звук системы», а не микрофоны
     if name.endswith(".monitor") or s.get("monitor_source_name"):
         continue
     if name.startswith("panacea_mix"):

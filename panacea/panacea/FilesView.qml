@@ -6,14 +6,9 @@ import QtQuick.Controls
 import Quickshell
 import Quickshell.Io
 
-// Проводник в пилюле: слева закладки, справа список файлов.
-// Клавиатура — основной способ управления: стрелки, Enter, Backspace,
-// печать фильтрует список, Esc закрывает.
 Item {
     id: view
     property var sys
-    // true — проводник открыт отдельным окном Hyprland: закрывать надо окно,
-    // а пилюля живёт своей жизнью и трогать её нельзя
     property bool pickerMode: false
     signal filePicked(string path)
     property bool windowMode: false
@@ -27,69 +22,50 @@ Item {
 
     implicitHeight: col.implicitHeight
 
-    // ------------------------------------------------------------ состояние
     property string dir: ""
     property int current: 0
     property string filter: ""
-    // Сортировка: "name" | "time" | "size" | "type". Порядок и «папки сверху»
-    // отдельными переключателями — так же, как в любом привычном проводнике.
     property string sortBy: "name"
     property bool   sortDesc: false
     property bool   foldersFirst: true
     property string status: ""
 
-    // Раскладка содержимого: "list" | "grid". Живёт в настройках, а не в самом
-    // виде: проводник открывают и закрывают десятками раз за сеанс, и каждый
-    // раз возвращаться к списку, когда работаешь с картинками, — маета.
     readonly property string mode: view.sys.cfg.filesMode === "grid" ? "grid" : "list"
     function setMode(m) {
         if (view.mode === m) return;
         view.sys.cfg.filesMode = m;
         view.sys.saveCfg();
     }
-    // Сколько плиток помещается в ряд. Нужно не только сетке: по этому же
-    // числу стрелки вверх и вниз ходят на строку, а не на соседний файл.
     readonly property int gridCell: 118
     readonly property int gridCols: Math.max(1, Math.floor(view.width > 0
                                                            ? view.width / view.gridCell : 1))
 
-    // выбранный файл, для которого показываем «чем открыть»
     property string openWithFile: ""
 
-    // буфер обмена проводника
-    // Буфер общий для всех окон проводника — живёт в оболочке
     readonly property var    clipPaths: view.sys.filesClipPaths
     readonly property string clipMode: view.sys.filesClipMode
 
-    // мультивыделение файлов
     property var    selectedPaths: []
     readonly property int selectedCount: selectedPaths.length
     property int    anchorIndex: -1
 
-    // контекстное меню
     property bool   menuOpen: false
-    property string menuPath: ""        // "" — меню пустого места
+    property string menuPath: ""
     property bool   menuIsDir: false
     property string menuKind: "folder"   // "file" | "folder" | "trash"
     property real   menuX: 0
     property real   menuY: 0
 
-    // диалог ввода имени
     property string dialogMode: ""      // "rename" | "mkdir"
 
-    // Переход между папками: список уезжает и гаснет, новый приезжает
-    // с той стороны, куда мы двинулись. Направление помним, чтобы «вверх»
-    // и «внутрь» ощущались по-разному.
     property real listOpacity: 1
     property real listShift: 0
     Behavior on listShift { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
-    property int  navDir: 1             // 1 — внутрь, -1 — наверх
+    property int  navDir: 1
 
-    ListModel { id: entries }      // отфильтрованный список
-    ListModel { id: rawEntries }   // всё, что вернул files.sh
+    ListModel { id: entries }
+    ListModel { id: rawEntries }
     ListModel { id: places }
-    // Смонтированные носители. Съёмные держим отдельной моделью: их раздел
-    // должен появляться только когда что-то воткнули.
     ListModel { id: disks }
     ListModel { id: removables }
     ListModel { id: apps }
@@ -98,8 +74,6 @@ Item {
 
     focus: true
     Component.onCompleted: {
-        // Каталог, с которого попросили открыться (карусель живых обоев,
-        // например). Одноразовый: дальше проводник ходит сам.
         if (!view.dir.length && view.sys.filesStartDir.length) {
             view.dir = view.sys.filesStartDir;
             view.sys.filesStartDir = "";
@@ -110,7 +84,6 @@ Item {
         reload();
     }
 
-    // ---------------------------------------------------------------- чтение
     Process {
         id: pList
         stdout: SplitParser {
@@ -151,18 +124,12 @@ Item {
         }
     }
 
-    // Очередь коротких операций. pAction здесь один на всех, и вторая
-    // операция, начатая пока идёт первая, затирала её команду и молча
-    // пропадала. Копирование и перенос сюда не попадают — они уходят в
-    // пилюлю, к своей очереди: см. runLong().
     property var opQueue: []
 
     Process {
         id: pAction
         onRunningChanged: {
             if (running) return;
-            // следующая из очереди — до перечитывания списка: перечитывать
-            // между операциями значит дважды проиграть анимацию появления
             if (view.opQueue.length > 0) {
                 var q = view.opQueue.slice();
                 var next = q.shift();
@@ -172,17 +139,12 @@ Item {
             }
             view.refresh();
             view.countTrash();
-            // Соседние окна проводника про наши правки не знают: после
-            // переноса файл исчезает здесь, но у них в списке ещё висит.
-            // Флаг — чтобы не перечитать список ещё раз у самих себя: две
-            // перезагрузки подряд дёргают анимацию появления.
             view.selfChange = true;
             view.sys.filesChanged();
             view.selfChange = false;
         }
     }
     property bool selfChange: false
-    // ...и наоборот: правку в соседнем окне подхватываем сами
     Connections {
         target: view.sys
         ignoreUnknownSignals: true
@@ -193,7 +155,6 @@ Item {
         }
     }
 
-    // сколько файлов в корзине — показываем счётчиком у закладки
     property int trashCount: 0
     readonly property string trashDir:
         (Quickshell.env("XDG_DATA_HOME") || (Quickshell.env("HOME") + "/.local/share"))
@@ -227,10 +188,6 @@ Item {
                     };
                     if (p[0] === "removable") r.push(row); else d.push(row);
                 }
-                // Раньше модель очищалась и набивалась заново каждые 4 секунды:
-                // делегаты пересоздавались, и полоса заполнения каждый раз
-                // заново уезжала от нуля. Теперь правим строки на месте, а
-                // список трогаем, только если носитель появился или пропал.
                 view.syncDisks(disks, d);
                 view.syncDisks(removables, r);
             }
@@ -268,14 +225,14 @@ Item {
                 var t = String(text).trim();
                 view.reloadDisks();
                 if (t.indexOf("ERROR busy") >= 0) {
-                    view.say(view.sys.tr("Носитель занят — закройте открытые с него файлы"));
+                    view.say(view.sys.tr("Drive is busy — close files opened from it"));
                     return;
                 }
                 if (t.indexOf("ERROR") >= 0) {
-                    view.say(view.sys.tr("Не удалось извлечь носитель"));
+                    view.say(view.sys.tr("Couldn't eject the drive"));
                     return;
                 }
-                view.say(view.sys.tr("Можно извлечь: ") + pEject.targetLabel);
+                view.say(view.sys.tr("Safe to remove: ") + pEject.targetLabel);
                 if (pEject.targetItem.length > 0 && view.dir.indexOf(pEject.targetItem) === 0)
                     view.go(Quickshell.env("HOME"));
             }
@@ -283,27 +240,25 @@ Item {
     }
     function ejectDisk(dev, path, label) {
         closeMenu();
-        // запись ещё идёт — извлекать нельзя, иначе файл не сохранится
         if (view.sys.fileOpActive) {
-            view.say(view.sys.tr("Дождитесь окончания копирования"));
+            view.say(view.sys.tr("Wait for copying to finish"));
             return;
         }
         pEject.targetItem = path && path.length > 0 ? path : dev;
         pEject.targetLabel = label || "";
-        view.say(view.sys.tr("Извлечение…"));
+        view.say(view.sys.tr("Ejecting…"));
         pEject.running = false;
         pEject.running = true;
     }
     function unmountDisk(path) {
         closeMenu();
         run(["sh", "-c", view.scripts + " unmountdisk \"$1\"", "_", path],
-            view.sys.tr("Отключено"));
+            view.sys.tr("Disconnected"));
         if (view.dir.indexOf(path) === 0) view.go(Quickshell.env("HOME"));
         diskRefresh.restart();
     }
     Timer { id: diskRefresh; interval: 600; onTriggered: view.reloadDisks() }
 
-    // меню носителя
     property string menuDiskDev: ""
     property string menuDiskPath: ""
     property string menuDiskLabel: ""
@@ -328,15 +283,11 @@ Item {
                 model.set(j, rows[j]);
                 continue;
             }
-            // меняем только цифры — делегат остаётся тем же
             if (cur.dUsed !== rows[j].dUsed) model.setProperty(j, "dUsed", rows[j].dUsed);
             if (cur.dSize !== rows[j].dSize) model.setProperty(j, "dSize", rows[j].dSize);
         }
     }
     function reloadDisks() { pDisks.running = false; pDisks.running = true; }
-    // Воткнули флешку или подключили телефон — раздел появится сам.
-    // Основной сигнал — udev из оболочки (флешка видна сразу), а редкий
-    // опрос нужен для занятого места и телефонов по MTP.
     Timer {
         interval: 6000
         running: true
@@ -361,7 +312,7 @@ Item {
 
     function emptyTrash() {
         closeMenu();
-        run(["sh", "-c", view.scripts + " emptytrash"], view.sys.tr("Корзина очищена"));
+        run(["sh", "-c", view.scripts + " emptytrash"], view.sys.tr("Trash emptied"));
     }
 
     function loadPlaces() {
@@ -370,14 +321,10 @@ Item {
         pPlaces.running = true;
     }
 
-    // reload() — переход в папку: список уезжает и приезжает заново.
-    // refresh() — та же папка, но файлы поменялись: перечитываем молча,
-    // сохраняя прокрутку, курсор и выделение. Раньше любое копирование
-    // дёргало анимацию и сбрасывало список наверх.
     property bool   silentReload: false
     property string keepName: ""
     property real   keepY: 0
-    property string focusName: ""        // что выделить после перечитывания
+    property string focusName: ""
 
     function reload() {
         view.silentReload = false;
@@ -428,7 +375,6 @@ Item {
             for (var k = 0; k < rows.length; k++) if (rows[k].eName === want) { idx = k; break; }
         }
         if (silent) {
-            // выделение: выбрасываем то, чего больше нет
             var names = {};
             for (var n = 0; n < rows.length; n++) names[view.fullPath(rows[n].eName)] = true;
             var sel = view.selectedPaths.filter(function (x) { return names[x]; });
@@ -445,9 +391,6 @@ Item {
         }
     }
 
-    // Сравнение двух строк списка. Каталоги держим отдельной группой, если
-    // включено «папки сверху»: иначе при сортировке по размеру они, все
-    // нулевые, сваливались в одну кучу посреди файлов.
     function compare(a, b) {
         if (view.foldersFirst && a.eType !== b.eType)
             return a.eType === "d" ? -1 : 1;
@@ -462,7 +405,6 @@ Item {
         if (r === 0) {
             var na = a.eName.toLowerCase(), nb = b.eName.toLowerCase();
             r = na < nb ? -1 : na > nb ? 1 : 0;
-            // имя всегда по возрастанию, если сортируем не по нему
             if (view.sortBy !== "name") return r;
         }
         return view.sortDesc ? -r : r;
@@ -478,7 +420,6 @@ Item {
         view.applyFilter();
     }
 
-    // «12 авг, 14:32», а для прошлых лет — с годом
     function timeText(e) {
         if (!e.eTime) return "";
         var d = new Date(e.eTime * 1000);
@@ -501,7 +442,6 @@ Item {
         go(i <= 0 ? "/" : p.slice(0, i));
     }
 
-    // что умеет показать наш плеер — открываем сразу, без вопроса «чем»
     function isMedia(e) {
         var m = String(e.eMime);
         return m.indexOf("image/") === 0 || m.indexOf("video/") === 0;
@@ -513,14 +453,11 @@ Item {
         var full = (view.dir === "/" ? "" : view.dir) + "/" + e.eName;
         if (e.eType === "d") { go(full); return; }
         if (view.pickerMode) { view.filePicked(full); return; }
-        // режим выбора обоев: картинку не открываем в плеере, а отдаём
-        // странице обоев для сохранения
         if (view.sys.wallpaperPickMode) {
             var m = String(e.eMime);
             if (m.indexOf("image/") === 0) { view.sys.finishWallpaperPick(full); return; }
         }
         if (view.isMedia(e)) { view.sys.openMedia(full); return; }
-        // остальное — сначала спрашиваем, чем открывать
         view.openWithFile = full;
         apps.clear();
         pApps.command = ["sh", "-c", view.scripts + " apps \"$1\"", "_", full];
@@ -530,10 +467,6 @@ Item {
 
     function openWith(desktopFile) {
         if (!view.openWithFile.length) return;
-        // Запускаем НЕ отсюда: следующей строкой панель закрывается, а вместе
-        // с ней уничтожается вид и всё, что в нём объявлено, — включая
-        // Process. Он умирал раньше, чем успевал запустить программу, и
-        // проводник просто закрывался, ничего не открыв.
         view.sys.openFileWith(view.openWithFile, desktopFile || "");
         view.openWithFile = "";
         view.leave();
@@ -544,7 +477,7 @@ Item {
         var e = entries.get(view.current);
         var full = (view.dir === "/" ? "" : view.dir) + "/" + e.eName;
         run(["sh", "-c", view.scripts + " trash \"$1\"", "_", full],
-            view.sys.tr("В корзину: ") + e.eName);
+            view.sys.tr("Trashed: ") + e.eName);
     }
     Timer { id: statusClear; interval: 2600; onTriggered: view.status = "" }
 
@@ -559,18 +492,17 @@ Item {
     }
     function baseName(p) { return String(p).split("/").pop(); }
 
-    // Подписи закладок переводим здесь: скрипт про язык интерфейса не знает.
     function placeLabel(key, fallback) {
         switch (key) {
-            case "home":      return view.sys.tr("Домашняя");
-            case "downloads": return view.sys.tr("Загрузки");
-            case "documents": return view.sys.tr("Документы");
-            case "pictures":  return view.sys.tr("Изображения");
-            case "videos":    return view.sys.tr("Видео");
-            case "music":     return view.sys.tr("Музыка");
-            case "desktop":   return view.sys.tr("Рабочий стол");
-            case "trash":     return view.sys.tr("Корзина");
-            case "root":      return view.sys.tr("Система");
+            case "home":      return view.sys.tr("Home");
+            case "downloads": return view.sys.tr("Downloads");
+            case "documents": return view.sys.tr("Documents");
+            case "pictures":  return view.sys.tr("Pictures");
+            case "videos":    return view.sys.tr("Videos");
+            case "music":     return view.sys.tr("Music");
+            case "desktop":   return view.sys.tr("Desktop");
+            case "trash":     return view.sys.tr("Trash");
+            case "root":      return view.sys.tr("System");
         }
         return fallback;
     }
@@ -591,20 +523,15 @@ Item {
         view.startOp(args, note);
     }
 
-    // Копирование и перенос уходят в пилюлю: они длятся минутами, а панель
-    // закрывают сразу после того, как перетащили файлы. Здесь их процесс
-    // умер бы вместе с Loader'ом, на середине.
     function runLong(args, note, label) {
         view.sys.runFileOp(args, label);
         if (note !== undefined) view.say(note);
     }
 
-    // --------------------------------------------------------- меню действий
     function openMenu(path, isDir, x, y, kind) {
         view.menuPath = path;
         view.menuIsDir = isDir;
         view.menuKind = kind !== undefined ? kind : (path.length ? "file" : "folder");
-        // держим меню внутри панели, иначе его срежет капсула
         view.menuX = Math.max(0, Math.min(x, view.width - 210));
         view.menuY = Math.max(0, Math.min(y, Math.max(0, view.height - 250)));
         view.menuOpen = true;
@@ -618,7 +545,6 @@ Item {
             if (view.fullPath(entries.get(i).eName) === path) { view.activate(i); return; }
         }
     }
-    // явный выбор программы — минуя автозапуск медиа в своём плеере
     function doOpenWith(path) {
         if (!path.length) return;
         closeMenu();
@@ -628,7 +554,6 @@ Item {
         pApps.running = false;
         pApps.running = true;
     }
-    // ---------------------------------------------------- мультивыделение
     function isSelected(path) {
         return view.selectedPaths.indexOf(path) !== -1;
     }
@@ -703,7 +628,6 @@ Item {
         view.selectedPaths = matched;
     }
 
-    // ----------------------------------------------------------- архивы
     function isArchive(path) {
         if (!path) return false;
         var l = String(path).toLowerCase();
@@ -728,14 +652,14 @@ Item {
     function doExtractHere(path) {
         closeMenu();
         runLong(["sh", "-c", view.scripts + " extract \"$1\" \"$2\"", "_", path, view.dir],
-                view.sys.tr("Распаковано: ") + view.baseName(path),
+                view.sys.tr("Extracted: ") + view.baseName(path),
                 view.baseName(path));
     }
     function doExtractToFolder(path) {
         closeMenu();
         var folder = view.dir + "/" + view.archiveFolderName(path);
         runLong(["sh", "-c", view.scripts + " extract \"$1\" \"$2\"", "_", path, folder],
-                view.sys.tr("Распаковано в ") + view.archiveFolderName(path) + "/",
+                view.sys.tr("Extracted to ") + view.archiveFolderName(path) + "/",
                 view.baseName(path));
     }
     function doExtractAllSelected(toSubfolders) {
@@ -747,7 +671,7 @@ Item {
             var p = paths[i];
             var dst = toSubfolders ? (view.dir + "/" + view.archiveFolderName(p)) : view.dir;
             view.runLong(["sh", "-c", view.scripts + " extract \"$1\" \"$2\"", "_", p, dst],
-                         view.sys.tr("Распаковано: ") + view.baseName(p),
+                         view.sys.tr("Extracted: ") + view.baseName(p),
                          view.baseName(p));
         }
     }
@@ -760,9 +684,9 @@ Item {
         view.sys.setFilesClip(targets, "copy");
         closeMenu();
         if (targets.length === 1) {
-            view.say(view.sys.tr("Скопировано: ") + view.baseName(targets[0]));
+            view.say(view.sys.tr("Copied: ") + view.baseName(targets[0]));
         } else {
-            view.say(view.sys.tr("Скопировано файлов: ") + targets.length);
+            view.say(view.sys.tr("Files copied: ") + targets.length);
         }
     }
     function doCut(path) {
@@ -773,9 +697,9 @@ Item {
         view.sys.setFilesClip(targets, "cut");
         closeMenu();
         if (targets.length === 1) {
-            view.say(view.sys.tr("Вырезано: ") + view.baseName(targets[0]));
+            view.say(view.sys.tr("Cut: ") + view.baseName(targets[0]));
         } else {
-            view.say(view.sys.tr("Вырезано файлов: ") + targets.length);
+            view.say(view.sys.tr("Files cut: ") + targets.length);
         }
     }
     function doPaste() {
@@ -794,7 +718,7 @@ Item {
         closeMenu();
         var text = targets.join("\n");
         run(["sh", "-c", "printf '%s' \"$1\" | wl-copy", "_", text],
-            view.sys.tr("Путь скопирован"));
+            view.sys.tr("Path copied"));
     }
     function doTrash(path) {
         var targets = (view.selectedCount > 0 && (path === "" || view.isSelected(path)))
@@ -804,12 +728,11 @@ Item {
         closeMenu();
         var cmd = ["sh", "-c", view.scripts + " trash \"$@\"", "_"].concat(targets);
         var label = targets.length === 1 ? view.baseName(targets[0])
-                                         : (targets.length + " " + view.sys.tr("файлов"));
-        run(cmd, view.sys.tr("В корзину: ") + label);
+                                         : (targets.length + " " + view.sys.tr("files"));
+        run(cmd, view.sys.tr("Trashed: ") + label);
         view.clearSelection();
     }
 
-    // ---------------------------------------------------------- свойства
     property bool  propsOpen: false
     property var   propsData: ({})
     property string propsPath: ""
@@ -853,7 +776,7 @@ Item {
     function startMkdir() {
         closeMenu();
         view.dialogMode = "mkdir";
-        dialogField.text = view.sys.tr("Новая папка");
+        dialogField.text = view.sys.tr("New folder");
         dialogField.selectAll();
         dialogFocus.restart();
     }
@@ -866,10 +789,10 @@ Item {
         view.focusName = name;
         if (mode === "rename")
             run(["sh", "-c", view.scripts + " rename \"$1\" \"$2\"", "_", view.menuPath, name],
-                view.sys.tr("Переименовано"));
+                view.sys.tr("Renamed"));
         else if (mode === "mkdir")
             run(["sh", "-c", view.scripts + " mkdir \"$1\" \"$2\"", "_", view.dir, name],
-                view.sys.tr("Папка создана"));
+                view.sys.tr("Folder created"));
     }
     function cancelDialog() {
         view.dialogMode = "";
@@ -877,7 +800,6 @@ Item {
     }
     Timer { id: dialogFocus; interval: 40; onTriggered: dialogField.forceActiveFocus() }
 
-    // -------------------------------------------------------------- клавиши
     Keys.onEscapePressed: {
         if (view.dialogMode.length) { view.cancelDialog(); return; }
         if (view.menuOpen) { view.closeMenu(); return; }
@@ -886,17 +808,11 @@ Item {
         if (view.filter.length) { view.filter = ""; applyFilter(); return; }
         view.leave();
     }
-    // В сетке вверх и вниз ходят на строку, а не на соседний файл: иначе
-    // стрелка вниз ползла бы вдоль ряда, а глаз ждёт, что она опустится под
-    // курсор. В списке строка и есть один файл, поэтому шаг там прежний.
     function step(delta) {
         var n = entries.count;
         if (n === 0) return;
         view.current = Math.max(0, Math.min(n - 1, view.current + delta));
     }
-    // Пока открыт список «чем открыть», стрелки ходят по нему: он и есть то,
-    // с чем сейчас работают. Ходить в это время по спрятанному списку файлов
-    // бессмысленно — его не видно.
     Keys.onUpPressed:    view.openWithFile.length ? appList.step(-1)
                        : view.step(view.mode === "grid" ? -view.gridCols : -1)
     Keys.onDownPressed:  view.openWithFile.length ? appList.step(1)
@@ -949,7 +865,6 @@ Item {
         }
     }
 
-    // ------------------------------------------------------------- иконки
     function iconFor(e) {
         if (e.eType === "d") return String.fromCodePoint(0xF024B);   // folder
         var m = String(e.eMime);
@@ -972,7 +887,6 @@ Item {
         return (s / 1073741824).toFixed(2) + " GB";
     }
 
-    // ------------------------------------------------------ контекстное меню
     component MenuItem: Rectangle {
         id: menuitem
 
@@ -1021,9 +935,6 @@ Item {
         }
     }
 
-    // ---------------------------------------------------------------- вид
-    // Раздел «Диски» / «Съёмные»: подпись, занятое место и полоска заполнения.
-    // Пустой раздел не рисуется вовсе — флешки нет, и заголовка быть не должно.
     component DiskSection: ColumnLayout {
         id: sec
         property string title: ""
@@ -1094,7 +1005,6 @@ Item {
                                 bold: disk.active
                             }
                         }
-                        // Кнопка безопасного извлечения
                         Rectangle {
                             visible: sec.removable && disk.mounted && (diskMa.containsMouse || ejectMa.containsMouse)
                             Layout.preferredWidth: 20
@@ -1134,13 +1044,12 @@ Item {
                         visible: disk.model.dSize > 0
                         text: disk.mounted
                               ? (view.human(disk.model.dUsed) + " / " + view.human(disk.model.dSize))
-                              : (view.human(disk.model.dSize) + " • " + view.sys.tr("Подключить"))
+                              : (view.human(disk.model.dSize) + " • " + view.sys.tr("Connect"))
                         color: disk.mounted ? Qt.rgba(1, 1, 1, 0.28) : view.sys.colOn
                         elide: Text.ElideRight
                         font { family: view.sys.fontFam; pixelSize: view.sys.fontSize - 7 }
                     }
 
-                    // полоска заполнения; у телефонов размера нет — и полосы тоже
                     Rectangle {
                         visible: disk.mounted && disk.model.dSize > 0
                         Layout.fillWidth: true
@@ -1180,16 +1089,10 @@ Item {
         }
     }
 
-    // Колонка закладок и список лежат на одном фоне, без черты граница не
-    // читалась. В раскладке она обрывалась вместе со строкой, поэтому рисуем
-    // её слоем: от шапки и до самого низа окна.
     Rectangle {
         z: 1
         width: 1
         x: 190 + 7
-        // Не anchors: headSep лежит внутри col, а не рядом, и привязка к
-        // не-родителю и не-соседу молча не срабатывает — черта просто
-        // не имела высоты. Считаем координату через положение в раскладке.
         y: col.y + headSep.y + headSep.height
         height: Math.max(0, view.height - y)
         color: Qt.rgba(1, 1, 1, 0.14)
@@ -1199,15 +1102,9 @@ Item {
     ColumnLayout {
         id: col
         width: parent.width
-        // В отдельном окне колонка обязана занять его целиком: список внутри
-        // тянется на всю оставшуюся высоту. Без этого окно любого размера
-        // показывало список одной и той же высоты, а под ним оставалась
-        // чёрная полоса в треть экрана — файлы приходилось прокручивать в
-        // окне, где на них хватало места с запасом.
         height: view.windowMode ? view.height : col.implicitHeight
         spacing: 12
 
-        // ------------------------------------------------------- шапка
         RowLayout {
             Layout.fillWidth: true
             spacing: 10
@@ -1241,7 +1138,7 @@ Item {
                 spacing: 0
                 Text {
                     text: view.dir === Quickshell.env("HOME")
-                          ? view.sys.tr("Домашняя") : view.dir.split("/").pop() || "/"
+                          ? view.sys.tr("Home") : view.dir.split("/").pop() || "/"
                     color: view.sys.colFg
                     font { family: view.sys.fontFam; pixelSize: view.sys.fontSize + 5; bold: true }
                 }
@@ -1254,7 +1151,6 @@ Item {
                 }
             }
 
-            // строка фильтра
             Rectangle {
                 Layout.preferredWidth: 260
                 Layout.preferredHeight: 38
@@ -1276,7 +1172,7 @@ Item {
                     }
                     Text {
                         Layout.fillWidth: true
-                        text: view.filter.length ? view.filter : view.sys.tr("Просто печатайте")
+                        text: view.filter.length ? view.filter : view.sys.tr("Just type")
                         color: view.filter.length ? view.sys.colFg : Qt.rgba(1, 1, 1, 0.30)
                         elide: Text.ElideRight
                         font { family: view.sys.fontFam; pixelSize: view.sys.fontSize - 1 }
@@ -1284,10 +1180,6 @@ Item {
                 }
             }
 
-            // ------------------------------------------- список или сетка
-            // Две кнопки, а не выпадающий список: режимов ровно два, и между
-            // ними переключаются часто. Выбор запоминается в настройках, иначе
-            // проводник каждый раз открывался бы не тем, чем его закрыли.
             Rectangle {
                 Layout.preferredWidth: 76
                 Layout.preferredHeight: 38
@@ -1346,13 +1238,11 @@ Item {
             color: view.sys.colLine
         }
 
-        // ---------------------------------------------- закладки + список
         RowLayout {
             Layout.fillWidth: true
             spacing: 14
             visible: !view.openWithFile.length
 
-            // закладки: узкая колонка фиксированной ширины, остальное — списку
             ColumnLayout {
                 Layout.preferredWidth: 190
                 Layout.maximumWidth: 190
@@ -1417,7 +1307,6 @@ Item {
                             cursorShape: Qt.PointingHandCursor
                             acceptedButtons: Qt.LeftButton | Qt.RightButton
                             onClicked: mouse => {
-                                // у корзины своё короткое меню: только очистка
                                 if (mouse.button === Qt.RightButton) {
                                     if (place.model.pKey !== "trash") return;
                                     var p = mapToItem(view, mouse.x, mouse.y);
@@ -1430,29 +1319,24 @@ Item {
                     }
                 }
 
-                // ------------------------------------------- носители
                 DiskSection {
-                    title: view.sys.tr("Диски")
+                    title: view.sys.tr("Disks")
                     items: disks
                 }
                 DiskSection {
-                    title: view.sys.tr("Съёмные")
+                    title: view.sys.tr("Removable")
                     items: removables
                     removable: true
                 }
             }
 
-            // место под вертикальную черту: сама она нарисована отдельно,
-            // чтобы идти до самого низа окна, а не до конца строки
             Item { Layout.preferredWidth: 1 }
 
-            // список файлов — занимает всё оставшееся место
             ColumnLayout {
                 Layout.fillWidth: true
                 Layout.minimumWidth: 380
                 spacing: 1
 
-                // ---------------------------------------------- сортировка
                 RowLayout {
                     Layout.fillWidth: true
                     Layout.bottomMargin: 4
@@ -1487,7 +1371,6 @@ Item {
                                     bold: sortbtn.on
                                 }
                             }
-                            // стрелка показывает направление и переключает его
                             Text {
                                 visible: sortbtn.on
                                 text: view.sortDesc ? "󰄼" : "󰄿"
@@ -1505,23 +1388,20 @@ Item {
                     }
 
                     Text {
-                        text: view.sys.tr("Сортировка")
+                        text: view.sys.tr("Sort")
                         color: Qt.rgba(1, 1, 1, 0.30)
                         font {
                             family: view.sys.fontFam; pixelSize: view.sys.fontSize - 5
                             bold: true; capitalization: Font.AllUppercase; letterSpacing: 1
                         }
                     }
-                    SortBtn { key: "name"; label: view.sys.tr("Имя") }
-                    SortBtn { key: "time"; label: view.sys.tr("Дата") }
-                    SortBtn { key: "size"; label: view.sys.tr("Размер") }
-                    SortBtn { key: "type"; label: view.sys.tr("Тип") }
+                    SortBtn { key: "name"; label: view.sys.tr("Name") }
+                    SortBtn { key: "time"; label: view.sys.tr("Date") }
+                    SortBtn { key: "size"; label: view.sys.tr("Size") }
+                    SortBtn { key: "type"; label: view.sys.tr("Type") }
 
                     Item { Layout.fillWidth: true }
 
-                    // Скрытые файлы. Выбор запоминается в настройках, а не
-                    // живёт до закрытия окна: человек решает это один раз и
-                    // не любит возвращаться к решению каждое утро.
                     Rectangle {
                         Layout.preferredHeight: 26
                         Layout.preferredWidth: hidTxt.implicitWidth + 26
@@ -1543,7 +1423,7 @@ Item {
                             }
                             Text {
                                 id: hidTxt
-                                text: view.sys.tr("Скрытые")
+                                text: view.sys.tr("Hidden")
                                 color: view.sys.cfg.filesHidden ? view.sys.colFg : view.sys.colMuted
                                 font { family: view.sys.fontFam; pixelSize: view.sys.fontSize - 4 }
                             }
@@ -1561,8 +1441,6 @@ Item {
                         }
                     }
 
-                    // папки сверху — отдельным переключателем, а не частью
-                    // порядка: он нужен при любой сортировке
                     Rectangle {
                         Layout.preferredHeight: 26
                         Layout.preferredWidth: ffTxt.implicitWidth + 26
@@ -1583,7 +1461,7 @@ Item {
                             }
                             Text {
                                 id: ffTxt
-                                text: view.sys.tr("Папки сверху")
+                                text: view.sys.tr("Folders first")
                                 color: view.foldersFirst ? view.sys.colFg : view.sys.colMuted
                                 font { family: view.sys.fontFam; pixelSize: view.sys.fontSize - 4 }
                             }
@@ -1601,9 +1479,6 @@ Item {
                     }
                 }
 
-                // Сдвиг делаем трансформом, а не x: координатами элементов
-                // внутри Layout распоряжается сам Layout, и присвоение x
-                // разъезжалось с раскладкой — колонки налезали друг на друга.
                 opacity: view.listOpacity
                 transform: Translate { x: view.listShift }
                 Behavior on opacity { NumberAnimation { duration: 150 } }
@@ -1612,10 +1487,6 @@ Item {
                     id: list
                     visible: view.mode === "list"
                     Layout.fillWidth: true
-                    // В пилюле высоту держим постоянной: список не должен
-                    // «дышать» при переходе между папками с разным числом
-                    // файлов. В отдельном окне наоборот — он занимает всё,
-                    // что окно даёт, иначе часть окна пропадает впустую.
                     Layout.fillHeight: view.windowMode
                     Layout.preferredHeight: view.windowMode ? 0 : view.sys.filesListH
                     Layout.minimumHeight: view.windowMode ? 120 : 0
@@ -1625,7 +1496,6 @@ Item {
                     highlightMoveDuration: 130
                     onCurrentIndexChanged: positionViewAtIndex(currentIndex, ListView.Contain)
 
-                    // Рамка выделения внутри ListView
                     Rectangle {
                         id: listRubberBand
                         z: 90
@@ -1636,20 +1506,9 @@ Item {
                         radius: 4
                     }
 
-                    // Мышью список не таскается. ListView — это Flickable, а он
-                    // по умолчанию понимает зажатую кнопку как прокрутку: то
-                    // есть ровно тем же движением, которым файл берут, чтобы
-                    // перетащить. Список уезжал из-под курсора на первых же
-                    // пикселях, и перетаскивание превращалось в лотерею.
                     //
-                    // Это поведение с сенсорного экрана, где другого способа
-                    // прокрутить нет. Здесь есть колесо, и оно однозначно.
                     interactive: false
 
-                    // interactive: false выключает у Flickable и колесо тоже,
-                    // поэтому крутим сами. У мыши шаг приходит в angleDelta
-                    // (одна «ступенька» — 120), у тачпада в pixelDelta и
-                    // мелкими порциями; берём то, что пришло.
                     WheelHandler {
                         acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
                         onWheel: function (ev) {
@@ -1661,9 +1520,6 @@ Item {
                         }
                     }
 
-                    // Подложка под делегатами: правый клик по пустому месту
-                    // даёт меню самой папки. Живёт внутри ListView, иначе
-                    // anchors ругались бы на управление со стороны Layout.
                     MouseArea {
                         id: listBgMa
                         anchors.fill: parent
@@ -1750,8 +1606,6 @@ Item {
                                     : "transparent"
                         border.width: (row.dropTarget || row.isSelected) ? 1 : 0
 
-                        // Папку можно выбрать курсором: бросили на строку —
-                        // кладём внутрь неё, а не в открытый каталог.
                         DropArea {
                             id: rowDrop
                             anchors.fill: parent
@@ -1785,7 +1639,6 @@ Item {
                                     bold: row.index === view.current || row.isSelected
                                 }
                             }
-                            // дата изменения — у всех, включая папки
                             Text {
                                 text: view.timeText(row.model)
                                 color: Qt.rgba(1, 1, 1, 0.26)
@@ -1816,14 +1669,12 @@ Item {
                             onReleased: dragging = false
                             onPositionChanged: mouse => {
                                 if (dragging || !pressed || mouse.buttons !== Qt.LeftButton) return;
-                                // порог, чтобы обычный клик не превращался в перетаскивание
                                 if (Math.abs(mouse.x - pressX) < 12
                                     && Math.abs(mouse.y - pressY) < 12) return;
                                 view.current = row.index;
                                 dragging = true;
                                 var p = view.fullPath(row.model.eName);
                                 if (!view.isSelected(p)) view.selectSingle(p, row.index);
-                                // панель сворачивается, файл остаётся на курсоре
                                 view.sys.startFileDrag(view.selectedPaths.length ? view.selectedPaths.slice() : [p],
                                                       view.windowMode);
                             }
@@ -1854,14 +1705,7 @@ Item {
                     }
                 }
 
-                // ------------------------------------------------- сетка
-                // Тот же список, разложенный плитками: значок крупно, имя под
-                // ним в две строки. Пригождается там, где по имени файл не
-                // узнать, — снимки, обои, загрузки.
                 //
-                // Модель, выделение, перетаскивание и меню — те же, что у
-                // списка: это одна и та же папка, показанная иначе, и вести
-                // себя она обязана одинаково.
                 GridView {
                     id: grid
                     visible: view.mode === "grid"
@@ -1877,8 +1721,6 @@ Item {
                     cellWidth: Math.floor(width / view.gridCols)
                     cellHeight: 104
 
-                    // Мышью не таскается — по той же причине, что и список:
-                    // зажатая кнопка здесь берёт файл, а не крутит содержимое.
                     interactive: false
                     WheelHandler {
                         acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
@@ -1891,7 +1733,6 @@ Item {
                         }
                     }
 
-                    // Рамка выделения внутри GridView
                     Rectangle {
                         id: gridRubberBand
                         z: 90
@@ -2085,8 +1926,8 @@ Item {
                 Text {
                     Layout.fillWidth: true
                     visible: entries.count === 0
-                    text: view.filter.length ? view.sys.tr("Ничего не найдено")
-                                             : view.sys.tr("Пусто")
+                    text: view.filter.length ? view.sys.tr("Nothing found")
+                                             : view.sys.tr("Empty")
                     color: view.sys.colMuted
                     horizontalAlignment: Text.AlignHCenter
                     font { family: view.sys.fontFam; pixelSize: 11 }
@@ -2094,22 +1935,14 @@ Item {
             }
         }
 
-        // -------------------------------------------------- чем открыть
         ColumnLayout {
             id: appList
-            // Не во всю ширину: проводник занимает 78% экрана, и список из
-            // пяти программ, растянутый на всю эту ширину, читался как
-            // случайно раскрытая таблица. Список выбора должен быть узким и по
-            // центру — глаз идёт по именам сверху вниз, а не слева направо.
             Layout.fillWidth: true
             Layout.maximumWidth: 520
             Layout.alignment: Qt.AlignHCenter
             spacing: 3
             visible: view.openWithFile.length > 0
 
-            // Какая программа сейчас выбрана. Раньше Enter всегда запускал
-            // ПЕРВУЮ: выбранной строки не существовало, а currentFile()
-            // возвращал apps.get(0). Стрелками выбрать было нечего.
             property int index: 0
             onVisibleChanged: if (visible) appList.index = 0
 
@@ -2135,7 +1968,7 @@ Item {
                     Layout.fillWidth: true
                     spacing: 0
                     Text {
-                        text: view.sys.tr("Чем открыть")
+                        text: view.sys.tr("Open with")
                         color: view.sys.colFg
                         font { family: view.sys.fontFam; pixelSize: view.sys.fontSize - 1; bold: true }
                     }
@@ -2181,9 +2014,6 @@ Item {
                     width: ListView.view.width
                     height: 44
                     radius: 12
-                    // Выделена выбранная строка, а не первая: раньше подсветка
-                    // стояла на программе по умолчанию и не двигалась, из-за
-                    // чего было не видно, что именно запустит Enter.
                     color: appRow.index === appList.index ? Qt.rgba(1, 1, 1, 0.11)
                          : (appMa.containsMouse ? view.sys.colHover : "transparent")
                     Behavior on color { ColorAnimation { duration: 120 } }
@@ -2216,7 +2046,7 @@ Item {
                         }
                         Text {
                             visible: appRow.index === 0
-                            text: view.sys.tr("по умолчанию")
+                            text: view.sys.tr("default")
                             color: view.sys.colMuted
                             font { family: view.sys.fontFam; pixelSize: view.sys.fontSize - 6 }
                         }
@@ -2236,26 +2066,19 @@ Item {
             Text {
                 Layout.fillWidth: true
                 visible: apps.count === 0
-                text: view.sys.tr("Подходящих программ не нашлось")
+                text: view.sys.tr("No matching apps")
                 color: view.sys.colMuted
                 horizontalAlignment: Text.AlignHCenter
                 font { family: view.sys.fontFam; pixelSize: 11 }
             }
         }
 
-        // Строки-подсказки внизу больше нет: длинный список наезжал на неё,
-        // и получалась каша из имён файлов и справки.
     }
 
-    // ------------------------------------------------------ приём файлов
-    // Перетаскивание идёт через системный drag (Drag.Automatic), поэтому
-    // работает и между двумя окнами проводника, а не только внутри одного.
     property var dropUrls: []
     property real dropX: 0
     property real dropY: 0
     property bool dropMenu: false
-    // Куда именно кладём: пусто — в открытую папку, иначе в ту, над которой
-    // отпустили. Так можно бросить прямо на строку каталога.
     property string dropDir: ""
     property string dropHover: ""
 
@@ -2268,7 +2091,6 @@ Item {
         }
         return out;
     }
-    // Что выбрали в первом меню, и что уже лежит в каталоге назначения.
     property bool dropMove: false
     property var  dropConflicts: []
     property bool dropAsk: false
@@ -2291,9 +2113,6 @@ Item {
         view.pendPaths = [];
     }
 
-    // Первый вопрос: переместить или скопировать. Второй — что делать с
-    // совпавшими именами — задаём только если совпадения есть, и только
-    // после того, как выбран сам способ.
     Process {
         id: pConflicts
         stdout: StdioCollector {
@@ -2312,18 +2131,16 @@ Item {
         }
     }
 
-    // Единый путь для вставки и бросания: проверить совпадения имён,
-    // при необходимости спросить, и отдать операцию оболочке.
     property var  pendPaths: []
     property string pendDest: ""
     function transfer(paths, dest, move) {
         var out = [];
         for (var i = 0; i < paths.length; i++) {
             var p = String(paths[i]).replace(/\/+$/, "");
-            if (p === dest) continue;                          // папка сама в себя
-            if (move && view.dirOf(p) === dest) continue;      // переносить некуда
-            if (dest.indexOf(p + "/") === 0) {                 // внутрь себя
-                view.say(view.sys.tr("Нельзя положить папку внутрь самой себя"));
+            if (p === dest) continue;
+            if (move && view.dirOf(p) === dest) continue;
+            if (dest.indexOf(p + "/") === 0) {
+                view.say(view.sys.tr("Can't put a folder inside itself"));
                 continue;
             }
             out.push(p);
@@ -2343,18 +2160,14 @@ Item {
         view.dropConflicts = [];
         if (!paths.length) return;
         var op = view.dropMove ? "move" : "copy";
-        var label = (view.dropMove ? view.sys.tr("Перемещение: ") : view.sys.tr("Копирование: "))
+        var label = (view.dropMove ? view.sys.tr("Moving: ") : view.sys.tr("Copying: "))
                   + (paths.length === 1 ? view.baseName(paths[0])
-                                        : view.sys.tr("Файлов: ") + paths.length);
+                                        : view.sys.tr("Files: ") + paths.length);
         var args = ["sh", "-c", view.scripts + " " + op + ' "$@"', "_", view.pendDest, mode].concat(paths);
         view.runLong(args, undefined, label);
         view.pendPaths = [];
     }
 
-    // Бросили файлы. Правило простое и предсказуемое:
-    //   из другого окна или другой папки — КОПИЯ;
-    //   внутри этого же окна на подпапку — ПЕРЕНОС.
-    // Спрашиваем только про совпавшие имена.
     function takeDrop(drop, targetDir, px, py) {
         if (!drop.hasUrls || drop.urls.length === 0) return;
         drop.accept(Qt.CopyAction);
@@ -2363,7 +2176,7 @@ Item {
         var local = true;
         for (var i = 0; i < paths.length; i++)
             if (view.dirOf(paths[i]) !== view.dir) { local = false; break; }
-        if (local && dest === view.dir) return;     // отпустили там же, где взяли
+        if (local && dest === view.dir) return;
         view.dropX = Math.max(6, Math.min(px, view.width - 240));
         view.dropY = Math.max(6, Math.min(py, view.height - 150));
         view.transfer(paths, dest, local);
@@ -2371,9 +2184,6 @@ Item {
 
     DropArea {
         id: dropZone
-        // Ниже всего: событие перетаскивания достаётся самой ВЕРХНЕЙ области
-        // под курсором и дальше не идёт. Пока эта висела сверху, строки папок
-        // до неё не доживали, и бросить файл в папку было нельзя.
         z: -1
         anchors.fill: parent
         keys: ["text/uri-list"]
@@ -2383,8 +2193,6 @@ Item {
         }
     }
 
-    // тонкая рамка, пока над окном что-то тащат: заливка во весь экран
-    // мешала целиться в конкретную папку
     Rectangle {
         z: 6
         anchors.fill: parent
@@ -2395,11 +2203,6 @@ Item {
         radius: 14
     }
 
-    // ------------------------------- совпавшие имена: что с ними делать
-    // Второй вопрос задаётся только когда есть о чём спрашивать, и уже после
-    // того, как выбран способ переноса. Раньше совпадения разбирались молча:
-    // рядом появлялся «файл-2», и человек узнавал об этом, когда искал глазами
-    // тот, что клал.
     MouseArea {
         z: 94
         anchors.fill: parent
@@ -2430,8 +2233,8 @@ Item {
                 Layout.topMargin: 6
                 Layout.bottomMargin: 2
                 text: view.dropConflicts.length === 1
-                      ? view.sys.tr("Уже есть: ") + view.dropConflicts[0]
-                      : view.sys.tr("Совпало имён: ") + view.dropConflicts.length
+                      ? view.sys.tr("Already there: ") + view.dropConflicts[0]
+                      : view.sys.tr("Names already taken: ") + view.dropConflicts.length
                 color: view.sys.colMuted
                 elide: Text.ElideMiddle
                 font { family: view.sys.fontFam; pixelSize: view.sys.fontSize - 4 }
@@ -2439,9 +2242,9 @@ Item {
 
             Repeater {
                 model: [
-                    { t: view.sys.tr("Заменить"),     g: 0xF0450, m: "overwrite" },
-                    { t: view.sys.tr("Оставить оба"), g: 0xF018F, m: "keepboth" },
-                    { t: view.sys.tr("Пропустить"),   g: 0xF0156, m: "skip" }
+                    { t: view.sys.tr("Replace"),     g: 0xF0450, m: "overwrite" },
+                    { t: view.sys.tr("Keep both"), g: 0xF018F, m: "keepboth" },
+                    { t: view.sys.tr("Skip"),   g: 0xF0156, m: "skip" }
                 ]
                 Rectangle {
                     id: askItem
@@ -2479,7 +2282,6 @@ Item {
         }
     }
 
-    // ------------------------------------------------ слой контекстного меню
     MouseArea {
         anchors.fill: parent
         z: 90
@@ -2513,11 +2315,10 @@ Item {
             anchors.margins: 6
             spacing: 1
 
-            // ---- меню носителя
             MenuItem {
                 visible: view.menuKind === "disk"
                 glyph: String.fromCodePoint(0xF0770)
-                label: view.menuDiskPath.length ? view.sys.tr("Открыть") : view.sys.tr("Подключить")
+                label: view.menuDiskPath.length ? view.sys.tr("Open") : view.sys.tr("Connect")
                 onChosen: {
                     view.closeMenu();
                     if (view.menuDiskPath.length) view.go(view.menuDiskPath);
@@ -2527,7 +2328,7 @@ Item {
             MenuItem {
                 visible: view.menuKind === "disk" && view.menuDiskPath.length > 0
                 glyph: String.fromCodePoint(0xF0219)
-                label: view.sys.tr("Копировать путь")
+                label: view.sys.tr("Copy path")
                 onChosen: { view.menuPath = view.menuDiskPath; view.doCopyPath(view.menuDiskPath); }
             }
             MenuItem {
@@ -2535,48 +2336,46 @@ Item {
                          && view.menuDiskPath !== "/" && view.menuDiskDev !== "mtp"
                          && view.menuDiskDev !== "gvfs"
                 glyph: String.fromCodePoint(0xF0384)
-                label: view.sys.tr("Отключить (размонтировать)")
+                label: view.sys.tr("Unmount")
                 onChosen: view.unmountDisk(view.menuDiskPath)
             }
             MenuItem {
                 visible: view.menuKind === "disk" && view.menuDiskRemovable
                 glyph: "⏏"
-                label: view.sys.tr("Извлечь безопасно")
+                label: view.sys.tr("Safely eject")
                 danger: true
                 onChosen: view.ejectDisk(view.menuDiskDev, view.menuDiskPath, view.menuDiskLabel)
             }
 
-            // ---- меню для файла или папки
             MenuItem {
                 visible: view.menuPath.length > 0 && view.selectedCount <= 1
                 glyph: String.fromCodePoint(0xF0770)
-                label: view.menuIsDir ? view.sys.tr("Открыть папку") : view.sys.tr("Открыть")
+                label: view.menuIsDir ? view.sys.tr("Open folder") : view.sys.tr("Open")
                 onChosen: view.doOpen(view.menuPath)
             }
             MenuItem {
                 visible: view.menuPath.length > 0 && !view.menuIsDir && view.selectedCount <= 1
                 glyph: String.fromCodePoint(0xF03CB)
-                label: view.sys.tr("Открыть с помощью…")
+                label: view.sys.tr("Open with…")
                 onChosen: view.doOpenWith(view.menuPath)
             }
 
-            // ---- меню для архивов
             MenuItem {
                 visible: view.menuPath.length > 0 && !view.menuIsDir && view.isArchive(view.menuPath) && view.selectedCount <= 1
                 glyph: String.fromCodePoint(0xF05C0)
-                label: view.sys.tr("Распаковать сюда")
+                label: view.sys.tr("Extract here")
                 onChosen: view.doExtractHere(view.menuPath)
             }
             MenuItem {
                 visible: view.menuPath.length > 0 && !view.menuIsDir && view.isArchive(view.menuPath) && view.selectedCount <= 1
                 glyph: String.fromCodePoint(0xF024B)
-                label: view.sys.tr("Распаковать в ") + view.archiveFolderName(view.menuPath) + "/"
+                label: view.sys.tr("Extract to ") + view.archiveFolderName(view.menuPath) + "/"
                 onChosen: view.doExtractToFolder(view.menuPath)
             }
             MenuItem {
                 visible: view.selectedCount > 1 && view.hasArchiveSelected()
                 glyph: String.fromCodePoint(0xF05C0)
-                label: view.sys.tr("Распаковать архивы в папки")
+                label: view.sys.tr("Extract archives to folders")
                 onChosen: view.doExtractAllSelected(true)
             }
 
@@ -2592,41 +2391,41 @@ Item {
             MenuItem {
                 visible: view.menuKind !== "disk" && view.menuKind !== "trash" && (view.menuPath.length > 0 || view.selectedCount > 0)
                 glyph: String.fromCodePoint(0xF018F)
-                label: view.selectedCount > 1 ? (view.sys.tr("Копировать (") + view.selectedCount + ")")
-                                             : view.sys.tr("Копировать")
+                label: view.selectedCount > 1 ? (view.sys.tr("Copy (") + view.selectedCount + ")")
+                                             : view.sys.tr("Copy")
                 onChosen: view.doCopy(view.menuPath)
             }
             MenuItem {
                 visible: view.menuKind !== "disk" && view.menuKind !== "trash" && (view.menuPath.length > 0 || view.selectedCount > 0)
                 glyph: String.fromCodePoint(0xF0190)
-                label: view.selectedCount > 1 ? (view.sys.tr("Вырезать (") + view.selectedCount + ")")
-                                             : view.sys.tr("Вырезать")
+                label: view.selectedCount > 1 ? (view.sys.tr("Cut (") + view.selectedCount + ")")
+                                             : view.sys.tr("Cut")
                 onChosen: view.doCut(view.menuPath)
             }
             MenuItem {
                 visible: view.menuKind !== "trash" && view.menuKind !== "disk"
                 glyph: String.fromCodePoint(0xF0192)
-                label: view.clipPaths.length > 1 ? (view.sys.tr("Вставить (") + view.clipPaths.length + ")")
-                                                : view.sys.tr("Вставить")
+                label: view.clipPaths.length > 1 ? (view.sys.tr("Paste (") + view.clipPaths.length + ")")
+                                                : view.sys.tr("Paste")
                 enabledItem: view.clipPaths.length > 0
                 onChosen: view.doPaste()
             }
             MenuItem {
                 visible: view.menuPath.length > 0 && view.selectedCount <= 1
                 glyph: String.fromCodePoint(0xF03EB)
-                label: view.sys.tr("Переименовать")
+                label: view.sys.tr("Rename")
                 onChosen: view.startRename(view.menuPath)
             }
             MenuItem {
                 visible: view.menuKind !== "disk" && view.menuKind !== "trash" && (view.menuPath.length > 0 || view.selectedCount > 0)
                 glyph: String.fromCodePoint(0xF0219)
-                label: view.sys.tr("Копировать путь")
+                label: view.sys.tr("Copy path")
                 onChosen: view.doCopyPath(view.menuPath)
             }
             MenuItem {
                 visible: view.menuPath.length > 0 && view.menuKind !== "trash" && view.selectedCount <= 1
-                glyph: String.fromCodePoint(0xF02FD)   // информация
-                label: view.sys.tr("Свойства")
+                glyph: String.fromCodePoint(0xF02FD)
+                label: view.sys.tr("Properties")
                 onChosen: view.showProps(view.menuPath)
             }
 
@@ -2639,24 +2438,22 @@ Item {
                 color: view.sys.colLine
             }
 
-            // ---- меню самой папки
             MenuItem {
                 visible: view.menuKind !== "trash" && view.menuKind !== "disk"
                 glyph: String.fromCodePoint(0xF0257)
-                label: view.sys.tr("Создать папку")
+                label: view.sys.tr("New folder")
                 onChosen: view.startMkdir()
             }
             MenuItem {
                 visible: view.menuKind !== "trash" && view.menuKind !== "disk"
                 glyph: String.fromCodePoint(0xF0450)
-                label: view.sys.tr("Обновить")
+                label: view.sys.tr("Refresh")
                 onChosen: { view.closeMenu(); view.refresh(); }
             }
-            // ---- меню закладки «Корзина»
             MenuItem {
                 visible: view.menuKind === "trash"
                 glyph: String.fromCodePoint(0xF0A79)
-                label: view.sys.tr("Очистить корзину")
+                label: view.sys.tr("Empty trash")
                 danger: true
                 enabledItem: view.trashCount > 0
                 onChosen: view.emptyTrash()
@@ -2664,15 +2461,14 @@ Item {
             MenuItem {
                 visible: view.menuKind !== "disk" && view.menuKind !== "trash" && (view.menuPath.length > 0 || view.selectedCount > 0)
                 glyph: String.fromCodePoint(0xF0A79)
-                label: view.selectedCount > 1 ? (view.sys.tr("В корзину (") + view.selectedCount + ")")
-                                             : view.sys.tr("В корзину")
+                label: view.selectedCount > 1 ? (view.sys.tr("Move to trash (") + view.selectedCount + ")")
+                                             : view.sys.tr("Move to trash")
                 danger: true
                 onChosen: view.doTrash(view.menuPath)
             }
         }
     }
 
-    // ------------------------------------------------ плашка мультивыделения
     Rectangle {
         id: multiActionBar
         z: 88
@@ -2695,7 +2491,7 @@ Item {
             spacing: 8
 
             Text {
-                text: view.selectedCount + " " + view.sys.tr("выбрано")
+                text: view.selectedCount + " " + view.sys.tr("selected")
                 color: view.sys.colFg
                 font { family: view.sys.fontFam; pixelSize: view.sys.fontSize - 2; bold: true }
             }
@@ -2706,7 +2502,6 @@ Item {
                 color: view.sys.colLine
             }
 
-            // Копировать
             Rectangle {
                 width: 30; height: 30; radius: 15
                 color: btnCopyMa.containsMouse ? view.sys.colHover : "transparent"
@@ -2725,7 +2520,6 @@ Item {
                 }
             }
 
-            // Вырезать
             Rectangle {
                 width: 30; height: 30; radius: 15
                 color: btnCutMa.containsMouse ? view.sys.colHover : "transparent"
@@ -2744,7 +2538,6 @@ Item {
                 }
             }
 
-            // Распаковать
             Rectangle {
                 visible: view.hasArchiveSelected()
                 width: 30; height: 30; radius: 15
@@ -2764,7 +2557,6 @@ Item {
                 }
             }
 
-            // В корзину
             Rectangle {
                 width: 30; height: 30; radius: 15
                 color: btnTrashMa.containsMouse ? Qt.rgba(0.94, 0.27, 0.27, 0.18) : "transparent"
@@ -2783,7 +2575,6 @@ Item {
                 }
             }
 
-            // Снять выделение
             Rectangle {
                 width: 26; height: 26; radius: 13
                 color: btnCloseMa.containsMouse ? view.sys.colHover : "transparent"
@@ -2804,7 +2595,6 @@ Item {
         }
     }
 
-    // ---------------------------------------------- диалог ввода имени
     MouseArea {
         anchors.fill: parent
         z: 95
@@ -2843,7 +2633,7 @@ Item {
                 Layout.fillWidth: true
                 color: view.sys.colFg
                 placeholderTextColor: view.sys.colMuted
-                placeholderText: view.sys.tr("Имя")
+                placeholderText: view.sys.tr("Name")
                 background: null
                 font { family: view.sys.fontFam; pixelSize: view.sys.fontSize }
                 onAccepted: view.confirmDialog()
@@ -2869,7 +2659,6 @@ Item {
         }
     }
 
-    // ------------------------------------------------------ панель «Свойства»
     MouseArea {
         anchors.fill: parent
         z: 97
@@ -2963,17 +2752,17 @@ Item {
                 color: view.sys.colLine
             }
 
-            PropRow { k: view.sys.tr("Тип");        v: String(view.propsData.kind || "") }
-            PropRow { k: view.sys.tr("Внутри");     v: propsPanel.isDir ? (String(view.propsData.items || "") + " " + view.sys.tr("элементов")) : "" }
-            PropRow { k: view.sys.tr("Размер");     v: String(view.propsData.size_human || "")
-                                                       + (view.propsData.size_bytes ? "  (" + view.propsData.size_bytes + " " + view.sys.tr("байт") + ")" : "") }
-            PropRow { k: view.sys.tr("Разрешение"); v: String(view.propsData.resolution || "") }
-            PropRow { k: view.sys.tr("Длительность"); v: view.propsData.duration ? view.fmtDuration(view.propsData.duration) : "" }
-            PropRow { k: view.sys.tr("Изменён");    v: String(view.propsData.modified || "") }
-            PropRow { k: view.sys.tr("Создан");     v: String(view.propsData.created || "") }
-            PropRow { k: view.sys.tr("Права");      v: String(view.propsData.perms || "") }
-            PropRow { k: view.sys.tr("Владелец");   v: String(view.propsData.owner || "") }
-            PropRow { k: view.sys.tr("Путь");       v: String(view.propsData.path || "") }
+            PropRow { k: view.sys.tr("Type");        v: String(view.propsData.kind || "") }
+            PropRow { k: view.sys.tr("Contains");     v: propsPanel.isDir ? (String(view.propsData.items || "") + " " + view.sys.tr("items")) : "" }
+            PropRow { k: view.sys.tr("Size");     v: String(view.propsData.size_human || "")
+                                                       + (view.propsData.size_bytes ? "  (" + view.propsData.size_bytes + " " + view.sys.tr("bytes") + ")" : "") }
+            PropRow { k: view.sys.tr("Resolution"); v: String(view.propsData.resolution || "") }
+            PropRow { k: view.sys.tr("Duration"); v: view.propsData.duration ? view.fmtDuration(view.propsData.duration) : "" }
+            PropRow { k: view.sys.tr("Modified");    v: String(view.propsData.modified || "") }
+            PropRow { k: view.sys.tr("Created");     v: String(view.propsData.created || "") }
+            PropRow { k: view.sys.tr("Permissions");      v: String(view.propsData.perms || "") }
+            PropRow { k: view.sys.tr("Owner");   v: String(view.propsData.owner || "") }
+            PropRow { k: view.sys.tr("Path");       v: String(view.propsData.path || "") }
         }
     }
 }

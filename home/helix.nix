@@ -1,7 +1,7 @@
-{ ... }:
+{ nixriotApps ? true, ... }:
 {
   programs.helix = {
-    enable = true;
-    defaultEditor = true;
+    enable = nixriotApps;
+    defaultEditor = nixriotApps;
   };
 }

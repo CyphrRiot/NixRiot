@@ -53,7 +53,7 @@ def main():
         return {'country':str(data.get('country_code','')).upper(),'name':str(data.get('country',''))}
     apps=[]
     seen=set()
-    locations=[pathlib.Path.home()/'.local/share/applications', pathlib.Path('/usr/local/share/applications'), pathlib.Path('/usr/share/applications')]
+    locations=[pathlib.Path.home()/'.local/share/applications', pathlib.Path('/run/current-system/sw/share/applications'), pathlib.Path('/usr/local/share/applications'), pathlib.Path('/usr/share/applications')]
     for folder in locations:
         if not folder.is_dir(): continue
         for file in folder.glob('*.desktop'):

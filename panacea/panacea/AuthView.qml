@@ -2,7 +2,6 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
 
-// Запрос прав polkit прямо в пилюле.
 Item {
     id: view
     property var sys
@@ -17,9 +16,6 @@ Item {
 
     Keys.onEscapePressed: view.cancel()
 
-    // После неверного пароля polkit спрашивает снова, но на время проверки
-    // поле выключено и теряет фокус — повторный ввод уходил в пустоту, и
-    // казалось, что попытка всего одна. Возвращаем фокус на каждый запрос.
     Connections {
         target: view.flow
         ignoreUnknownSignals: true
@@ -55,7 +51,7 @@ Item {
                 color: Qt.rgba(0.96, 0.62, 0.04, 0.16)
                 Glyph {
                     anchors.fill: parent
-                    glyph: String.fromCodePoint(0xF0BC4)      // щит с ключом
+                    glyph: String.fromCodePoint(0xF0BC4)
                     color: view.sys.colWarn
                     fontFam: view.sys.fontFam
                     size: view.sys.iconSize + 2
@@ -66,7 +62,7 @@ Item {
                 Layout.fillWidth: true
                 spacing: 1
                 Text {
-                    text: view.sys.tr("Требуются права")
+                    text: view.sys.tr("Authentication required")
                     color: view.sys.colFg
                     font { family: view.sys.fontFam; pixelSize: view.sys.fontSize; bold: true }
                 }
@@ -80,7 +76,6 @@ Item {
             }
         }
 
-        // поле пароля
         Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: 42
@@ -110,12 +105,11 @@ Item {
                 TextField {
                     id: pw
                     Layout.fillWidth: true
-                    // responseVisible=true означает, что ввод можно не скрывать
                     echoMode: (view.flow && view.flow.responseVisible) ? TextInput.Normal
                                                                        : TextInput.Password
                     placeholderText: view.flow && view.flow.inputPrompt
                                      ? String(view.flow.inputPrompt)
-                                     : view.sys.tr("Пароль")
+                                     : view.sys.tr("Password")
                     color: view.sys.colFg
                     placeholderTextColor: view.sys.colMuted
                     font { family: view.sys.fontFam; pixelSize: view.sys.fontSize - 2 }
@@ -135,7 +129,7 @@ Item {
                                  || String(view.flow.supplementaryMessage || "").length > 0) : false
             text: view.flow && String(view.flow.supplementaryMessage || "").length > 0
                   ? String(view.flow.supplementaryMessage)
-                  : view.sys.tr("Неверный пароль")
+                  : view.sys.tr("Wrong password")
             color: view.sys.colCrit
             font { family: view.sys.fontFam; pixelSize: view.sys.fontSize - 3 }
         }
@@ -154,7 +148,7 @@ Item {
                 Behavior on color { ColorAnimation { duration: 150 } }
                 Text {
                     anchors.centerIn: parent
-                    text: view.sys.tr("Отмена")
+                    text: view.sys.tr("Cancel")
                     color: view.sys.colMuted
                     font { family: view.sys.fontFam; pixelSize: view.sys.fontSize - 3 }
                 }
@@ -178,7 +172,7 @@ Item {
                 Behavior on color { ColorAnimation { duration: 150 } }
                 Text {
                     anchors.centerIn: parent
-                    text: view.sys.tr("Подтвердить")
+                    text: view.sys.tr("Authenticate")
                     color: view.sys.colFg
                     font { family: view.sys.fontFam; pixelSize: view.sys.fontSize - 3; bold: true }
                 }

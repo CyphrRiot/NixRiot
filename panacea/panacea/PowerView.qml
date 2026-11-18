@@ -2,16 +2,13 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Layouts
 
-// Меню питания (Super+N) в стиле пилюли.
-// Первое нажатие выделяет действие, второе подтверждает — чтобы
-// случайное касание не выключило машину. Escape отменяет.
 Item {
     id: view
     property var sys
 
     implicitHeight: col.implicitHeight
 
-    property int armed: -1          // индекс действия, ждущего подтверждения
+    property int armed: -1
     property int current: 0
 
     Timer {
@@ -20,36 +17,25 @@ Item {
         onTriggered: view.armed = -1
     }
 
-    // Иконки из одного семейства Material Design и, что важнее, одной
-    // весовой группы: перезагрузка и выключение существуют только штрихом,
-    // поэтому замок и выход тоже взяты штриховые. Залитые силуэты рядом с
-    // ними выбивались и выглядели наклеенными из другого набора.
-    // Блокировка исчезает из меню, если экран блокировки выключен: жать на
-    // кнопку, которая ничего не делает, хуже, чем её отсутствие.
     readonly property var actions: view.sys.cfg.featLock ? view.allActions
                                  : view.allActions.filter(a => a.id !== "lock")
     readonly property var allActions: [
-        { id: "sleep", icon: "", label: view.sys.tr("Сон"),
+        { id: "sleep", icon: "", label: view.sys.tr("Sleep"),
           cmd: "systemctl suspend -i || systemctl suspend || loginctl suspend",
-          accent: view.sys.tint("#38bdf8") },  // рисуется буквами, см. ниже
+          accent: view.sys.tint("#38bdf8") },
         { id: "lock", instant: true, icon: String.fromCodePoint(0xF033E),
-          label: view.sys.tr("Заблокировать"),
+          label: view.sys.tr("Lock"),
           cmd: "$HOME/.config/panacea/scripts/lock.sh",
           accent: view.sys.tint("#a78bfa") },  // md-lock
-        // instant: срабатывает с первого нажатия. Подтверждение нужно там, где
-        // ошибка стоит несохранённой работы, — выключение, перезагрузка, сон.
-        // Блокировка не стоит ничего: она отменяется тем же паролем, которым
-        // и снимается. Требовать на неё второе нажатие значило делать вид,
-        // что кнопка не работает: первое-то не делает ничего.
-        { id: "logout", instant: true, icon: String.fromCodePoint(0xF0343), label: view.sys.tr("Выйти"),
+        { id: "logout", instant: true, icon: String.fromCodePoint(0xF0343), label: view.sys.tr("Log out"),
           cmd: "if [ -n \"$NIRI_SOCKET\" ] || [ \"${XDG_CURRENT_DESKTOP,,}\" = \"niri\" ]; then "
              + "niri msg action quit --skip-confirmation; "
              + "else out=$(hyprctl dispatch 'hl.dsp.exit()' 2>&1); case \"$out\" in ok*) ;; *) hyprctl dispatch exit ;; esac; fi",
           accent: view.sys.colWarn },  // md-logout
-        { id: "reboot", icon: String.fromCodePoint(0xF0709), label: view.sys.tr("Перезагрузка"),
+        { id: "reboot", icon: String.fromCodePoint(0xF0709), label: view.sys.tr("Restart"),
           cmd: "systemctl reboot -i || systemctl reboot || loginctl reboot",
           accent: view.sys.tint("#fb923c") },  // md-restart
-        { id: "poweroff", icon: String.fromCodePoint(0xF0425), label: view.sys.tr("Выключить"),
+        { id: "poweroff", icon: String.fromCodePoint(0xF0425), label: view.sys.tr("Shut down"),
           cmd: "systemctl poweroff -i || systemctl poweroff || loginctl poweroff",
           accent: view.sys.colCrit }   // md-power
     ]
@@ -63,13 +49,7 @@ Item {
             return;
         }
         disarm.stop();
-        // Запускаем через корень оболочки, а не своим Process.
         //
-        // setsid -f уводит команду в собственный сеанс, но этого мало:
-        // строкой ниже панель закрывается, страница уничтожается, а вместе с
-        // ней и её Process — до того, как команда успеет отделиться. Быстрым
-        // хватало мгновения, а блокировке нет: её скрипт сперва готовит фон
-        // из обоев. Со стороны это выглядело как неработающая кнопка.
         view.sys.runDetached(actions[i].cmd);
         view.sys.collapse();
     }
@@ -89,8 +69,8 @@ Item {
         Text {
             Layout.fillWidth: true
             text: view.armed >= 0
-                  ? view.sys.tr("Ещё раз, чтобы подтвердить: ") + view.actions[view.armed].label
-                  : view.sys.tr("Завершение работы")
+                  ? view.sys.tr("Press again to confirm: ") + view.actions[view.armed].label
+                  : view.sys.tr("Power")
             color: view.armed >= 0 ? view.actions[view.armed].accent : view.sys.colFg
             font { family: view.sys.fontFam; pixelSize: view.sys.fontSize; bold: true }
             Behavior on color { ColorAnimation { duration: 180 } }
@@ -116,11 +96,9 @@ Item {
                     Layout.preferredHeight: 104
                     radius: 16
 
-                    // база всегда нейтральная; подтверждение красит верхний слой
                     color: btnMa.containsMouse || isCurrent
                            ? Qt.rgba(1, 1, 1, 0.10) : Qt.rgba(1, 1, 1, 0.05)
 
-                    // отдельный слой для подсветки подтверждения
                     Rectangle {
                         anchors.fill: parent
                         radius: parent.radius
@@ -144,10 +122,6 @@ Item {
                         anchors.centerIn: parent
                         spacing: 9
 
-                        // Голый значок без круга под ним. Круг со своей
-                        // заливкой, обводкой и свечением спорил с плиткой, на
-                        // которой стоит: два вложенных выделения одного и того
-                        // же действия. Взведённость показывает сама плитка.
                         Item {
                             id: itemrt
 
@@ -157,10 +131,6 @@ Item {
 
                             readonly property color ink: rectang.modelData.accent
 
-                            // Сон рисуется буквами, а не глифом: у месяца в
-                            // Nerd Font нет пары к остальным — он про ночь, а
-                            // не про сон, и рядом с замком и стрелкой читался
-                            // как погода. Три «z» треугольником говорят прямо.
                             Item {
                                 anchors.fill: parent
                                 visible: rectang.modelData.id === "sleep"
@@ -197,7 +167,7 @@ Item {
 
                         Text {
                             Layout.alignment: Qt.AlignHCenter
-                            text: rectang.isArmed ? view.sys.tr("Подтвердите") : rectang.modelData.label
+                            text: rectang.isArmed ? view.sys.tr("Confirm") : rectang.modelData.label
                             color: rectang.isArmed ? view.sys.colFg : view.sys.colMuted
                             font {
                                 family: view.sys.fontFam

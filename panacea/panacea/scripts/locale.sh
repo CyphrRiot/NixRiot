@@ -19,7 +19,6 @@ want_locale() {
     local code="$1" loc
     case "$code" in
         en) code=en_US ;;
-        ru) code=ru_RU ;;
         tr) code=tr_TR ;;
     esac
     [[ "$code" =~ ^[a-z]{2,3}_[A-Z]{2}$ ]] || return 1
@@ -31,7 +30,7 @@ want_locale() {
 }
 
 cmd_list() {
-    printf 'en|English\nru|Русский\ntr|Türkçe\n'
+    printf 'en|English\ntr|Türkçe\n'
     if [ -r "$GEN" ]; then
         awk '$1 ~ /^#?[a-z]{2,3}_[A-Z]{2}\.UTF-8$/ && $2 == "UTF-8" {
             sub(/^#/, "", $1); sub(/\.UTF-8$/, "", $1); print $1 "|" $1
@@ -48,7 +47,6 @@ cmd_get() {
     cur="${cur%%.*}"
     case "$cur" in
         en_US) echo en ;;
-        ru_RU) echo ru ;;
         tr_TR) echo tr ;;
         *) printf '%s\n' "$cur" ;;
     esac
@@ -57,8 +55,6 @@ cmd_get() {
 cmd_set() {
     local loc; loc="$(want_locale "$1")" || { echo "Unsupported locale: $1" >&2; return 1; }
 
-    # Локали может не быть в системе: тогда переменная указывала бы в никуда,
-    # и приложения молча откатились бы к английскому.
     if ! locale -a 2>/dev/null | grep -qiE "^${loc%.UTF-8}\.?utf-?8$"; then
         if [ -f "$GEN" ]; then
             sed -i "s/^#\s*${loc} UTF-8/${loc} UTF-8/" "$GEN" 2>/dev/null

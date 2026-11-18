@@ -1,14 +1,6 @@
 import QtQuick 2.15
 
-// Экран входа в стиле Panacea: размытые обои системы, капсула-остров с
-// полем пароля, выбор сессии и кнопки питания. Тот же язык форм, что у
-// пилюли и локскрина.
 //
-// Напрямую из ~/ обои не читаются: greeter работает от пользователя sddm,
-// а домашний каталог закрыт (drwx------). Поэтому switch_theme.sh при
-// каждой смене темы кладёт готовую размытую копию текущих обоев в
-// /var/lib/panacea, откуда greeter её и берёт. Нет файла — остаётся
-// прежний градиент.
 Rectangle {
     id: root
     width: 1920
@@ -16,53 +8,31 @@ Rectangle {
     color: "#050506"
 
     readonly property string fontFam: "JetBrainsMono Nerd Font"
-    // Акцент текущей темы, положенный рядом с обоями. Значение по умолчанию
-    // остаётся, пока файла нет — например до первой смены темы.
     //
-    // Забирается именно Loader'ом: Process в greeter'е недоступен, а XHR к
-    // file:// Qt 6 молча блокирует без QML_XHR_ALLOW_FILE_READ, которую
-    // greeter'у не выставить. Загрузка крошечного QML-фрагмента работает.
     Loader {
         id: accentLoader
         source: "file:///var/lib/panacea/accent.qml"
         asynchronous: false
     }
-    // Палитру пишет сама оболочка при смене темы — она одна знает, какая
-    // тема выбрана. Значения читаем по одному и с запасными: файл мог
-    // остаться от прежней версии, где в нём был только акцент.
     readonly property color accent:
         accentLoader.item ? accentLoader.item.value : "#c65a47"
 
-    // Язык — оттуда же и тем же способом. Пишет его сама пилюля, когда
-    // язык меняют в настройках (SUPER + I): экран входа не должен говорить
-    // по-русски, если вся остальная система переключена на английский.
     Loader {
         id: localeLoader
         source: "file:///var/lib/panacea/locale.qml"
         asynchronous: false
     }
-    // По умолчанию английский — как и у пилюли, пока файла ещё нет.
-    // Ключ — русский текст, как в пилюле: исходник остаётся читаемым, а
-    // словарь нужен только для английского.
-    readonly property var dictEn: ({
-        "Пароль": "Password",
-        "Неверный пароль": "Wrong password",
-        "Сон": "Sleep",
-        "Перезагрузка": "Restart",
-        "Выключить": "Shut down"
-    })
     readonly property var dictTr: ({
-        "Пароль": "Parola",
-        "Неверный пароль": "Yanlış parola",
-        "Сон": "Uyku",
-        "Перезагрузка": "Yeniden başlat",
-        "Выключить": "Kapat"
+        "Password": "Parola",
+        "Wrong password": "Yanlış parola",
+        "Sleep": "Uyku",
+        "Restart": "Yeniden başlat",
+        "Shut down": "Kapat",
     })
     function tr(k) {
         var language = localeLoader.item ? String(localeLoader.item.lang).split("_")[0] : "en";
-        if (language === "ru") return k;
         if (language === "tr" && dictTr[k] !== undefined) return dictTr[k];
-        return dictEn[k] !== undefined ? dictEn[k] : k;
+        return k;
     }
     readonly property color fg:
         (accentLoader.item && accentLoader.item.fg !== undefined)
@@ -71,12 +41,8 @@ Rectangle {
         (accentLoader.item && accentLoader.item.muted !== undefined)
             ? accentLoader.item.muted : "#8a8a8a"
     readonly property color line: Qt.rgba(root.fg.r, root.fg.g, root.fg.b, 0.12)
-    // Красный «неверный пароль» остаётся красным на любой теме: это цвет
-    // отказа, а не украшение.
     readonly property color crit: "#ef4444"
 
-    // Цвет надписи поверх заливки акцентом: на светлом акценте белым по
-    // белому не видно ничего. Яркость по Rec. 709 — так же, как в оболочке.
     function fgOn(c) {
         return (0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b) > 0.6
                ? root.bg : "#ffffff";
@@ -85,13 +51,10 @@ Rectangle {
         (accentLoader.item && accentLoader.item.bg !== undefined)
             ? accentLoader.item.bg : "#050506"
 
-    // Отображаемое имя. Системный логин уходит в sddm.login() как есть.
     readonly property string loginName: userModel.lastUser || "ensi"
     readonly property string nick:
         loginName.charAt(0).toUpperCase() + loginName.slice(1)
 
-    // имена сессий: роли модели у SDDM нумеруются по-разному между версиями,
-    // поэтому забираем их обычным делегатом, а не через data(index, role)
     property var sessionNames: []
 
     Repeater {
@@ -108,8 +71,6 @@ Rectangle {
     property string errorText: ""
     property bool busy: false
 
-    // ------------------------------------------------------------------ фон
-    // Текущие обои системы, размытые заранее скриптом темы.
     Image {
         id: wallpaper
         anchors.fill: parent
@@ -122,17 +83,12 @@ Rectangle {
         Behavior on opacity { NumberAnimation { duration: 320 } }
     }
 
-    // Затемнение поверх обоев: капсула и часы должны читаться и на светлой
-    // картинке. Слабое — темы у нас и без того тёмные, на 0.45 экран входа
-    // превращался в сплошной чёрный и обоев было не видно вовсе.
     Rectangle {
         anchors.fill: parent
         visible: wallpaper.visible
         color: Qt.rgba(0, 0, 0, 0.28)
     }
 
-    // мягкое пятно акцента, чтобы чёрный не был плоским
-    // (запасной фон, когда картинки нет — например на первой загрузке)
     Rectangle {
         anchors.fill: parent
         visible: !wallpaper.visible
@@ -143,7 +99,6 @@ Rectangle {
         }
     }
 
-    // ---------------------------------------------------------------- часы
     Column {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: parent.top
@@ -175,12 +130,10 @@ Rectangle {
         }
     }
 
-    // -------------------------------------------------------------- центр
     Column {
         anchors.centerIn: parent
         spacing: 18
 
-        // аватар: первая буква ника
         Rectangle {
             anchors.horizontalCenter: parent.horizontalCenter
             width: 84; height: 84; radius: 42
@@ -203,7 +156,6 @@ Rectangle {
             font { family: root.fontFam; pixelSize: 20; bold: true }
         }
 
-        // ----------------------------------------------- капсула с паролем
         Rectangle {
             id: capsule
             anchors.horizontalCenter: parent.horizontalCenter
@@ -219,7 +171,6 @@ Rectangle {
                                                   : root.line)
             Behavior on border.color { ColorAnimation { duration: 200 } }
 
-            // тряска при неверном пароле
             transform: Translate { id: shakeT }
             SequentialAnimation {
                 id: shake
@@ -235,9 +186,6 @@ Rectangle {
                 anchors.rightMargin: 16
                 spacing: 12
 
-                // Иконка в собственной коробке: у глифов Material Design
-                // чернила шире advance, и по одному только verticalCenter
-                // замок съезжал наполовину за край строки.
                 Item {
                     width: 26; height: 26
                     anchors.verticalCenter: parent.verticalCenter
@@ -251,12 +199,7 @@ Rectangle {
                         font { family: root.fontFam; pixelSize: 20 }
                     }
 
-                    // Кружок загрузки нарисован, а не взят из шрифта.
                     //
-                    // Глиф вращался вокруг середины строки, а чернила у него
-                    // сидят не по центру своей коробки — круг выходил кривым
-                    // и вихлял. Дуга же описана вокруг настоящего центра и
-                    // остаётся ровной в любом кадре.
                     Canvas {
                         id: spinner
                         anchors.centerIn: parent
@@ -273,15 +216,12 @@ Rectangle {
                             var ctx = getContext("2d");
                             ctx.reset();
                             var r = width / 2 - 2;
-                            // подложка — всё кольцо, чтобы дуга не висела в
-                            // пустоте и было видно, сколько ей ещё идти
                             ctx.beginPath();
                             ctx.arc(width / 2, height / 2, r, 0, Math.PI * 2);
                             ctx.lineWidth = 2;
                             ctx.strokeStyle = Qt.rgba(spinner.tint.r, spinner.tint.g,
                                                       spinner.tint.b, 0.22);
                             ctx.stroke();
-                            // сама дуга: три четверти круга
                             ctx.beginPath();
                             ctx.arc(width / 2, height / 2, r,
                                     spinner.angle, spinner.angle + Math.PI * 1.5);
@@ -320,13 +260,12 @@ Rectangle {
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
                         visible: password.text.length === 0
-                        text: root.errorText.length ? root.errorText : root.tr("Пароль")
+                        text: root.errorText.length ? root.errorText : root.tr("Password")
                         color: root.errorText.length ? root.crit : Qt.rgba(1, 1, 1, 0.32)
                         font { family: root.fontFam; pixelSize: 15 }
                     }
                 }
 
-                // кнопка входа
                 Rectangle {
                     anchors.verticalCenter: parent.verticalCenter
                     width: 40; height: 40; radius: 20
@@ -336,9 +275,6 @@ Rectangle {
                     Text {
                         anchors.centerIn: parent
                         text: String.fromCodePoint(0xF0142)
-                        // Кружок налит акцентом, а он на чёрно-белой теме
-                        // белый — белая стрелка на нём пропадала целиком, и
-                        // кнопка выглядела пустым белым пятном.
                         color: password.text.length ? root.fgOn(root.accent) : root.muted
                         font { family: root.fontFam; pixelSize: 16 }
                     }
@@ -351,7 +287,6 @@ Rectangle {
             }
         }
 
-        // ------------------------------------------------- выбор сессии (WM)
         Rectangle {
             id: sessionBtn
             anchors.horizontalCenter: parent.horizontalCenter
@@ -400,16 +335,10 @@ Rectangle {
                 onClicked: sessionList.visible = !sessionList.visible
             }
 
-            // список доступных оконных менеджеров
             Rectangle {
                 id: sessionList
                 visible: false
                 width: 260
-                // Высота по числу строк самого списка, а не по
-                // sessionModel.rowCount(): rowCount у QAbstractItemModel не
-                // помечен Q_INVOKABLE, и в Qt 6 вызов из QML бросает
-                // TypeError — привязка обрывалась, список оставался нулевой
-                // высоты, и выбрать сеанс было нечем.
                 height: Math.min(sessionView.count, 6) * 34 + 12
                 radius: 16
                 color: Qt.rgba(0.04, 0.04, 0.05, 0.97)
@@ -472,7 +401,6 @@ Rectangle {
         }
     }
 
-    // ------------------------------------------------------------- питание
     Row {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
@@ -481,20 +409,13 @@ Rectangle {
 
         Repeater {
             model: [
-                // Сон рисуется буквами, как в меню питания оболочки: у месяца
-                // в Nerd Font нет пары к остальным — он про ночь, а не про
-                // сон, и рядом с перезагрузкой и выключением читался чужим.
-                { glyph: "", sleep: true, tip: root.tr("Сон"),          act: "suspend" },
-                { glyph: String.fromCodePoint(0xF0709), tip: root.tr("Перезагрузка"), act: "reboot"  },
-                { glyph: String.fromCodePoint(0xF0425), tip: root.tr("Выключить"),    act: "power"   }
+                { glyph: "", sleep: true, tip: root.tr("Sleep"),          act: "suspend" },
+                { glyph: String.fromCodePoint(0xF0709), tip: root.tr("Restart"), act: "reboot"  },
+                { glyph: String.fromCodePoint(0xF0425), tip: root.tr("Shut down"),    act: "power"   }
             ]
 
             Rectangle {
                 width: 46; height: 46; radius: 23
-                // Подложка и обводка заметнее прежних: на чёрном фоне
-                // пятипроцентная заливка с двенадцатипроцентной рамкой
-                // читалась как пустое место, и три кнопки внизу экрана
-                // попросту не находились глазом.
                 color: pwrMa.containsMouse ? Qt.rgba(1, 1, 1, 0.18)
                                            : Qt.rgba(1, 1, 1, 0.09)
                 border.color: pwrMa.containsMouse
@@ -506,9 +427,6 @@ Rectangle {
                 scale: pwrMa.pressed ? 0.92 : 1.0
                 Behavior on scale { NumberAnimation { duration: 130 } }
 
-                // Три «z» треугольником — тот же рисунок, что и в меню
-                // питания оболочки: маленькая сверху по центру, большая ниже
-                // слева, средняя справа.
                 Item {
                     anchors.centerIn: parent
                     width: 26; height: 26
@@ -540,9 +458,6 @@ Rectangle {
                     anchors.centerIn: parent
                     visible: modelData.sleep !== true
                     text: modelData.glyph
-                    // Значок в полную яркость и без наведения: приглушённым
-                    // он сливался с подложкой. Наведение теперь показывает
-                    // сама кнопка, а не пропажа её содержимого.
                     color: root.fg
                     opacity: pwrMa.containsMouse ? 1 : 0.75
                     Behavior on opacity { NumberAnimation { duration: 150 } }
@@ -565,12 +480,7 @@ Rectangle {
         }
     }
 
-    // Раскладка клавиатуры — мелочь, но без неё легко ввести пароль не в той.
     //
-    // С перелистыванием, а не подменой буквы: раскладку переключают вслепую,
-    // уже начав набирать, и подтверждение нужно заметить краем глаза.
-    // Неподвижная надпись меняется незаметно — а цена незамеченной смены
-    // здесь целая неудачная попытка входа.
     Item {
         id: kbBox
         anchors.right: parent.right
@@ -580,9 +490,6 @@ Rectangle {
         height: kbText.implicitHeight
         clip: true
 
-        // Индекс проверяем отдельно от длины: на машине без настроенных
-        // раскладок currentLayout приходит равным -1, и обращение по нему
-        // роняло привязку целиком, унося с собой и надпись, и её анимацию.
         readonly property string value: {
             var l = keyboard.layouts;
             if (!l || l.length === 0) return "";
@@ -615,7 +522,6 @@ Rectangle {
         }
     }
 
-    // --------------------------------------------------------------- логин
     function doLogin() {
         if (root.busy || password.text.length === 0) return;
         root.errorText = "";
@@ -632,7 +538,7 @@ Rectangle {
         }
         function onLoginFailed() {
             root.busy = false;
-            root.errorText = root.tr("Неверный пароль");
+            root.errorText = root.tr("Wrong password");
             password.text = "";
             shake.restart();
             password.forceActiveFocus();
