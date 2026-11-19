@@ -1,13 +1,13 @@
 return {
-    gaps_in = 5,
-    gaps_out = 5,
+    gaps_in = 0,
+    gaps_out = 0,
     border_size = 1,
     -- Active window border. The red end of the former gradient crept into the
     -- frame as a stripe under the island and clashed with the black and white
     -- shell; here it marked nothing, it was simply a colour.
     active_border = { colors = { "rgba(ffffffff)","rgba(8a8a8aff)" }, angle = 45 },
     inactive_border = "rgba(2a2a2aaa)",
-    rounding = 12,
+    rounding = 8,
     rounding_power = 4.0,
     active_opacity = 1.0,
     inactive_opacity = 0.90,

@@ -56,6 +56,14 @@ tooling; `UPSTREAM` and `LICENSE` stay for attribution.
     `binds_data.lua` aborts the whole config with a dump of every search path.
     Changed to `pcall(require, "lua.binds_data")`, matching `monitors.lua`,
     `input.lua` and `windowrules.lua`.
+12. `hypr/theme.lua` uses `gaps_in = 0`, `gaps_out = 0`, `rounding = 8`,
+    matching OpenRiot: flush tiled windows, rounded corners, and a 1px border
+    on every window. Upstream used 5/5 and rounding 12.
+13. `hypr/lua/windowrules.lua` drops the `no-gaps-wtv1` rule, which zeroed
+    `border_size` and `rounding` on any workspace with exactly one tiled
+    window. That made a lone window borderless, which is the opposite of
+    OpenRiot's `default_border pixel 1` with `smart_gaps off`. The `no-gaps-f1`
+    rule stays: true fullscreen should have neither border nor rounding.
 
 ## Not yet changed
 

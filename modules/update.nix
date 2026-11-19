@@ -13,6 +13,7 @@ let
       pkgs.jq
       pkgs.nix
       pkgs.coreutils
+      pkgs.rsync
     ]}:$PATH
 
     dir="${statusDir}"
@@ -43,12 +44,21 @@ let
 
       apply)
         old=$(installed_rev)
-        cd /etc/nixriot
-        git pull --rebase --autostash >/dev/null 2>&1 || true
-        nix flake update
+
+        tmp="$(mktemp -d)"
+        trap 'rm -rf "$tmp"' EXIT
+        git clone --quiet "$repo" "$tmp"
+        rev="$(git -C "$tmp" rev-parse HEAD)"
+        rsync -a --delete --exclude .git \
+          --exclude hosts/installed/local.nix \
+          --exclude hosts/installed/hardware-configuration.nix \
+          "$tmp/" /etc/nixriot/
+        printf '%s\n' "$rev" > /etc/nixriot-revision
+
         nixos-rebuild switch --flake /etc/nixriot#installed
-        if [ -n "$old" ] && [ "$old" != unknown ] && git rev-parse --verify --quiet "$old" >/dev/null 2>&1; then
-          git log --pretty=format:'%s' "$old..HEAD" > "$notes" 2>/dev/null || true
+
+        if [ -n "$old" ] && [ "$old" != unknown ] && git -C "$tmp" rev-parse --verify --quiet "$old" >/dev/null 2>&1; then
+          git -C "$tmp" log --pretty=format:'%s' "$old..HEAD" > "$notes" 2>/dev/null || true
           chmod 644 "$notes" 2>/dev/null || true
         fi
         ;;

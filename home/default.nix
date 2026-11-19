@@ -7,6 +7,7 @@
     ./xdg.nix
     ./gtk.nix
     ./panacea.nix
+    ./launcher.nix
   ];
 
   home.username = nixriotUser;

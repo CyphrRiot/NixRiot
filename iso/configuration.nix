@@ -1,73 +1,83 @@
-{ modulesPath, lib, pkgs, inputs, installedSystem, ... }:
+{ modulesPath, lib, pkgs, inputs, ... }:
 let
   nixriot-install = import ../installer { inherit pkgs; };
+
+  installerSession = (pkgs.writeShellScriptBin "nixriot-installer-session" ''
+    if [ "$(tty 2>/dev/null)" != "/dev/tty1" ]; then
+      exec ${pkgs.bashInteractive}/bin/bash -l
+    fi
+    /run/wrappers/bin/sudo ${nixriot-install}/bin/nixriot-install
+    status=$?
+    echo
+    echo "The installer exited with status $status without rebooting."
+    echo "Dropping to a shell."
+    exec ${pkgs.bashInteractive}/bin/bash -l
+  '') // {
+    shellPath = "/bin/nixriot-installer-session";
+  };
 in
 {
   imports = [
     "${modulesPath}/installer/cd-dvd/installation-cd-base.nix"
     ../modules/nixriot.nix
-    inputs.home-manager.nixosModules.home-manager
   ];
 
-  # Boot straight into the NixRiot desktop. The live user is `nixos`.
-  # The application set and OCR are left out: they cost gigabytes and the
-  # installer image only needs the desktop and the installer.
   nixriot = {
     enable = true;
     user = "nixos";
-    desktop.enable = true;
+    desktop.enable = false;
     apps = false;
     ocr = false;
   };
 
-  home-manager.useGlobalPkgs = true;
-  home-manager.useUserPackages = true;
-  home-manager.extraSpecialArgs = {
-    inherit inputs;
-    panaceaSrc = ../panacea;
-    nixriotUser = "nixos";
-    nixriotApps = false;
-  };
-  home-manager.users.nixos = { lib, ... }: {
-    imports = [ ../home ];
-
-    # Open the installer in a terminal once Panacea has laid out its config.
-    # Hyprland reads the Lua config here, so the autostart goes in the Lua
-    # module (custom/autostart.lua), not custom/execs.conf.
-    home.activation.nixriotLiveInstaller =
-      lib.hm.dag.entryAfter [ "panaceaConfig" ] ''
-        run mkdir -p "$HOME/.config/hypr/custom"
-        run cat > "$HOME/.config/hypr/custom/autostart.lua" <<'NIXRIOT_LUA'
-        hl.on("hyprland.start", function()
-          hl.exec_cmd("foot -e sh -c 'sudo /run/current-system/sw/bin/nixriot-install; echo; echo Press Enter to close; read x'")
-        end)
-        NIXRIOT_LUA
-      '';
+  users.users.nixos = {
+    shell = installerSession;
+    extraGroups = [
+      "wheel"
+      "networkmanager"
+      "video"
+      "audio"
+      "input"
+      "uinput"
+    ];
   };
 
-  users.users.nixos.extraGroups = [
-    "wheel"
-    "networkmanager"
-    "video"
-    "audio"
-    "input"
-    "uinput"
-  ];
-
-  services.displayManager.autoLogin = {
-    enable = true;
-    user = "nixos";
-  };
+  boot.kernelParams = lib.mkForce [ "console=tty0" "console=ttyS0,115200n8" ];
+  boot.consoleLogLevel = lib.mkForce 7;
 
   environment.etc."nixriot".source = lib.cleanSource ../.;
 
-  # Offline install: carry the whole target system closure in the ISO store, so
-  # nixos-install needs no network. The flake inputs come along too.
+  # Netinstall with a head start: the flake inputs are carried so the flake
+  # evaluates offline, and the heaviest parts of the installed system are
+  # pre-seeded so nixos-install downloads less. Anything not listed here comes
+  # from cache.nixos.org. The machine inherits this flake's nixpkgs pin, so the
+  # pre-seeded store paths are byte-identical to the ones the install wants.
   isoImage.storeContents = [
-    installedSystem
     inputs.nixpkgs.outPath
     inputs.home-manager.outPath
     inputs.nixos-generators.outPath
+
+    pkgs.mesa
+    pkgs.firefox
+    pkgs.qt6.qtdeclarative
+    pkgs.qt6.qtmultimedia
+    pkgs.helix
+    pkgs.gvfs
+    pkgs.hyprland
+    pkgs.quickshell
+    pkgs.transmission_4-gtk
+    pkgs.mpv
+    pkgs.gurk-rs
+    pkgs.rclone
+    pkgs.restic
+    pkgs.zathura
+    pkgs.gnome-text-editor
+    pkgs.foot
+    pkgs.fish
+    pkgs.git
+    pkgs.noto-fonts-cjk-sans
+    pkgs.kora-icon-theme
+    pkgs.bibata-cursors
   ];
 
   # Better ratio than zstd -19; slower build.
@@ -85,6 +95,5 @@ in
     nixriot-install
   ];
 
-  # Branding and quiet boot come from modules/nixriot.nix.
   boot.loader.grub.memtest86.enable = lib.mkForce false;
 }

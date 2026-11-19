@@ -66,8 +66,8 @@ NixRiot/
     apps/
       shell.nix              # fish, starship, zoxide, ripgrep, btop
       editors.nix            # Helix, gnome-text-editor, Crush
-      media.nix              # mpv, mpd, rmpc, transmission, yt-dlp
-      office.nix             # LibreOffice, zathura, Firefox
+      media.nix              # mpv, Lollypop, transmission
+      office.nix             # AbiWord, Gnumeric, zathura, Firefox
       games.nix              # optional curated game set (off by default)
     crypto/
       monero.nix             # monero-gui
@@ -137,10 +137,10 @@ declaratively. "Reuse" means the existing config or asset is copied.
 | Bitcoin Core | **Port** | nixpkgs `bitcoind`, `bitcoin` |
 | WireGuard | **Port** | `networking.wireguard` |
 | Transmission | **Port** | nixpkgs `transmission_4-gtk` |
-| mpv, mpd, rmpc | **Port** | nixpkgs |
+| mpv, Lollypop | **Port** | nixpkgs |
 | Proton Drive sync | **Port** | `rclone` systemd user timer |
 | Signal (gurk) | **Port** | nixpkgs `gurk-rs` |
-| LibreOffice, Firefox | **Port** | nixpkgs |
+| AbiWord, Gnumeric, Firefox | **Port** | nixpkgs |
 | Backup and restore | **Port** | `restic` |
 | Disk manager | **Port** | `gnome-disks` or `gparted` |
 | MAC randomization | **Port** | NetworkManager setting |
@@ -190,8 +190,10 @@ Ordered by priority.
   unit names. The Home Manager port is the largest single work item.
 - **Quickshell and Hyprland versions must match.** Panacea tracks Hyprland
   closely. NixRiot must pin both and test the pair.
-- **The ISO is large.** A graphical live image plus Panacea assets will exceed
-  the stock 3.9 GB. Budget for a 5 to 6 GB USB.
+- **The ISO is smaller than stock.** The live image uses `installation-cd-base`
+  with `apps = false` and `ocr = false`, so it ships the desktop and installer
+  but not the app set. The built image measures 2.56 GiB (2.75 GB); a 4 GB USB
+  is enough. Re-measure if the app set or OCR is added to the live image.
 
 ## Non-goals
 

@@ -17,10 +17,12 @@ pkgs.writeScriptBin "nixriot-install" ''
     ]}:$PATH
 
   LOG=/tmp/nixriot-install.log
-  stage=/tmp/nixriot-stage
-  repo="https://github.com/CyphrRiot/NixRiot"
+  keyfile=""
+
+  cleanup() { if [ -n "$keyfile" ]; then rm -f "$keyfile"; fi; }
 
   exec > >(tee -a "$LOG") 2>&1
+  trap 'cleanup' EXIT
   trap 'echo; echo "Installer stopped at line $LINENO."; echo "Log: $LOG" >&2' ERR
 
   if [ "$(id -u)" -ne 0 ]; then
@@ -28,74 +30,99 @@ pkgs.writeScriptBin "nixriot-install" ''
     exit 1
   fi
 
-  echo "NixRiot installer. Log: $LOG"
-  echo
+  dmesg -n 1 2>/dev/null || true
 
-  while :; do
-    read -r -p "Username for the desktop user: " user
+  noninteractive=0
+  if [ -n "''${NIXRIOT_DISK:-}" ]; then
+    noninteractive=1
+    [ -n "''${NIXRIOT_USER:-}" ] || { echo "NIXRIOT_DISK is set but NIXRIOT_USER is not." >&2; exit 1; }
+    [ -n "''${NIXRIOT_PASSPHRASE:-}" ] || { echo "NIXRIOT_DISK is set but NIXRIOT_PASSPHRASE is not." >&2; exit 1; }
+    [ -n "''${NIXRIOT_PASSWORD:-}" ] || { echo "NIXRIOT_DISK is set but NIXRIOT_PASSWORD is not." >&2; exit 1; }
+  fi
+
+  if [ -n "''${NIXRIOT_USER:-}" ]; then
+    user="$NIXRIOT_USER"
     case "$user" in
-      ""|root)
-        echo "Enter a username." >&2
-        continue
-        ;;
-      *[!a-z0-9_-]*|[0-9_-]*)
-        echo "Use lowercase letters, digits, underscore or hyphen, not starting with a digit or underscore." >&2
-        continue
+      root|*[!a-z0-9_-]*|[0-9_-]*)
+        echo "Invalid NIXRIOT_USER: $user" >&2
+        exit 1
         ;;
     esac
-    break
-  done
-
-  # Stage the tree and check the network BEFORE touching any disk, so a
-  # failure here costs nothing.
-  if [ -n "''${NIXRIOT_FLAKE:-}" ]; then
-    flake_ref="$NIXRIOT_FLAKE"
-    echo "Using the flake at $flake_ref"
   else
-    echo "Staging the install tree in $stage ..."
-    rm -rf "$stage"
-    mkdir -p "$stage"
+    while :; do
+      read -r -p "Username for the desktop user: " user
+      case "$user" in
+        ""|root)
+          echo "Enter a username." >&2
+          continue
+          ;;
+        *[!a-z0-9_-]*|[0-9_-]*)
+          echo "Use lowercase letters, digits, underscore or hyphen, not starting with a digit or underscore." >&2
+          continue
+          ;;
+      esac
+      break
+    done
+  fi
 
-    if [ "''${NIXRIOT_USE_REPO:-0}" = "1" ] && git clone --depth 1 "$repo" "$stage" >/dev/null 2>&1; then
-      :
-    else
-      src=$(readlink -f /etc/nixriot)
-      cp -rL "$src/." "$stage/"
-      chmod -R u+w "$stage"
-      git -C "$stage" init -q
-      git -C "$stage" remote add origin "$repo" 2>/dev/null || true
-      git -C "$stage" add -A
-      git -C "$stage" -c user.name=nixriot -c user.email=nixriot@localhost \
-        commit -q -m "image snapshot" >/dev/null
-    fi
-
-    printf '{\n  nixriotUser = "%s";\n}\n' "$user" > "$stage/hosts/installed/local.nix"
-    git -C "$stage" add hosts/installed/local.nix
-    git -C "$stage" -c user.name=nixriot -c user.email=nixriot@localhost \
-      commit -q -m "local: desktop user" >/dev/null 2>&1 || true
+  if [ -n "''${NIXRIOT_PASSWORD:-}" ]; then
+    user_pass="$NIXRIOT_PASSWORD"
+  else
+    while :; do
+      read -r -s -p "Password for '$user': " p1
+      echo
+      read -r -s -p "Confirm password: " p2
+      echo
+      if [ -z "$p1" ]; then
+        echo "Password cannot be empty." >&2
+        continue
+      fi
+      if [ "$p1" != "$p2" ]; then
+        echo "Passwords do not match." >&2
+        continue
+      fi
+      user_pass="$p1"
+      break
+    done
   fi
 
   if [ "''${NIXRIOT_OFFLINE:-0}" != "1" ]; then
-    if curl -fsS --max-time 15 -o /dev/null https://cache.nixos.org/nix-cache-info; then
-      :
-    else
-      echo "No network to cache.nixos.org; continuing, the image is offline-capable." >&2
-    fi
+    while ! curl -fsS --max-time 10 -o /dev/null https://cache.nixos.org/nix-cache-info; do
+      echo
+      echo "No network. NixRiot downloads the system from cache.nixos.org during"
+      echo "the install, so it needs a connection before it touches the disk."
+      echo
+      echo "  Enter  retry"
+      echo "  w      configure Wi-Fi / network (nmtui)"
+      echo "  skip   install anyway (only if the store already has everything)"
+      read -r answer
+      case "$answer" in
+        w|W) nmtui-connect </dev/tty >/dev/tty 2>&1 || true ;;
+        skip|SKIP) break ;;
+        *) : ;;
+      esac
+    done
   fi
 
   echo
-  echo "Whole disks:"
-  lsblk -dpno NAME,SIZE,MODEL,TYPE | grep -w disk || true
-  echo
-  read -r -p "Target disk (e.g. /dev/nvme0n1 or /dev/sda): " disk
+  if [ "$noninteractive" = 1 ]; then
+    disk="$NIXRIOT_DISK"
+  else
+    echo "Whole disks:"
+    lsblk -dpno NAME,SIZE,MODEL,TYPE | grep -w disk || true
+    echo
+    read -r -p "Target disk (e.g. /dev/nvme0n1 or /dev/sda): " disk
+  fi
 
   if [ ! -b "$disk" ] || [ "$(lsblk -dno TYPE "$disk")" != "disk" ]; then
     echo "Refusing: $disk is not a whole block device." >&2
     exit 1
   fi
 
-  read -r -p "This ERASES ALL DATA on $disk. Type ERASE to continue: " confirm
-  [ "$confirm" = "ERASE" ] || { echo "Aborted."; exit 1; }
+  if [ "$noninteractive" = 0 ]; then
+    read -r -p "This ERASES ALL DATA on $disk. Type ERASE to continue: " confirm
+    [ "$confirm" = "ERASE" ] || { echo "Aborted."; exit 1; }
+  fi
 
   umount -R /mnt >/dev/null 2>&1 || true
 
@@ -114,19 +141,68 @@ pkgs.writeScriptBin "nixriot-install" ''
     exit 1
   fi
 
-  mkfs.fat -F 32 -n BOOT "$esp"
+  if [ "$noninteractive" = 1 ]; then
+    mkfs.fat -F 32 -n BOOT -I "$esp"
+  else
+    mkfs.fat -F 32 -n BOOT "$esp"
+  fi
 
-  cryptsetup luksFormat --type luks2 --label nixos "$root"
-  cryptsetup open "$root" cryptroot
+  if [ -n "''${NIXRIOT_PASSPHRASE:-}" ]; then
+    luks_pass="$NIXRIOT_PASSPHRASE"
+  else
+    while :; do
+      read -r -s -p "Disk passphrase for $root (you type this at every boot): " l1
+      echo
+      read -r -s -p "Confirm passphrase: " l2
+      echo
+      if [ -z "$l1" ]; then
+        echo "Passphrase cannot be empty." >&2
+        continue
+      fi
+      if [ "$l1" != "$l2" ]; then
+        echo "Passphrases do not match." >&2
+        continue
+      fi
+      luks_pass="$l1"
+      break
+    done
+  fi
+
+  keyfile=$(mktemp)
+  chmod 600 "$keyfile"
+  printf '%s' "$luks_pass" > "$keyfile"
+  luks_opts=(--batch-mode --key-file "$keyfile")
+
+  echo
+  echo "Encrypting $root (LUKS2) ..."
+  cryptsetup luksFormat --type luks2 --label nixos "''${luks_opts[@]}" "$root"
+
+  echo "Unlocking the encrypted volume ..."
+  cryptsetup open "''${luks_opts[@]}" "$root" cryptroot
+
+  echo "Creating the root filesystem ..."
   mkfs.ext4 -F -L nixos-root /dev/mapper/cryptroot
 
-  mkdir -p /mnt /mnt/boot
+  mkdir -p /mnt
   mount /dev/mapper/cryptroot /mnt
-  mount "$esp" /mnt/boot
+  mkdir -p /mnt/boot
+  mount -o fmask=0077,dmask=0077 "$esp" /mnt/boot
 
   if [ -z "''${NIXRIOT_FLAKE:-}" ]; then
-    mkdir -p /mnt/etc
-    cp -a "$stage" /mnt/etc/nixriot
+    echo
+    echo "Installing the NixRiot project into /mnt/etc/nixriot ..."
+    mkdir -p /mnt/etc/nixriot
+    cp -rL "$(readlink -f /etc/nixriot)/." /mnt/etc/nixriot/
+    chmod -R u+w /mnt/etc/nixriot
+
+    cp /etc/nixriot-image-revision /mnt/etc/nixriot-revision 2>/dev/null \
+      || echo unknown > /mnt/etc/nixriot-revision
+
+    echo "Detecting hardware ..."
+    nixos-generate-config --root /mnt --dir /mnt/etc/nixriot/hosts/installed
+
+    printf '{\n  nixriotUser = "%s";\n}\n' "$user" > /mnt/etc/nixriot/hosts/installed/local.nix
+
     flake_ref="/mnt/etc/nixriot#installed"
   fi
 
@@ -140,9 +216,18 @@ pkgs.writeScriptBin "nixriot-install" ''
   fi
 
   echo
-  echo "Set a password for the '$user' user:"
-  nixos-enter --root /mnt --command "passwd $user"
+  printf '%s:%s\n' "$user" "$user_pass" | nixos-enter --root /mnt --command "chpasswd"
 
   echo
-  echo "NixRiot installed. Reboot into it."
+  echo "NixRiot installed."
+  sync
+  umount -R /mnt 2>/dev/null || true
+  cryptsetup close cryptroot 2>/dev/null || true
+
+  if [ "''${NIXRIOT_REBOOT:-1}" = "1" ]; then
+    echo "Rebooting into the installed system ..."
+    systemctl reboot
+  else
+    echo "Reboot into it when ready."
+  fi
 ''

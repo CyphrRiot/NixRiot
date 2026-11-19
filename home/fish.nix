@@ -165,7 +165,7 @@
     alias la='lsd -la'
 
     # Music
-    alias music='rmpc'
+    alias music='lollypop'
 
     # Disk usage -- top 10 largest items by size
     function dum

@@ -1,4 +1,4 @@
-{ ... }:
+{ pkgs, ... }:
 {
   xdg.enable = true;
 
@@ -23,6 +23,24 @@
       "x-scheme-handler/https" = "firefox.desktop";
       "application/pdf" = "org.pwmt.zathura.desktop";
       "inode/directory" = "thunar.desktop";
+
+      "image/png" = "panacea-media.desktop";
+      "image/jpeg" = "panacea-media.desktop";
+      "image/gif" = "panacea-media.desktop";
+      "image/webp" = "panacea-media.desktop";
+      "image/bmp" = "panacea-media.desktop";
+      "image/tiff" = "panacea-media.desktop";
+      "image/svg+xml" = "panacea-media.desktop";
+
+      "video/mp4" = "mpv.desktop";
+      "video/webm" = "mpv.desktop";
+      "video/x-matroska" = "mpv.desktop";
+      "video/quicktime" = "mpv.desktop";
     };
+  };
+
+  programs.mpv = {
+    enable = true;
+    scripts = [ pkgs.mpvScripts.mpris ];
   };
 }

@@ -33,7 +33,7 @@ hl.bind("SUPER + O", hl.dsp.exec_cmd("gnome-text-editor"))
 hl.bind("SUPER + C", hl.dsp.exec_cmd("foot -e crush"))
 
 -- Music player (OpenRiot: SUPER+Shift+K)
-hl.bind("SUPER + SHIFT + K", hl.dsp.exec_cmd("foot -e rmpc"))
+hl.bind("SUPER + SHIFT + K", hl.dsp.exec_cmd("lollypop"))
 
 -- Clipboard history (OpenRiot: SUPER+Shift+V; Panacea: SUPER+V)
 hl.bind("SUPER + SHIFT + V", pill("clipboard"))

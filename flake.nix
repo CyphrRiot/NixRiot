@@ -71,8 +71,6 @@
           specialArgs = {
             inherit self inputs;
             panaceaSrc = ./panacea;
-            installedSystem =
-              self.nixosConfigurations.installed.config.system.build.toplevel;
           };
           modules = [
             ./iso/configuration.nix

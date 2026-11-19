@@ -1,4 +1,9 @@
 { config, lib, pkgs, ... }:
+let
+  qmlImportPath = lib.makeSearchPath "lib/qt-6/qml" [
+    pkgs.qt6.qtmultimedia
+  ];
+in
 {
   config = lib.mkIf (config.nixriot.enable && config.nixriot.desktop.enable) {
     programs.hyprland.enable = true;
@@ -16,6 +21,7 @@
 
     security.polkit.enable = true;
     security.rtkit.enable = true;
+    security.pam.services.swaylock = { };
     services.gnome.gnome-keyring.enable = true;
     programs.dconf.enable = true;
 
@@ -40,7 +46,11 @@
       gui.enable = true;
     };
 
-    environment.sessionVariables.NIXOS_OZONE_WL = "1";
+    environment.sessionVariables = {
+      NIXOS_OZONE_WL = "1";
+      QML2_IMPORT_PATH = qmlImportPath;
+      QML_IMPORT_PATH = qmlImportPath;
+    };
 
     environment.systemPackages = with pkgs; [
       quickshell
@@ -80,7 +90,6 @@
       openssl
       python3
 
-      qt6.qtwebengine
       qt6.qtmultimedia
       qt6.qtdeclarative
 

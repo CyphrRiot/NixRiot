@@ -7,6 +7,7 @@ in
     ./desktop/panacea.nix
     ./desktop/theme.nix
     ./desktop/sddm.nix
+    ./desktop/plymouth.nix
     ./update.nix
     ./apps/shell.nix
     ./apps/editors.nix
@@ -74,8 +75,27 @@ in
       type = lib.types.bool;
       default = false;
       description = ''
-        Install LibreOffice (about 1.5 GB). Off by default; the rest of the
-        office set (zathura, Thunar, file-roller) is always installed.
+        Install the word processor and spreadsheet (AbiWord and Gnumeric). Off
+        by default; the rest of the office set (zathura, Thunar, file-roller)
+        is always installed.
+      '';
+    };
+
+    npu = lib.mkEnableOption "Intel NPU support (driver, firmware, Level Zero)";
+
+    plymouth = lib.mkEnableOption "the NixRiot boot splash (Plymouth)";
+
+    autologin = lib.mkEnableOption "automatic login into the desktop session";
+
+    plymouthLogo = lib.mkOption {
+      type = lib.types.path;
+      default = pkgs.runCommand "nixriot-plymouth-blank-logo" { nativeBuildInputs = [ pkgs.imagemagick ]; } ''
+        magick -size 1x1 xc:none PNG:"$out"
+      '';
+      description = ''
+        PNG drawn as the Plymouth logo on the splash. Defaults to a blank 1x1
+        image so nothing overlays the artwork; point it at a NixRiot logo PNG
+        to show one (transparent background, roughly square).
       '';
     };
 
@@ -114,8 +134,7 @@ in
 
     system.nixos.distroName = "NixRiot";
 
-    boot.kernelParams = [ "quiet" "loglevel=3" "udev.log_level=3" ];
-    boot.consoleLogLevel = 3;
+    boot.consoleLogLevel = 7;
 
     # The graphical-desktop profile turns this on by default; it pulls
     # speech-dispatcher and about 270 MB of mbrola voices.
@@ -128,7 +147,7 @@ in
     hardware.enableAllFirmware = lib.mkForce false;
     hardware.enableRedistributableFirmware = lib.mkForce false;
     hardware.wirelessRegulatoryDatabase = true;
-    hardware.firmware = lib.mkForce [
+    hardware.firmware = lib.mkForce ([
       (pkgs.linux-firmware.overrideAttrs (old: {
         postInstall = (old.postInstall or "") + ''
           rm -rf $out/lib/firmware/qcom \
@@ -153,15 +172,38 @@ in
       pkgs.ipw2200-firmware
       pkgs.rt5677-firmware
       pkgs.zd1211fw
-    ];
+    ] ++ lib.optionals cfg.npu [ pkgs.intel-npu-driver.firmware ]);
+
+    hardware.cpu.intel.npu.enable = cfg.npu;
 
     networking.hostName = cfg.hostName;
     time.timeZone = "UTC";
     i18n.defaultLocale = "en_US.UTF-8";
 
+    users.users.${cfg.user} = lib.mkIf cfg.desktop.enable {
+      isNormalUser = true;
+      group = "users";
+      homeMode = "0750";
+      extraGroups = [
+        "wheel"
+        "networkmanager"
+        "video"
+        "audio"
+        "input"
+        "uinput"
+      ];
+    };
+
+    security.sudo.wheelNeedsPassword = lib.mkIf cfg.desktop.enable true;
+
     nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
-    environment.etc."nixriot-revision".text = self.rev or self.dirtyRev or "unknown";
+    services.displayManager.autoLogin = lib.mkIf cfg.autologin {
+      enable = true;
+      user = cfg.user;
+    };
+
+    environment.etc."nixriot-image-revision".text = self.rev or self.dirtyRev or "unknown";
 
     services.fprintd.enable = lib.mkIf cfg.fingerprint.enable true;
     services.fprintd.enablePam = lib.mkIf cfg.fingerprint.enable cfg.fingerprint.pam;

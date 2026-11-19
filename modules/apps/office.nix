@@ -7,6 +7,6 @@
       thunar
       tumbler
       file-roller
-    ] ++ lib.optionals config.nixriot.office [ libreoffice ];
+    ] ++ lib.optionals config.nixriot.office [ abiword gnumeric ];
   };
 }

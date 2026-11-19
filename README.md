@@ -2,7 +2,7 @@
 
 # NixRiot
 
-## One flake. Complete NixOS desktop. Reproducible by construction.
+## Start a Riot on NixOS.
 
 ![Status](https://img.shields.io/badge/status-pre--release-9ECE6A?labelColor=1a1b26)
 ![Platform](https://img.shields.io/badge/platform-NixOS-9ECE6A?logo=nixos&logoColor=white&labelColor=1a1b26)
@@ -18,20 +18,46 @@
 
 </div>
 
+NixRiot is a small, fast, reproducible desktop, assembled from things we learned
+the hard way.
+
+ArchRiot was the first pass: Arch, an installer, and hand-maintained dotfiles. It
+taught us what the desktop should feel like. Omarchy then covered much of that
+ground, so we stopped rather than duplicate it. What we could not fix on Arch was
+trust: the AUR means running code from strangers, and that is not a defensible
+default for a desktop you have to keep patched. OpenBSD came next and remains the
+Unix we trust most, but hardware support there is narrow, and a modern GPU
+desktop on it is a permanent fight.
+
+NixRiot takes all of that and puts it on a foundation that can be trusted and
+reproduced. One flake. Packages from a pinned nixpkgs. An installer that builds
+the same system it was built from.
+
 A reproducible NixOS desktop with the [Panacea](https://github.com/EnsixD/Panacea)
 shell and the parts of [OpenRiot](https://github.com/CyphrRiot/OpenRiot) that
 make sense on Linux. One flake builds the installer image and the installed
 system, so both stay in step.
 
-Status: **pre-release**. The flake evaluates and the ISO builds. It has not been
-booted on real hardware yet, so treat everything below as untested until you
-have installed it once.
+## Screenshots
+
+The desktop, the launcher, and the power menu, all from the Panacea pill:
+
+![The NixRiot desktop, with the pill collapsed at the top](docs/img/desktop.webp)
+
+![The launcher, searching the curated application list](docs/img/launcher.webp)
+
+![The power menu](docs/img/power.webp)
+
+Status: **pre-release**. The flake evaluates, the ISO builds, and it installs
+and boots in a virtual machine. It has not been installed on real hardware yet,
+so treat the hardware notes below as untested.
 
 Read [docs/Design.md](docs/Design.md) for the reasoning, architecture, and
 roadmap. This file is the manual.
 
 ## Navigate this guide
 
+- [Screenshots](#screenshots)
 - [The usual free software warning](#the-usual-free-software-warning)
 - [What you get](#what-you-get)
 - [Download](#download)
@@ -70,11 +96,11 @@ NixRiot ships no wallet files, no secrets, and no `crypto.toml`. You own those.
   overview, clipboard, notifications, settings, power menu, lock screen.
 - **fish** with starship, plus the OpenRiot aliases and functions.
 - **Helix** (the default editor), Crush, and a plain text editor.
-- **Firefox**, LibreOffice, zathura, Thunar.
-- **Media**: mpv, mpd with rmpc, yt-dlp, optional Transmission.
+- **Firefox**, zathura, Thunar, and AbiWord with Gnumeric when `nixriot.office` is on.
+- **Media**: mpv, Lollypop, optional Transmission.
 - **Crypto** (opt-in): Monero GUI, Bitcoin Core, WireGuard.
-- **Mullvad VPN**: installed and enabled by default, with the GUI in the app
-  launcher and the Panacea VPN panel.
+- **Mullvad VPN**: the daemon and the desktop app are installed and enabled by
+  default, with the GUI in the app launcher and the `mullvad` command line.
 - **Security**: firewall, SSH hardening, sysctl hardening, MAC randomization,
   `restic` and `rclone` for backups.
 - The **NixRiot wallpaper set** (26 WebP images, `00.webp` through `25.webp`).
@@ -87,34 +113,30 @@ NixRiot ships no wallet files, no secrets, and no `crypto.toml`. You own those.
 Grab the latest image and write it to a USB stick. No build tools required.
 
 - **Download page:** [github.com/CyphrRiot/NixRiot/releases/latest](https://github.com/CyphrRiot/NixRiot/releases/latest)
-- **Image:** `nixriot-x86_64.iso` (about 2.5 GB)
+- **Image:** `NixRiot.iso` (about 2 GB)
 
 ```sh
-sudo dd if=nixriot-x86_64.iso of=/dev/sdX bs=4M status=progress oflag=sync
+sudo dd if=NixRiot.iso of=/dev/sdX bs=4M status=progress oflag=sync
 ```
 
-**No release yet?** Two fallbacks:
+It is a network installer: it carries the installer, the project and the biggest
+parts of the desktop, and downloads the rest while it installs. It needs an
+internet connection.
 
-- Boot a stock NixOS graphical ISO and install over it:
-
-  ```sh
-  sudo nix run github:CyphrRiot/NixRiot#installer
-  ```
-
-- Or build the image yourself. See Advanced, at the end of this file.
+Prefer to build the image yourself? See Advanced, at the end of this file.
 
 ---
 
 ## Requirements
 
-- x86_64 machine that boots modern UEFI.
-- A USB stick of at least 4 GB.
+- x86_64 machine that boots UEFI.
+- A USB stick of at least 2 GB.
 - A target disk that can be erased.
-- Network during install, unless you are using an offline image.
+- An internet connection during install.
 
-Installing from the ISO does not require Nix on your machine. The ISO carries
-everything. You only need Nix, with flakes enabled and about 40 GB free, if you
-build the image yourself.
+Installing does not require Nix on your machine: the image provides it. You only
+need Nix, with flakes enabled and about 40 GB free, if you build the image
+yourself.
 
 ---
 
@@ -129,13 +151,11 @@ Intel and AMD drivers use.
 - **CPU:** Intel and AMD x86_64. ARM is not built.
 - **Drivers and firmware:** `hardware.graphics` is enabled, and the live image
   turns on all hardware, so GPU, Wi-Fi and Bluetooth firmware load on their own.
-- **Boot:** UEFI and legacy BIOS, both via systemd-boot and its own installer.
-  Secure Boot must be off (see Download).
+- **Boot:** UEFI only, via systemd-boot. Secure Boot must be off.
 - **Out of scope:** NVIDIA, ARM, and Secure Boot. Fingerprint readers are off by
   default but supported through `fprintd`; see the note below.
-- **Installed systems:** regenerate the hardware config for the machine with
-  `nixos-generate-config` before installing, so the disk and firmware modules
-  are correct.
+- **Installed systems:** the installer generates the hardware configuration for
+  the machine it is run on, so the disk and firmware modules are correct.
 
 ### Fingerprint reader
 
@@ -163,38 +183,38 @@ reader it does not know cannot be made to work.
 ## Install
 
 1. Boot the USB stick (disable Secure Boot first if the firmware refuses it).
-2. It boots straight into the NixRiot desktop and opens the installer in a
-   terminal by itself. The repo for the install lives at `/etc/nixriot`.
-3. If it is not already running, open a terminal (`foot`) and run:
-
-   ```sh
-   sudo nixriot-install
-   ```
-
-4. The command lists the disks it can see. Type the target disk, for example
+2. It comes up on a text console, logs in as `nixos`, and starts the installer by
+   itself.
+3. It asks for a username, then a password for that user. The username uses
+   lowercase letters, digits, underscore or hyphen, and does not start with a
+   digit or underscore.
+4. It checks for a network. If there is none, press `w` to run `nmtui` and
+   connect. The installer waits, and will not touch a disk until it is online.
+5. It lists the disks it can see. Type the target disk, for example
    `/dev/nvme0n1`.
-5. Type `ERASE` to confirm. This is the point of no return.
-6. Enter the LUKS passphrase when `cryptsetup` prompts. You will type this at
-   every boot, so pick something you can remember and write it down somewhere
-   safe.
-7. Choose a username for the desktop user. Use lowercase letters, digits,
-   underscore, or hyphen, and do not start with a digit or underscore. This is
-   the name you log in with; there is no default.
+6. Type `ERASE` to confirm. This is the point of no return.
+7. Enter the LUKS passphrase twice (once to set it, once to confirm). It is
+   reused to unlock the new volume, so there is no third prompt. You will type
+   this at every boot, so pick something you can remember and write it down
+   somewhere safe.
 8. It partitions (512M ESP labeled `BOOT`, the rest as an encrypted `nixos`
    volume), formats, mounts, and runs `nixos-install`.
-9. When `nixos-install` finishes, the installer asks you to set a password for
-   the user you chose. Choose one; there is no default password.
-10. Reboot and remove the USB stick.
+9. When `nixos-install` finishes, it unmounts and reboots into the installed
+   system. Remove the USB stick.
 
-The install builds the target system from the flake, so it needs network the
-first time. Offline installs are on the roadmap, not shipped yet.
+The install builds the target system from the flake and downloads it from
+`cache.nixos.org`, so it needs a network connection. Everything is logged to
+`/tmp/nixriot-install.log`.
 
 ---
 
 ## First boot
 
-The disk passphrase prompt comes first, then SDDM. Log in as the user you chose
-during install, with the password you set. `sudo` asks for the same password.
+The boot splash appears, then the LUKS passphrase prompt, then the session
+starts on its own: NixRiot logs the desktop user in automatically. There is no
+greeter, so the lock screen (`SUPER + L`) is what protects the machine. `sudo`
+asks for the password you set during install.
+
 NixRiot ships no default user or password.
 
 To change or reset your password, log in and run:
@@ -240,7 +260,7 @@ writes overrides that survive updates.
 | `SUPER + SHIFT + E` | Yazi in the terminal |
 | `SUPER + O` | Text editor |
 | `SUPER + C` | Crush |
-| `SUPER + SHIFT + K` | Music player (rmpc) |
+| `SUPER + SHIFT + K` | Music player (Lollypop) |
 | `SUPER + Q` | Close window |
 | `SUPER + W` | Toggle floating |
 | `SUPER + SHIFT + Space` | Float, resize, center |
@@ -290,9 +310,9 @@ full set.
 |---|---|
 | `apps/shell.nix` | fish, starship, zoxide, ripgrep, fd, fzf, btop, fastfetch, lsd, bat, pv, jq, gurk-rs |
 | `apps/editors.nix` | helix, gnome-text-editor, crush, git |
-| `apps/media.nix` | mpv, mpd, rmpc, yt-dlp, ffmpeg, ffmpegthumbnailer, cava, transmission (optional) |
-| `apps/office.nix` | libreoffice, zathura, firefox, thunar, tumbler, file-roller |
-| `desktop/panacea.nix` | hyprland, quickshell, hyprpaper, hyprsunset, hypridle, foot, grim, slurp, wl-clipboard, cliphist, wf-recorder, yazi, swappy, mpvpaper, tesseract, and the rest of the shell's runtime |
+| `apps/media.nix` | mpv, lollypop, ffmpeg, ffmpegthumbnailer, cava, transmission (optional) |
+| `apps/office.nix` | zathura, firefox, thunar, tumbler, file-roller, abiword and gnumeric (optional) |
+| `desktop/panacea.nix` | hyprland, quickshell, hyprpaper, hyprsunset, hypridle, foot, grim, slurp, wl-clipboard, cliphist, wf-recorder, yazi, swappy, mpvpaper, and the rest of the shell's runtime (tesseract with `nixriot.ocr`) |
 | `desktop/theme.nix` | JetBrains Mono Nerd Font, Material Design icons, Noto fonts, Bibata cursors, Kora icons |
 | `crypto/*` | monero-gui, bitcoin and bitcoind, glyphriot, wireguard-tools |
 | `security/*` | restic, rclone, firewall, SSH hardening, sysctl hardening |
@@ -311,7 +331,7 @@ for NixOS.
 | `helix` | `hx` |
 | `signal` | Signal desktop (`gurk`) |
 | `ls`, `ll`, `la` | `lsd`, `lsd -l`, `lsd -la` |
-| `music` | `rmpc` (MPD client) |
+| `music` | `lollypop` |
 | `more` | `more -e` |
 | `dum` | top 10 largest items in the current directory |
 | `!!` | expands to the previous command |
@@ -343,7 +363,7 @@ wallpapers are not shipped.
 
 ## Blockchain
 
-Enable in the host config:
+Enable in `/etc/nixriot/hosts/installed/local.nix`:
 
 ```nix
 nixriot = {
@@ -363,13 +383,24 @@ included, are yours to create and back up; the flake never ships them.
 
 ## VPN
 
-Mullvad VPN is installed and enabled by default. Open the Mullvad app from the
-app launcher, or use the VPN panel in the Panacea pill. The daemon starts at
-boot and the GUI is available in the system menu.
+Mullvad VPN is installed and enabled by default: the daemon starts at boot and
+the desktop app is in the app launcher. The `mullvad` command line works too:
+
+```sh
+sudo mullvad account login <your-16-digit-account>
+sudo mullvad relay set location us nyc
+sudo mullvad connect
+mullvad status
+```
+
+The pill's VPN panel is a status readout: it reports whether a tunnel is up (it
+detects Mullvad's `wg0-mullvad` interface), but connecting and picking a server
+happen in the app.
 
 For a WireGuard config (the OpenRiot workflow), enable `nixriot.wireguard` in
-the host config and put your config in `/etc/wireguard/wg0.conf`. The Panacea
-VPN panel detects `wg0` and reports the tunnel state.
+`/etc/nixriot/hosts/installed/local.nix` and put your config in
+`/etc/wireguard/wg0.conf`. The Panacea VPN panel detects `wg0` and reports the
+tunnel state.
 
 ---
 
@@ -395,24 +426,30 @@ Brave, Chromium, and other browsers are not installed by default.
 
 ## Games
 
-Off by default. To install the curated set, set `nixriot.games = true;` in your
-host config. It pulls supertux, openttd, cataclysm-dda, endless-sky, angband,
-and brogue-ce. It is deliberately a small subset of OpenRiot's list; several
-OpenRiot games are no longer in nixpkgs.
+Off by default. To install the curated set, set `nixriot.games = true;` in
+`/etc/nixriot/hosts/installed/local.nix`. It pulls supertux, openttd,
+cataclysm-dda, endless-sky, angband, and brogue-ce. It is deliberately a small
+subset of OpenRiot's list; several OpenRiot games are no longer in nixpkgs.
 
 ---
 
 ## Updating
 
-The flake is the update path. On an installed system:
+`/etc/nixriot` is a copy of the project, and
+`/etc/nixriot/hosts/installed/local.nix` is yours. An update replaces the
+project and keeps the two machine files (`local.nix` and
+`hardware-configuration.nix`).
+
+From the pill: **Settings → System → Update**. On the command line:
 
 ```sh
 sudo nixos-rebuild switch --flake /etc/nixriot#installed
 ```
 
-To pick up newer packages, update the lock first, from a checkout with network:
+That rebuilds against the pinned inputs. To move the packages forward as well:
 
 ```sh
+cd /etc/nixriot
 nix flake update
 sudo nixos-rebuild switch --flake .#installed
 ```
@@ -423,8 +460,7 @@ Panacea's own updater is disabled on purpose; it would fight the flake.
 
 ## Advanced: build your own image
 
-For a reproducible build of your own, or an air-gapped install, build the ISO
-from source on any machine running Nix with flakes enabled:
+To build the image yourself, on any machine running Nix with flakes enabled:
 
 ```sh
 git clone git@github.com:CyphrRiot/NixRiot.git
@@ -432,7 +468,7 @@ cd NixRiot
 nix build .#iso
 ```
 
-The image lands at `result/iso/nixos-*.iso`. It is a hybrid image, so `dd` it to
+The image lands at `result/iso/NixRiot.iso`. It is a hybrid image, so `dd` it to
 a USB stick as in Download. Building needs about 40 GB of free space and network
 access for the first `nix flake lock`.
 
@@ -443,12 +479,10 @@ access for the first `nix flake lock`.
 - **Notes are not installed.** Panacea's `notes` action points at Obsidian, which
   NixRiot does not ship, so `SUPER + O` is rebound to the text editor. Install
   Obsidian or rebind it from the settings panel.
-- **The greeter does not look like Panacea.** The SDDM theme may need a Qt5/Qt6
-  shim depending on the SDDM version in nixpkgs. The session still works.
 - **The install failed partway.** Re-run `sudo nixriot-install`; it wipes and
   starts over.
-- **No network during install.** The first cut needs network to build the
-  target. Offline installs are not implemented yet.
+- **No network during install.** The installer refuses to touch a disk until
+  `cache.nixos.org` answers. Press `w` at the prompt to run `nmtui`.
 
 ---
 
