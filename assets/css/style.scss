@@ -9,11 +9,10 @@
 :root {
     --nixriot-dark-bg: #0a0a0f;
     --nixriot-darker-bg: #05050a;
-    --nixriot-accent: #c65a47;
-    --nixriot-accent-light: #c65a47;
-    --nixriot-accent-dark: #c65a47;
-    --nixriot-blue: #3b82f6;
-    --nixriot-cyan: #06b6d4;
+    --nixriot-accent: #9a2eef;
+    --nixriot-accent-light: #a855f7;
+    --nixriot-accent-dark: #5e16e6;
+    --nixriot-blue: #1e87f5;
     --nixriot-text: #e5e7eb;
     --nixriot-text-dim: #9ca3af;
     --nixriot-border: #374151;
@@ -30,7 +29,6 @@ body {
     color: var(--nixriot-text) !important;
     font-family:
         "FiraCode Nerd Font",
-        "JetBrains Mono",
         "Fira Code",
         "SF Mono",
         "Monaco",
@@ -48,7 +46,7 @@ body {
     border-radius: 12px;
     backdrop-filter: blur(10px);
     border: 1px solid var(--nixriot-border);
-    box-shadow: 0 8px 32px rgba(158, 206, 106, 0.1);
+    box-shadow: 0 8px 32px rgba(154, 46, 239, 0.1);
     max-width: 1200px;
     margin: 2rem auto;
     padding: 0;
@@ -84,13 +82,13 @@ h6 {
     background: linear-gradient(
         45deg,
         var(--nixriot-accent),
-        var(--nixriot-cyan)
+        var(--nixriot-blue)
     );
     background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     font-weight: 600;
-    font-family: "JetBrains Mono", monospace;
+    font-family: "FiraCode Nerd Font", monospace;
     line-height: 1.5;
     margin-top: 2rem;
     margin-bottom: 1rem;
@@ -143,8 +141,8 @@ a {
 }
 
 a:hover {
-    color: var(--nixriot-cyan) !important;
-    text-shadow: 0 0 8px var(--nixriot-cyan);
+    color: var(--nixriot-blue) !important;
+    text-shadow: 0 0 8px var(--nixriot-blue);
 }
 
 /* Code blocks and inline code */
@@ -154,7 +152,7 @@ code {
     padding: 0.2rem 0.4rem;
     border-radius: 4px;
     border: 1px solid var(--nixriot-border);
-    font-family: "FiraCode Nerd Font", "JetBrains Mono", "Fira Code", monospace;
+    font-family: "FiraCode Nerd Font", "Fira Code", monospace;
     font-size: 16px;
 }
 
@@ -197,7 +195,7 @@ td {
 }
 
 tr:hover td {
-    background: rgba(158, 206, 106, 0.1) !important;
+    background: rgba(154, 46, 239, 0.1) !important;
 }
 
 /* Badges and shields.io images */
@@ -256,7 +254,7 @@ a[href*="install"]:not([href^="#"]) {
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    box-shadow: 0 4px 12px rgba(158, 206, 106, 0.3);
+    box-shadow: 0 4px 12px rgba(154, 46, 239, 0.3);
     transition: all 0.3s ease;
     border: none;
     display: inline-block;
@@ -268,7 +266,7 @@ a[href*="install"]:not([href^="#"]) {
 a[href*="download"]:not([href^="#"]):hover,
 a[href*="install"]:not([href^="#"]):hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(158, 206, 106, 0.4) !important;
+    box-shadow: 0 6px 20px rgba(154, 46, 239, 0.4) !important;
     color: white !important;
 }
 
@@ -325,7 +323,7 @@ footer {
     background: linear-gradient(
         45deg,
         var(--nixriot-accent-light),
-        var(--nixriot-cyan)
+        var(--nixriot-blue)
     );
 }
 
@@ -373,7 +371,7 @@ strong:contains("Important") {
 }
 
 .tooltip:hover {
-    color: var(--nixriot-cyan) !important;
+    color: var(--nixriot-blue) !important;
 }
 
 .tooltip .tooltiptext {
@@ -395,7 +393,7 @@ strong:contains("Important") {
     border-radius: 8px;
     padding: 1rem;
     border: 1px solid var(--nixriot-accent);
-    box-shadow: 0 8px 32px rgba(158, 206, 106, 0.3);
+    box-shadow: 0 8px 32px rgba(154, 46, 239, 0.3);
 
     /* Position the tooltip */
     z-index: 999;
@@ -462,7 +460,7 @@ strong:contains("Important") {
 
 /* Footnote definitions */
 .footnotes li:target {
-    background: rgba(158, 206, 106, 0.1);
+    background: rgba(154, 46, 239, 0.1);
     border-radius: 4px;
     padding: 0.5rem;
     margin: 0.5rem 0;
@@ -471,10 +469,10 @@ strong:contains("Important") {
 
 @keyframes highlight-footnote {
     0% {
-        background: rgba(158, 206, 106, 0.3);
+        background: rgba(154, 46, 239, 0.3);
     }
     100% {
-        background: rgba(158, 206, 106, 0.1);
+        background: rgba(154, 46, 239, 0.1);
     }
 }
 
@@ -492,7 +490,7 @@ sup a[href^="#fn"][href*=":"],
     top: -0.4em;
     font-size: 0.65em !important;
     padding: 0.1em 0.25em;
-    background: rgba(158, 206, 106, 0.1);
+    background: rgba(154, 46, 239, 0.1);
     border-radius: 2px;
     transition: all 0.2s ease;
     cursor: pointer;
@@ -505,10 +503,10 @@ sup a[href^="#fn:"]:hover,
 sup a[href^="#fn"][href*=":"]:hover,
 .footnote-ref a:hover,
 .footnote a:hover {
-    color: var(--nixriot-cyan) !important;
-    background: rgba(158, 206, 106, 0.2);
+    color: var(--nixriot-blue) !important;
+    background: rgba(154, 46, 239, 0.2);
     transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(158, 206, 106, 0.3);
+    box-shadow: 0 2px 4px rgba(154, 46, 239, 0.3);
 }
 
 /* Footnote backlinks - all possible formats */
@@ -525,7 +523,7 @@ a[href^="#fnref"],
 a[href^="#fnref:"]:hover,
 a[href^="#fnref"]:hover,
 .footnote-backref:hover {
-    color: var(--nixriot-cyan) !important;
+    color: var(--nixriot-blue) !important;
     opacity: 1;
 }
 

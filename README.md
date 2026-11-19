@@ -1,36 +1,39 @@
 <div align="center">
 
-# NixRiot
+# ![NixRiot](docs/img/banner.webp)
 
-## Start a Riot on NixOS.
+![Status](https://img.shields.io/badge/status-alpha-9a2eef?labelColor=1b2b34)
+![Version](https://img.shields.io/badge/version-1.1-9a2eef?labelColor=1b2b34)
+![Platform](https://img.shields.io/badge/platform-NixOS-9a2eef?logo=nixos&logoColor=white&labelColor=1b2b34)
+![Shell](https://img.shields.io/badge/shell-Hyprland-9a2eef?logo=hyprland&logoColor=9a2eef&labelColor=1b2b34)
+![UI](https://img.shields.io/badge/UI-Quickshell-9a2eef?labelColor=1b2b34)
+![Last Commit](https://img.shields.io/github/last-commit/CyphrRiot/NixRiot?color=9a2eef&labelColor=1b2b34)
+![Code Size](https://img.shields.io/github/languages/code-size/CyphrRiot/NixRiot?color=9a2eef&labelColor=1b2b34)
 
-![Status](https://img.shields.io/badge/status-pre--release-c65a47?labelColor=1b2b34)
-![Version](https://img.shields.io/badge/version-1.1-c65a47?labelColor=1b2b34)
-![Platform](https://img.shields.io/badge/platform-NixOS-c65a47?logo=nixos&logoColor=white&labelColor=1b2b34)
-![Shell](https://img.shields.io/badge/shell-Hyprland-c65a47?logo=hyprland&logoColor=c65a47&labelColor=1b2b34)
-![UI](https://img.shields.io/badge/UI-Quickshell-c65a47?labelColor=1b2b34)
-![Last Commit](https://img.shields.io/github/last-commit/CyphrRiot/NixRiot?color=c65a47&labelColor=1b2b34)
-![Code Size](https://img.shields.io/github/languages/code-size/CyphrRiot/NixRiot?color=c65a47&labelColor=1b2b34)
-
-![Code](https://img.shields.io/badge/human-coded-c65a47?logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmZmZmYiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0ibHVjaWRlIGx1Y2lkZS1wZXJzb24tc3RhbmRpbmctaWNvbiBsdWNpZGUtcGVyc29uLXN0YW5kaW5nIj48Y2lyY2xlIGN4PSIxMiIgY3k9IjUiIHI9IjEiLz48cGF0aCBkPSJtOSAyMCAzLTYgMyA2Ii8+PHBhdGggZD0ibTYgOCA2IDIgNi0yIi8+PHBhdGggZD0iTTEyIDEwdjQiLz48L3N2Zz4=&logoColor=c65a47&labelColor=1b2b34)
-![Language](https://img.shields.io/badge/language-Nix-c65a47?logo=nixos&logoColor=cyan&labelColor=1b2b34)
-![Language](https://img.shields.io/badge/language-QML-c65a47?logo=qt&logoColor=41CD52&labelColor=1b2b34)
+![Code](https://img.shields.io/badge/human-coded-9a2eef?logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmZmZmYiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0ibHVjaWRlIGx1Y2lkZS1wZXJzb24tc3RhbmRpbmctaWNvbiBsdWNpZGUtcGVyc29uLXN0YW5kaW5nIj48Y2lyY2xlIGN4PSIxMiIgY3k9IjUiIHI9IjEiLz48cGF0aCBkPSJtOSAyMCAzLTYgMyA2Ii8+PHBhdGggZD0ibTYgOCA2IDIgNi0yIi8+PHBhdGggZD0iTTEyIDEwdjQiLz48L3N2Zz4=&logoColor=9a2eef&labelColor=1b2b34)
+![Language](https://img.shields.io/badge/language-Nix-9a2eef?logo=nixos&logoColor=cyan&labelColor=1b2b34)
+![Language](https://img.shields.io/badge/language-QML-9a2eef?logo=qt&logoColor=41CD52&labelColor=1b2b34)
 [![Donate BTC](https://img.shields.io/badge/Donate-Bitcoin-F7931A?logo=bitcoin&logoColor=white&labelColor=1b2b34)](#donations)
 
 </div>
 
 ## Status of NixRiot
 
-It runs in a virtual machine. The image builds, installs over the network with
-LUKS, reboots, and comes up on the Panacea desktop. Nothing has been installed
-on a physical machine yet.
+**This is an early alpha. It has not been fully tested on real hardware, so
+parts of it may not work at all. Download and install it at your own risk.**
 
-Untested, on any hardware:
+What is verified, in a virtual machine only:
 
+- The image builds, installs over the network with LUKS, and reboots.
+- It comes up on the Panacea desktop.
+
+What has not been tested:
+
+- A full install on real hardware.
 - The lock screen and the password vault.
 - Media keys and the pill's media capsule.
 - Bluetooth, and the Mullvad app under Wayland.
-- Every claim under [Supported hardware](#supported-hardware).
+- Unverified claims under [Supported hardware](#supported-hardware).
 
 ![The NixRiot desktop, with the pill collapsed at the top](docs/img/desktop.webp)
 
