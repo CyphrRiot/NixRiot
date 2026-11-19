@@ -8,7 +8,6 @@ SHA256SUMS
 Wallpapers/
 
 # User-owned secrets. Never commit these.
-crypto.toml
 *.key
 *.pem
 .env

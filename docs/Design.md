@@ -190,7 +190,7 @@ asset is carried.
 | MAC randomization | **Port** | NetworkManager setting |
 | SSH hardening | **Port** | NixOS options |
 | XDG user directories | **Port** | Home Manager |
-| Crypto config (`crypto.toml`) | **User-owned** | Never shipped, never overwritten |
+| Crypto config (`crypto.toml`) | **Replaced** | `nixriot.crypto.*` options in `local.nix` |
 | Control center | **Replaced** | Panacea settings |
 | Games bundle | **Optional** | Curated subset, opt-in module |
 

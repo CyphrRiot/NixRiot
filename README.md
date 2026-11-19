@@ -90,7 +90,7 @@ roadmap. This file is the manual.
 This installer **erases the disk you point it at**. It partitions, encrypts, and
 formats without asking twice. Back up anything you care about first.
 
-NixRiot ships no wallet files, no secrets, and no `crypto.toml`. You own those.
+NixRiot ships no wallet files and no secrets. You own those.
 
 ---
 

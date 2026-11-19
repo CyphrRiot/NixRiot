@@ -117,8 +117,8 @@ do-publish:
 	  echo "  result/iso/NixRiot.iso  ($$(du -h result/iso/NixRiot.iso | cut -f1))"; \
 	  echo "  SHA256SUMS"; \
 	  echo; \
-	  read -r -p "Push main and the tag, and create the release? [y/N] " answer; \
-	  case "$$answer" in y|Y) ;; *) echo "Nothing published. Re-run 'make publish' when ready."; exit 0 ;; esac; \
+	  read -r -p "Push main and the tag, and create the release? [Y/n] " answer; \
+	  case "$$answer" in n|N) echo "Nothing published. Re-run 'make publish' when ready."; exit 0 ;; *) ;; esac; \
 	  git push origin main; \
 	  git push origin "v$$ver"; \
 	  if gh release view "v$$ver" >/dev/null 2>&1; then \
