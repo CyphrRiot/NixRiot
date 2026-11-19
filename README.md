@@ -21,9 +21,16 @@
 
 ## Status of NixRiot
 
-**Pre-release.** The flake evaluates, the ISO builds, and it installs and boots
-in a virtual machine. It has not been installed on real hardware yet, so treat
-the hardware notes below as untested.
+It runs in a virtual machine. The image builds, installs over the network with
+LUKS, reboots, and comes up on the Panacea desktop. Nothing has been installed
+on a physical machine yet.
+
+Untested, on any hardware:
+
+- The lock screen and the password vault.
+- Media keys and the pill's media capsule.
+- Bluetooth, and the Mullvad app under Wayland.
+- Every claim under [Supported hardware](#supported-hardware).
 
 ![The NixRiot desktop, with the pill collapsed at the top](docs/img/desktop.webp)
 
