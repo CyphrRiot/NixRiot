@@ -1,6 +1,6 @@
 <div align="center">
 
-# ![NixRiot](docs/img/banner.webp)
+![NixRiot](docs/img/banner.webp)
 
 ![Status](https://img.shields.io/badge/status-alpha-9a2eef?labelColor=1b2b34)
 ![Version](https://img.shields.io/badge/version-1.1-9a2eef?labelColor=1b2b34)

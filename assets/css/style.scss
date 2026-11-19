@@ -81,8 +81,8 @@ h5,
 h6 {
     background: linear-gradient(
         45deg,
-        var(--nixriot-accent),
-        var(--nixriot-blue)
+        var(--nixriot-blue),
+        var(--nixriot-accent)
     );
     background-clip: text;
     -webkit-background-clip: text;
@@ -346,11 +346,9 @@ footer {
         border-color 0.3s ease;
 }
 
-/* Special styling for important warnings */
-strong:contains("⚠️"),
-strong:contains("Important") {
-    color: var(--nixriot-accent) !important;
-    font-weight: 700;
+/* Bold text carries the accent blue */
+strong {
+    color: var(--nixriot-blue);
 }
 
 /* GitHub corner ribbon (if present) */
