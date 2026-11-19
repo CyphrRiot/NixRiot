@@ -61,7 +61,7 @@
       };
 
       packages.${system} = {
-        iso = self.nixosConfigurations.live.config.system.build.images.iso;
+        iso = self.nixosConfigurations.live.config.system.build.isoImage;
 
         installer = import ./installer { pkgs = nixpkgs.legacyPackages.${system}; };
       };
