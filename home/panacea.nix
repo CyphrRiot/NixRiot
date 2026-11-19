@@ -63,7 +63,8 @@ in
     fi
 
     if [ -x "$HOME/.config/hypr/scripts/palette.sh" ]; then
-      run "$HOME/.config/hypr/scripts/palette.sh" >/dev/null 2>&1 || true
+      run mkdir -p "$HOME/.cache/panacea"
+      run "$HOME/.config/hypr/scripts/palette.sh" >"$HOME/.cache/panacea/palette.log" 2>&1 || true
     fi
   '';
 }

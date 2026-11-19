@@ -4,19 +4,23 @@
 
 ## Start a Riot on NixOS.
 
-![Status](https://img.shields.io/badge/status-pre--release-9ECE6A?labelColor=1a1b26)
-![Platform](https://img.shields.io/badge/platform-NixOS-9ECE6A?logo=nixos&logoColor=white&labelColor=1a1b26)
-![Shell](https://img.shields.io/badge/shell-Hyprland-9ECE6A?logo=hyprland&logoColor=9ECE6A&labelColor=1a1b26)
-![UI](https://img.shields.io/badge/UI-Quickshell-9ECE6A?labelColor=1a1b26)
-![Last Commit](https://img.shields.io/github/last-commit/CyphrRiot/NixRiot?color=8BB85A&labelColor=1a1b26)
-![Code Size](https://img.shields.io/github/languages/code-size/CyphrRiot/NixRiot?color=9ECE6A&labelColor=1a1b26)
+![Status](https://img.shields.io/badge/status-pre--release-c65a47?labelColor=1b2b34)
+![Platform](https://img.shields.io/badge/platform-NixOS-c65a47?logo=nixos&logoColor=white&labelColor=1b2b34)
+![Shell](https://img.shields.io/badge/shell-Hyprland-c65a47?logo=hyprland&logoColor=c65a47&labelColor=1b2b34)
+![UI](https://img.shields.io/badge/UI-Quickshell-c65a47?labelColor=1b2b34)
+![Last Commit](https://img.shields.io/github/last-commit/CyphrRiot/NixRiot?color=c65a47&labelColor=1b2b34)
+![Code Size](https://img.shields.io/github/languages/code-size/CyphrRiot/NixRiot?color=c65a47&labelColor=1b2b34)
 
-![Code](https://img.shields.io/badge/human-coded-9ECE6A?logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmZmZmYiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0ibHVjaWRlIGx1Y2lkZS1wZXJzb24tc3RhbmRpbmctaWNvbiBsdWNpZGUtcGVyc29uLXN0YW5kaW5nIj48Y2lyY2xlIGN4PSIxMiIgY3k9IjUiIHI9IjEiLz48cGF0aCBkPSJtOSAyMCAzLTYgMyA2Ii8+PHBhdGggZD0ibTYgOCA2IDIgNi0yIi8+PHBhdGggZD0iTTEyIDEwdjQiLz48L3N2Zz4=&logoColor=9ECE6A&labelColor=1a1b26)
-![Language](https://img.shields.io/badge/language-Nix-9ECE6A?logo=nixos&logoColor=cyan&labelColor=1a1b26)
-![Language](https://img.shields.io/badge/language-QML-9ECE6A?logo=qt&logoColor=41CD52&labelColor=1a1b26)
-[![Donate BTC](https://img.shields.io/badge/Donate-Bitcoin-F7931A?logo=bitcoin&logoColor=white&labelColor=1a1b26)](#donations)
+![Code](https://img.shields.io/badge/human-coded-c65a47?logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmZmZmYiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0ibHVjaWRlIGx1Y2lkZS1wZXJzb24tc3RhbmRpbmctaWNvbiBsdWNpZGUtcGVyc29uLXN0YW5kaW5nIj48Y2lyY2xlIGN4PSIxMiIgY3k9IjUiIHI9IjEiLz48cGF0aCBkPSJtOSAyMCAzLTYgMyA2Ii8+PHBhdGggZD0ibTYgOCA2IDIgNi0yIi8+PHBhdGggZD0iTTEyIDEwdjQiLz48L3N2Zz4=&logoColor=c65a47&labelColor=1b2b34)
+![Language](https://img.shields.io/badge/language-Nix-c65a47?logo=nixos&logoColor=cyan&labelColor=1b2b34)
+![Language](https://img.shields.io/badge/language-QML-c65a47?logo=qt&logoColor=41CD52&labelColor=1b2b34)
+[![Donate BTC](https://img.shields.io/badge/Donate-Bitcoin-F7931A?logo=bitcoin&logoColor=white&labelColor=1b2b34)](#donations)
 
 </div>
+
+**Pre-release.** The flake evaluates, the ISO builds, and it installs and boots
+in a virtual machine. It has not been installed on real hardware yet, so treat
+the hardware notes below as untested.
 
 NixRiot is a small, fast, reproducible desktop, assembled from things we learned
 the hard way.
@@ -47,10 +51,6 @@ The desktop, the launcher, and the power menu, all from the Panacea pill:
 ![The launcher, searching the curated application list](docs/img/launcher.webp)
 
 ![The power menu](docs/img/power.webp)
-
-Status: **pre-release**. The flake evaluates, the ISO builds, and it installs
-and boots in a virtual machine. It has not been installed on real hardware yet,
-so treat the hardware notes below as untested.
 
 Read [docs/Design.md](docs/Design.md) for the reasoning, architecture, and
 roadmap. This file is the manual.

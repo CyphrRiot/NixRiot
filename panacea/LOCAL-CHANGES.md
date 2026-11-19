@@ -64,6 +64,10 @@ tooling; `UPSTREAM` and `LICENSE` stay for attribution.
     window. That made a lone window borderless, which is the opposite of
     OpenRiot's `default_border pixel 1` with `smart_gaps off`. The `no-gaps-f1`
     rule stays: true fullscreen should have neither border nor rounding.
+14. `hypr/scripts/palette.sh` now derives foot's full 16-colour ANSI palette
+    from `palette.conf` and writes it to `~/.config/foot/theme`. It previously
+    wrote only foreground, background and selection, so foot fell back to its
+    own stock palette, which is where the terminal's green came from.
 
 ## Not yet changed
 

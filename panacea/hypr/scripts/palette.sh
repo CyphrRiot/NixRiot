@@ -91,7 +91,38 @@ if os.path.isdir(fish_dir):
         f.write(f"set -g fish_color_selection --background={accent} --foreground={bg}\n")
         f.write("set -g fish_color_autosuggestion 707070\n")
 
-# 2. ZED
+# 2. FOOT
+# This used to write only foreground, background and selection, so foot kept
+# its own stock 16-colour palette, and that is where the green came from.
+# Derive the ANSI colours from the accent instead, so palette.conf stays the
+# only source of truth.
+foot_theme = os.path.expanduser('~/.config/foot/theme')
+if os.path.isdir(os.path.dirname(foot_theme)):
+    term_bg = "$TERM_BG"
+    rf, gf, bf = [x / 255.0 for x in hex_to_rgb(fg)]
+    grey = rgb_to_hex(((r + rf) / 2, (g + gf) / 2, (b + bf) / 2))
+    base = v * 0.85
+    bright = min(v * 1.1, 1.0)
+
+    def wheel(deg, value):
+        return rgb_to_hex(colorsys.hsv_to_rgb((h + deg / 360.0) % 1.0, min(s, 0.85), value))
+
+    hues = {1: 0, 2: 120, 3: 55, 4: 225, 5: 300, 6: 180}
+    with open(foot_theme, 'w') as f:
+        f.write("[colors-dark]\n")
+        f.write(f"foreground={fg.lstrip('#')}\n")
+        f.write(f"background={term_bg.lstrip('#')}\n")
+        f.write(f"selection-foreground={term_bg.lstrip('#')}\n")
+        f.write(f"selection-background={fg.lstrip('#')}\n")
+        f.write(f"regular0={term_bg.lstrip('#')}\n")
+        f.write(f"regular7={fg.lstrip('#')}\n")
+        f.write(f"bright0={grey}\n")
+        f.write(f"bright7={fg.lstrip('#')}\n")
+        for index, deg in hues.items():
+            f.write(f"regular{index}={wheel(deg, base)}\n")
+            f.write(f"bright{index}={wheel(deg, bright)}\n")
+
+# 3. ZED
 zed_path = os.path.expanduser('~/.config/zed/settings.json')
 accent_mute = f"{accent}33"
 accent_very_mute = f"{accent}15"
@@ -130,7 +161,7 @@ if os.path.exists(zed_path):
     with open(zed_path, 'w') as f:
         json.dump(zed_data, f, indent=4)
 
-# 3. BTOP
+# 4. BTOP
 btop_theme_dir = os.path.expanduser('~/.config/btop/themes')
 os.makedirs(btop_theme_dir, exist_ok=True)
 with open(os.path.join(btop_theme_dir, 'dynamic.theme'), 'w') as f:

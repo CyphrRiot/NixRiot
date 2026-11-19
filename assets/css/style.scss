@@ -4,21 +4,20 @@
 @import "{{ site.theme }}";
 
 /* NixRiot Dark Theme Override */
-/* Inspired by Neo Tokyo + Bondi Green aesthetic */
+/* Inspired by the Panacea palette: dark background, terracotta accent */
 
 :root {
     --nixriot-dark-bg: #0a0a0f;
     --nixriot-darker-bg: #05050a;
-    --nixriot-green: #9ECE6A;
-    --nixriot-green-light: #9ECE6A;
-    --nixriot-green-dark: #9ECE6A;
+    --nixriot-accent: #c65a47;
+    --nixriot-accent-light: #c65a47;
+    --nixriot-accent-dark: #c65a47;
     --nixriot-blue: #3b82f6;
     --nixriot-cyan: #06b6d4;
     --nixriot-text: #e5e7eb;
     --nixriot-text-dim: #9ca3af;
     --nixriot-border: #374151;
     --nixriot-code-bg: #1f2937;
-    --nixriot-accent: #f59e0b;
 }
 
 /* Global dark background */
@@ -84,7 +83,7 @@ h5,
 h6 {
     background: linear-gradient(
         45deg,
-        var(--nixriot-green),
+        var(--nixriot-accent),
         var(--nixriot-cyan)
     );
     background-clip: text;
@@ -111,7 +110,7 @@ h3 code,
 h4 code,
 h5 code,
 h6 code {
-    -webkit-text-fill-color: var(--nixriot-green-light) !important;
+    -webkit-text-fill-color: var(--nixriot-accent-light) !important;
     background: none !important;
     border: none !important;
     padding: 0 !important;
@@ -119,8 +118,8 @@ h6 code {
 
 /* Override for the main title */
 h1:first-child {
-    color: var(--nixriot-green-light) !important;
-    -webkit-text-fill-color: var(--nixriot-green-light) !important;
+    color: var(--nixriot-accent-light) !important;
+    -webkit-text-fill-color: var(--nixriot-accent-light) !important;
     font-size: 2.5rem;
     text-align: center;
     margin-bottom: 2rem;
@@ -138,7 +137,7 @@ td {
 
 /* Links with green theme */
 a {
-    color: var(--nixriot-green-light) !important;
+    color: var(--nixriot-accent-light) !important;
     text-decoration: none;
     transition: all 0.3s ease;
 }
@@ -151,7 +150,7 @@ a:hover {
 /* Code blocks and inline code */
 code {
     background: var(--nixriot-code-bg) !important;
-    color: var(--nixriot-green-light) !important;
+    color: var(--nixriot-accent-light) !important;
     padding: 0.2rem 0.4rem;
     border-radius: 4px;
     border: 1px solid var(--nixriot-border);
@@ -185,7 +184,7 @@ table {
 }
 
 th {
-    background: var(--nixriot-green-dark) !important;
+    background: var(--nixriot-accent-dark) !important;
     color: var(--nixriot-darker-bg) !important;
     padding: 0.5rem 1rem;
     font-weight: 600;
@@ -211,7 +210,7 @@ img[src*="badge"] {
 /* Blockquotes */
 blockquote {
     background: var(--nixriot-dark-bg) !important;
-    border-left: 4px solid var(--nixriot-green) !important;
+    border-left: 4px solid var(--nixriot-accent) !important;
     color: var(--nixriot-text) !important;
     padding: 0.5rem 1rem;
     margin: 0.5rem 0;
@@ -225,7 +224,7 @@ ol {
 }
 
 li::marker {
-    color: var(--nixriot-green-light);
+    color: var(--nixriot-accent-light);
 }
 
 /* Horizontal rules */
@@ -235,7 +234,7 @@ hr {
     background: linear-gradient(
         90deg,
         transparent,
-        var(--nixriot-green),
+        var(--nixriot-accent),
         transparent
     );
     margin: 2rem 0;
@@ -248,7 +247,7 @@ a[href*="download"]:not([href^="#"]),
 a[href*="install"]:not([href^="#"]) {
     background: linear-gradient(
         45deg,
-        var(--nixriot-green),
+        var(--nixriot-accent),
         var(--nixriot-blue)
     ) !important;
     color: white !important;
@@ -277,7 +276,7 @@ a[href*="install"]:not([href^="#"]):hover {
 footer {
     background: var(--nixriot-darker-bg) !important;
     color: var(--nixriot-text-dim) !important;
-    border-top: 2px solid var(--nixriot-green);
+    border-top: 2px solid var(--nixriot-accent);
     padding: 2rem 0;
     text-align: center;
 }
@@ -316,7 +315,7 @@ footer {
 ::-webkit-scrollbar-thumb {
     background: linear-gradient(
         45deg,
-        var(--nixriot-green),
+        var(--nixriot-accent),
         var(--nixriot-blue)
     );
     border-radius: 6px;
@@ -325,19 +324,19 @@ footer {
 ::-webkit-scrollbar-thumb:hover {
     background: linear-gradient(
         45deg,
-        var(--nixriot-green-light),
+        var(--nixriot-accent-light),
         var(--nixriot-cyan)
     );
 }
 
 /* Selection styling */
 ::selection {
-    background: var(--nixriot-green);
+    background: var(--nixriot-accent);
     color: white;
 }
 
 ::-moz-selection {
-    background: var(--nixriot-green);
+    background: var(--nixriot-accent);
     color: white;
 }
 
@@ -358,7 +357,7 @@ strong:contains("Important") {
 
 /* GitHub corner ribbon (if present) */
 .github-corner svg {
-    fill: var(--nixriot-green);
+    fill: var(--nixriot-accent);
     color: var(--nixriot-dark-bg);
 }
 
@@ -367,7 +366,7 @@ strong:contains("Important") {
     position: relative;
     display: inline;
     cursor: help;
-    color: var(--nixriot-green-light) !important;
+    color: var(--nixriot-accent-light) !important;
     text-decoration: underline;
     text-decoration-style: dotted;
     text-underline-offset: 3px;
@@ -395,7 +394,7 @@ strong:contains("Important") {
     text-align: left;
     border-radius: 8px;
     padding: 1rem;
-    border: 1px solid var(--nixriot-green);
+    border: 1px solid var(--nixriot-accent);
     box-shadow: 0 8px 32px rgba(158, 206, 106, 0.3);
 
     /* Position the tooltip */
@@ -423,7 +422,7 @@ strong:contains("Important") {
     margin-left: -8px;
     border-width: 8px;
     border-style: solid;
-    border-color: var(--nixriot-green) transparent transparent transparent;
+    border-color: var(--nixriot-accent) transparent transparent transparent;
 }
 
 .tooltip:hover .tooltiptext {
@@ -486,7 +485,7 @@ sup a[href^="#fn:"],
 sup a[href^="#fn"][href*=":"],
 .footnote-ref a,
 .footnote a {
-    color: var(--nixriot-green-light) !important;
+    color: var(--nixriot-accent-light) !important;
     text-decoration: none;
     font-weight: normal;
     position: relative;
@@ -516,7 +515,7 @@ sup a[href^="#fn"][href*=":"]:hover,
 a[href^="#fnref:"],
 a[href^="#fnref"],
 .footnote-backref {
-    color: var(--nixriot-green-light) !important;
+    color: var(--nixriot-accent-light) !important;
     text-decoration: none;
     margin-left: 0.5em;
     font-size: 0.9em;

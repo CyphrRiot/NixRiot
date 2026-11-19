@@ -109,12 +109,12 @@
         set -l host (hostname -s 2>/dev/null; or echo unknown)
 
         # Accent follows the palette, grafted by conf.d/theme_colors.fish.
-        # Fall back to the OpenRiot green when the palette value is unusable.
+        # Fall back to plain white when the palette value is unusable.
         set -l accent
         if set -q fish_color_command
             set accent $fish_color_command[1]
         end
-        string match -qr '^(#?[0-9a-fA-F]{6}|[a-z_]+)$' -- "$accent"; or set accent 9ECE6A
+        string match -qr '^(#?[0-9a-fA-F]{6}|[a-z_]+)$' -- "$accent"; or set accent ffffff
 
         set_color $accent
         printf '\uf17c  '
