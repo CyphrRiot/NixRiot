@@ -141,6 +141,18 @@ in
     # speech-dispatcher and about 270 MB of mbrola voices.
     services.speechd.enable = false;
 
+    # lid-close suspend is logind's, not ours: closing the lid suspends unless
+    # an external display is attached, because more than one connected display
+    # counts as "docked" and HandleLidSwitchDocked is ignore. That is what keeps
+    # a laptop on HDMI usable with the lid shut. Stated explicitly so a future
+    # logind default cannot quietly change it. The lock runs first, from
+    # hypridle's before_sleep_cmd.
+    services.logind.settings.Login = {
+      HandleLidSwitch = "suspend";
+      HandleLidSwitchExternalPower = "suspend";
+      HandleLidSwitchDocked = "ignore";
+    };
+
     # Ship only the firmware a laptop can use. Dropped: whole-ARM-SoC qcom,
     # server NICs (mellanox, netronome, dpaa2, qed, liquidio, cxgb4, bnx2x,
     # sfc, qlogic) and the Marvell Prestera switch ASIC. Kept: every x86
