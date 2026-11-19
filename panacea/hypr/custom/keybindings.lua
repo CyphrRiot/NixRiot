@@ -35,6 +35,14 @@ hl.bind("SUPER + C", hl.dsp.exec_cmd("foot -e crush"))
 -- Music player (OpenRiot: SUPER+Shift+K)
 hl.bind("SUPER + SHIFT + K", hl.dsp.exec_cmd("lollypop"))
 
+-- Proton Mail (OpenRiot: SUPER+E, which Panacea already uses for its Files view)
+hl.bind("SUPER + M", hl.dsp.exec_cmd("firefox https://mail.proton.me/inbox"))
+hl.bind("XF86Mail", hl.dsp.exec_cmd("firefox https://mail.proton.me/inbox"))
+
+-- X, formerly Twitter (OpenRiot: SUPER+X)
+hl.bind("SUPER + X", hl.dsp.exec_cmd("firefox https://x.com/"))
+hl.bind("SUPER + SHIFT + X", hl.dsp.exec_cmd("firefox --new-window https://x.com/compose/post"))
+
 -- Clipboard history (OpenRiot: SUPER+Shift+V; Panacea: SUPER+V)
 hl.bind("SUPER + SHIFT + V", pill("clipboard"))
 

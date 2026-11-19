@@ -57,5 +57,15 @@ in
       exec = "foot -e gurk";
       categories = "Network;Chat;";
     };
+    "applications/proton-mail.desktop" = appFile {
+      name = "Proton Mail";
+      exec = "firefox https://mail.proton.me/inbox";
+      categories = "Network;Email;";
+    };
+    "applications/x.desktop" = appFile {
+      name = "X";
+      exec = "firefox https://x.com/";
+      categories = "Network;News;";
+    };
   };
 }

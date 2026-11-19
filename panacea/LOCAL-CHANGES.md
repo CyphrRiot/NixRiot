@@ -71,6 +71,10 @@ tooling; `UPSTREAM` and `LICENSE` stay for attribution.
 15. `panacea/Mascot.qml` draws smaller eyes: the pupils go from 7x21 to 5x15,
     the containers from 15x29 to 11x21, and the spacing from 7 to 5. The two
     eyes filled most of the 46x38 face before.
+16. `hypr/custom/keybindings.lua` and `hypr/custom/keybinds.conf` carry two more
+    OpenRiot shortcuts: `SUPER+M` (and `XF86Mail`) opens Proton Mail, and
+    `SUPER+X` opens X with `SUPER+Shift+X` for the compose page. OpenRiot put
+    Proton Mail on `SUPER+E`, which Panacea already uses for its Files view.
 
 ## Not yet changed
 

@@ -72,7 +72,7 @@ case "${1:-check}" in
         whatsnew="$HOME/.config/panacea/.whatsnew"
         mkdir -p "$HOME/.config/panacea"
         if [ -r "$notes" ]; then
-            cut -c1-7 /etc/nixriot-revision > "$whatsnew" 2>/dev/null || echo unknown > "$whatsnew"
+            cat /etc/nixriot/VERSION > "$whatsnew" 2>/dev/null || echo unknown > "$whatsnew"
             cat "$notes" >> "$whatsnew"
         fi
         exit 0
