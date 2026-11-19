@@ -11,6 +11,12 @@ nothing else, so the wording here is exactly what a person reads on the pill's
 
 ## Unreleased
 
+## 1.1
+
+- Focus follows a click instead of the pointer: moving the mouse across a window
+  no longer switches to it.
+- The system no longer tries to import a ZFS root pool while booting.
+
 ## 1.0
 
 First release.

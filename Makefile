@@ -36,6 +36,11 @@ do-release:
 	  major=$${old%%.*}; \
 	  minor=$${old#*.}; \
 	  if [ -n "$$(git tag -l "v$$old")" ]; then \
+	    if gh auth status >/dev/null 2>&1 && ! gh release view "v$$old" >/dev/null 2>&1; then \
+	      echo "v$$old is tagged but not published. Publishing it now."; \
+	      $(MAKE) --no-print-directory do-publish; \
+	      exit 0; \
+	    fi; \
 	    section=Unreleased; \
 	    case "$(BUMP)" in \
 	      minor) new="$$major.$$((minor + 1))" ;; \
@@ -52,12 +57,13 @@ do-release:
 	      '$$0 == h { f = 1; next } /^## / { f = 0 } f && /^- / { print }' $(CHANGELOG); \
 	  }; \
 	  if [ -z "$$(notes)" ]; then \
-	    echo "No notes under '## $$section'. Opening $(EDITOR)."; \
 	    line=$$(awk -v h="## $$section" '$$0 == h { print NR + 1; exit }' $(CHANGELOG)); \
-	    $(EDITOR) "+$$line" $(CHANGELOG) || true; \
+	    echo "No notes under '## $$section'. Write bullets under it in $(CHANGELOG) (line $$line)."; \
+	    $(EDITOR) $(CHANGELOG) || echo "The editor exited with an error."; \
 	  fi; \
 	  [ -n "$$(notes)" ] || { \
 	    echo "Still nothing under '## $$section'. Nothing released."; \
+	    echo "Add bullets under '## $$section' in $(CHANGELOG), then run make release again."; \
 	    exit 1; \
 	  }; \
 	  if [ "$$section" = "Unreleased" ]; then \
