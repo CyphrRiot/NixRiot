@@ -18,6 +18,8 @@
 
 </div>
 
+## Status of NixRiot
+
 **Pre-release.** The flake evaluates, the ISO builds, and it installs and boots
 in a virtual machine. It has not been installed on real hardware yet, so treat
 the hardware notes below as untested.

@@ -115,21 +115,21 @@ Item {
     Row {
         anchors.centerIn: parent
         anchors.verticalCenterOffset: -2
-        spacing: 7
+        spacing: 5
         Repeater {
             model: 2
             delegate: Item {
                 required property int index
-                width: 15; height: 29
+                width: 11; height: 21
                 Item {
                     x: mascot.gazeX * 4
                     y: mascot.gazeY * 3
-                    width: 15; height: 29
+                    width: 11; height: 21
                     Behavior on x { NumberAnimation { duration: 85; easing.type: Easing.OutCubic } }
                     Behavior on y { NumberAnimation { duration: 85; easing.type: Easing.OutCubic } }
                     Rectangle {
                         anchors.centerIn: parent
-                        width: mascot.showing ? 7 : 11; height: !mascot.showing || mascot.blinking ? 3 : 21
+                        width: mascot.showing ? 5 : 8; height: !mascot.showing || mascot.blinking ? 2 : 15
                         radius: width / 2; color: sys.colFg
                         Behavior on height { NumberAnimation { duration: 150 } }
                         Behavior on width { NumberAnimation { duration: 150 } }

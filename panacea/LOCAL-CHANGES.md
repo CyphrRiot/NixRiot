@@ -68,6 +68,9 @@ tooling; `UPSTREAM` and `LICENSE` stay for attribution.
     from `palette.conf` and writes it to `~/.config/foot/theme`. It previously
     wrote only foreground, background and selection, so foot fell back to its
     own stock palette, which is where the terminal's green came from.
+15. `panacea/Mascot.qml` draws smaller eyes: the pupils go from 7x21 to 5x15,
+    the containers from 15x29 to 11x21, and the spacing from 7 to 5. The two
+    eyes filled most of the 46x38 face before.
 
 ## Not yet changed
 
