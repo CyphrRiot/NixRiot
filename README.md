@@ -5,6 +5,7 @@
 ## Start a Riot on NixOS.
 
 ![Status](https://img.shields.io/badge/status-pre--release-c65a47?labelColor=1b2b34)
+![Version](https://img.shields.io/badge/version-1.0-c65a47?labelColor=1b2b34)
 ![Platform](https://img.shields.io/badge/platform-NixOS-c65a47?logo=nixos&logoColor=white&labelColor=1b2b34)
 ![Shell](https://img.shields.io/badge/shell-Hyprland-c65a47?logo=hyprland&logoColor=c65a47&labelColor=1b2b34)
 ![UI](https://img.shields.io/badge/UI-Quickshell-c65a47?labelColor=1b2b34)

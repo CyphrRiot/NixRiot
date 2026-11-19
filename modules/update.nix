@@ -13,6 +13,7 @@ let
       pkgs.jq
       pkgs.nix
       pkgs.coreutils
+      pkgs.gawk
       pkgs.rsync
     ]}:$PATH
 
@@ -20,7 +21,7 @@ let
     status="$dir/status.json"
     notes="$dir/release-notes.txt"
     repo="''${NIXRIOT_REPO:-${cfg.remoteRepo}}"
-    api="https://api.github.com/repos/$repo/commits/main"
+    raw="https://raw.githubusercontent.com/$repo/main"
 
     installed_rev() {
       sed 's/-dirty$//' /etc/nixriot-revision 2>/dev/null || echo unknown
@@ -30,12 +31,13 @@ let
       check)
         mkdir -p "$dir"
         now=$(date -u +%Y-%m-%dT%H:%M:%SZ)
-        body=$(curl -fsS --max-time 10 "$api" 2>/dev/null) || exit 0
-        remote=$(printf '%s' "$body" | jq -r .sha 2>/dev/null) || exit 0
-        [ -n "$remote" ] && [ "$remote" != "null" ] || exit 0
-        subject=$(printf '%s' "$body" | jq -r '.commit.message' 2>/dev/null | head -n1)
-        cur=$(installed_rev)
+        cur=$(tr -d ' \n' < /etc/nixriot/VERSION 2>/dev/null) || exit 0
+        [ -n "$cur" ] || exit 0
+        remote=$(curl -fsS --max-time 10 "$raw/VERSION" 2>/dev/null | tr -d ' \n') || exit 0
+        [ -n "$remote" ] || exit 0
         if [ "$cur" = "$remote" ]; then avail=false; else avail=true; fi
+        subject=$(curl -fsS --max-time 10 "$raw/CHANGELOG.md" 2>/dev/null \
+          | awk -v h="## $remote" '$0 == h { found = 1; next } found && /^- / { sub(/^- /, ""); print; exit }')
         jq -n --arg i "$cur" --arg a "$remote" --arg s "$subject" --argjson u "$avail" --arg t "$now" \
           '{installed:$i,available:$a,subject:$s,updateAvailable:$u,lastChecked:$t}' > "$status.tmp"
         mv "$status.tmp" "$status"
@@ -44,6 +46,7 @@ let
 
       apply)
         old=$(installed_rev)
+        oldver=$(tr -d ' \n' < /etc/nixriot/VERSION 2>/dev/null) || oldver=unknown
 
         tmp="$(mktemp -d)"
         trap 'rm -rf "$tmp"' EXIT
@@ -57,10 +60,15 @@ let
 
         nixos-rebuild switch --flake /etc/nixriot#installed
 
-        if [ -n "$old" ] && [ "$old" != unknown ] && git -C "$tmp" rev-parse --verify --quiet "$old" >/dev/null 2>&1; then
+        if [ -r /etc/nixriot/CHANGELOG.md ] && [ -n "$oldver" ] && [ "$oldver" != unknown ]; then
+          awk -v stop="## $oldver" '
+            /^## / { if ($0 == stop) { exit } ; if (!seen) { seen = 1 } }
+            seen { print }
+          ' /etc/nixriot/CHANGELOG.md > "$notes" 2>/dev/null || true
+        elif [ -n "$old" ] && [ "$old" != unknown ] && git -C "$tmp" rev-parse --verify --quiet "$old" >/dev/null 2>&1; then
           git -C "$tmp" log --pretty=format:'%s' "$old..HEAD" > "$notes" 2>/dev/null || true
-          chmod 644 "$notes" 2>/dev/null || true
         fi
+        chmod 644 "$notes" 2>/dev/null || true
         ;;
 
       *)
@@ -81,7 +89,7 @@ in
     remoteRepo = lib.mkOption {
       type = lib.types.str;
       default = "CyphrRiot/NixRiot";
-      description = "GitHub repository to compare the installed revision against.";
+      description = "GitHub repository to compare the installed version against.";
     };
 
     interval = lib.mkOption {

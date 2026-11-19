@@ -119,6 +119,34 @@ Checked against nixpkgs. Do not re-add removed packages, and use these names.
   `nixriot-update`: `check` answers in key=value from the status file, `apply`
   starts the service and writes `~/.config/panacea/.whatsnew`.
 
+## Releases
+
+- `VERSION` is the single source of truth: two parts, `1.0`, then `1.1`, then
+  `2.0`. Minor is the normal release, major is deliberate, and there is no patch
+  level, so fixes ship as the next minor.
+- `CHANGELOG.md` holds short hand-written notes, newest first, one `## <version>`
+  heading per release matching `VERSION`. Work in progress goes under
+  `## Unreleased`.
+- The installed system reads its own copies, `/etc/nixriot/VERSION` and
+  `/etc/nixriot/CHANGELOG.md`, so no stamp file is involved: an update replaces
+  both files with the tree.
+- `nixriot-update check` fetches both from
+  `raw.githubusercontent.com/<repo>/main` and compares the versions. It does not
+  use the GitHub API, so there is no rate limit and no commit-hash comparison. A
+  commit that does not bump `VERSION` is not offered to anyone.
+- `status.json` keeps its shape, so the pill shows `1.0 -> 1.1`: `installed` and
+  `available` carry versions, and `subject` is the first bullet of the new
+  version's entry.
+- The notes a machine shows are the changelog sections *above* its own version,
+  sliced by `nixriot-update apply` and written to
+  `/var/lib/nixriot/release-notes.txt`. `panacea/scripts/update.sh` turns that
+  into `~/.config/panacea/.whatsnew`, with the version as the first line. If the
+  changelog is missing or the installed version is unknown, the notes fall back
+  to commit subjects from the clone.
+- Publishing (bump, guards, editor prompt, tag, ISO build, `SHA256SUMS`,
+  `gh release create`) is `make release` and `make publish`. The mechanics and
+  the rules are in `AGENTS.md` under Releasing.
+
 ## Testing in QEMU
 
 ```

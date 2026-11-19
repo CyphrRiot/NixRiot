@@ -2,6 +2,7 @@ result
 result-*
 .direnv
 AGENTS.md
+SHA256SUMS
 
 # Source JPEGs for the wallpaper set. The shipped form is panacea/hypr/wallpaper/*.webp.
 Wallpapers/
