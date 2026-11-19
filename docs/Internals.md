@@ -4,7 +4,7 @@ Maintainer and agent notes. The user-facing manual is `../README.md`; the
 reasoning and roadmap are in `Design.md`. This file is the durable record of how
 the system works and why, so it survives a clone.
 
-Last updated: 2026-11-18.
+Last updated: 2026-11-19.
 
 ## Decisions, and why
 
@@ -12,7 +12,11 @@ Last updated: 2026-11-18.
    defensibility are the point. The README intro carries the history.
 2. **Panacea is carried in-repo, not a flake input.** First-party copies under
    `panacea/`, no sync tooling. Every deliberate change from upstream goes in
-   `panacea/LOCAL-CHANGES.md`.
+   `panacea/LOCAL-CHANGES.md`. Upstream work is **ported by hand, never merged**:
+   our copy is a translated one, so a merge would conflict across roughly 194
+   files and hand the Russian comments back. `panacea/UPSTREAM` records the
+   reviewed revision and moves only once a revision has been read, so nothing is
+   reviewed twice and skipped work stays visible in *Not yet changed*.
 3. **One flake, with the machine's files inside it.** The installer writes
    `hosts/installed/local.nix` (username, plus any `nixriot` overrides) and
    generates `hosts/installed/hardware-configuration.nix`. Updates preserve
@@ -50,6 +54,57 @@ Last updated: 2026-11-18.
 14. **Zed is not installed.** If it is wanted, it is a one-line option plus a
     writable `~/.config/zed/settings.json` so Panacea's `palette.sh` can theme
     it. Helix and Crush are the defaults.
+15. **The screen locks itself after ten minutes idle.** Upstream Panacea ships a
+    manual lock only; this is OpenRiot's behaviour restored
+    (`xautolock -time 10`). `panacea/hypr/hypridle.conf` locks through
+    Panacea's own `lock.sh` at 600s, `hypr/custom/autostart.lua` starts
+    `hypridle`, and Coffee mode still wins: it holds a `systemd-inhibit` for
+    `idle`, which hypridle honours at its default `ignore_systemd_inhibit`.
+    Display-off is deliberately absent — Hyprland 0.56 replaced the `dpms`
+    dispatcher with Lua `hl.dpms`, so there is no version-independent command.
+16. **Closing the lid is logind's business.** NixRiot does not bind the lid
+    switch at all: upstream bound it to a lock, which locked a machine that was
+    still in use on an external display. logind's own rule does what is wanted —
+    more than one connected display counts as docked and
+    `HandleLidSwitchDocked` is `ignore`, so a clamshell lid does not suspend,
+    and `modules/nixriot.nix` states the three values explicitly so a logind
+    default change cannot alter it. The lock happens on the way into suspend,
+    from hypridle's `before_sleep_cmd`.
+17. **Night light is a hyprsunset toggle, off by default.** Ported from upstream
+    `2d68047`. `panacea/scripts/nightlight.sh` owns the filter (`on [K]`,
+    `off` -> `identity`, 4000K like OpenRiot); `shell.qml` owns the state, the
+    schedule and the settings; `SetDisplay.qml` and `ControlsView.qml` expose
+    it, and `SUPER+N` toggles it. The daemon starts bare at 6000K
+    (`hypr/hyprsunset.conf`) instead of being forced to 5000K at boot, so the
+    screen is neutral until you ask. `hyprsunset` applies the filter through
+    CTM, so screenshots and recordings carry it.
+18. **Fingerprint stays opt-in, with a decided design for when it is not.** All
+    three options are off today (`nixriot.fingerprint.{enable,pam,tod}`), so the
+    daemon is not even started and nothing can interfere with login. Omarchy
+    does it at runtime instead, and that is the model to copy:
+    - Detect the reader from sysfs, before fprintd exists. Match USB vendor IDs
+      (`27c6` Goodix, `138a` Validity, `06cb` Synaptics, `08ff` AuthenTec,
+      `1c7a` EgisTec, `147e` Upek) plus a vendor-independent product string
+      (`*fingerprint*`, `*biometric*`, `elan:arm-m4`, `fpc *`). Reject a vendor
+      match when a kernel driver is bound to any of the device's interfaces:
+      libfprint drives readers from userspace, so a bound driver means the
+      vendor ID is shared with a webcam bridge or a touchpad. `usbfs` is the
+      exception, since libusb claims an interface through it. Elan and STMicro
+      are left out of the vendor list on purpose for the same reason.
+    - Invite once, by notification, when a reader is present and nothing is
+      enrolled.
+    - Leave PAM to nixpkgs, which installs `pam_fprintd` with
+      `control = "sufficient"` and exposes `security.pam.services.<name>.fprintAuth`.
+    - Add the gate. With PAM on and the lid shut the reader is unreachable, so
+      `pam_fprintd` waits for a finger that cannot arrive and only then falls
+      through to the password. Omarchy puts
+      `auth [success=1 default=ignore] pam_exec.so quiet
+      /usr/bin/omarchy-hw-laptop-closed` immediately before it, which skips
+      exactly that one rule; its helper reads `/proc/acpi/button/lid/*/state`
+      and falls back to the `SW_LID` bit in `/sys/class/input/*/capabilities/sw`.
+      **nixpkgs has no equivalent**, so anything that turns `fprintAuth` on must
+      carry the gate itself. `security.pam.services.<name>.rules` and its
+      per-rule `order` are how to place it without editing PAM files.
 
 ## Verified package facts
 

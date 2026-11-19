@@ -11,6 +11,12 @@ nothing else, so the wording here is exactly what a person reads on the pill's
 
 ## Unreleased
 
+- The screen locks itself after ten minutes without input.
+- Closing the lid suspends, unless a second display is attached: a laptop on an
+  external monitor stays awake with the lid shut instead of locking and sleeping.
+- Night light, off until you switch it on with `SUPER + N` or from the card in
+  Settings → Display. It comes on at 4000K and can follow an evening schedule.
+
 ## 1.2
 
 - Installing is much faster: the system no longer builds a fish completion file for every package, one at a time.

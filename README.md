@@ -2,7 +2,7 @@
 
 ![NixRiot](docs/img/banner.webp)
 
-![Status](https://img.shields.io/badge/status-alpha-9a2eef?labelColor=1b2b34)
+![Status](https://img.shields.io/badge/status-early_release-9a2eef?labelColor=1b2b34)
 ![Version](https://img.shields.io/badge/version-1.2-9a2eef?labelColor=1b2b34)
 ![Platform](https://img.shields.io/badge/platform-NixOS-9a2eef?logo=nixos&logoColor=white&labelColor=1b2b34)
 ![Shell](https://img.shields.io/badge/shell-Hyprland-9a2eef?logo=hyprland&logoColor=9a2eef&labelColor=1b2b34)
@@ -11,7 +11,7 @@
 ![Code Size](https://img.shields.io/github/languages/code-size/CyphrRiot/NixRiot?color=9a2eef&labelColor=1b2b34)
 
 ![Code](https://img.shields.io/badge/human-coded-9a2eef?logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmZmZmYiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0ibHVjaWRlIGx1Y2lkZS1wZXJzb24tc3RhbmRpbmctaWNvbiBsdWNpZGUtcGVyc29uLXN0YW5kaW5nIj48Y2lyY2xlIGN4PSIxMiIgY3k9IjUiIHI9IjEiLz48cGF0aCBkPSJtOSAyMCAzLTYgMyA2Ii8+PHBhdGggZD0ibTYgOCA2IDIgNi0yIi8+PHBhdGggZD0iTTEyIDEwdjQiLz48L3N2Zz4=&logoColor=9a2eef&labelColor=1b2b34)
-![Language](https://img.shields.io/badge/language-Nix-9a2eef?logo=nixos&logoColor=cyan&labelColor=1b2b34)
+![Language](https://img.shields.io/badge/language-Nix-9a2eef?logo=nixos&logoColor=9a2eef&labelColor=1b2b34)
 ![Language](https://img.shields.io/badge/language-QML-9a2eef?logo=qt&logoColor=41CD52&labelColor=1b2b34)
 [![Donate BTC](https://img.shields.io/badge/Donate-Bitcoin-F7931A?logo=bitcoin&logoColor=white&labelColor=1b2b34)](#donations)
 
@@ -19,7 +19,7 @@
 
 ## Status of NixRiot
 
-**This is an early alpha. It has not been fully tested on real hardware, so
+**This is an early release. It has not been fully tested on real hardware, so
 parts of it may not work at all. Download and install it at your own risk.**
 
 What is verified, in a virtual machine only:
@@ -32,6 +32,8 @@ What has not been tested:
 - A full install on real hardware.
 - The lock screen and the password vault.
 - Media keys and the pill's media capsule.
+- The night light, the idle lock, and the lid behaviour an external monitor
+  changes.
 - Bluetooth, and the Mullvad app under Wayland.
 - Unverified claims under [Supported hardware](#supported-hardware).
 
@@ -84,7 +86,9 @@ roadmap. This file is the manual.
 - [Shell aliases and quick reference](#shell-aliases-and-quick-reference)
 - [Control center](#control-center)
 - [Wallpapers](#wallpapers)
+- [Night light](#night-light)
 - [Blockchain](#blockchain)
+- [VPN](#vpn)
 - [Browser and moving from OpenRiot](#browser-and-moving-from-openriot)
 - [Games](#games)
 - [Updating](#updating)
@@ -108,7 +112,8 @@ NixRiot ships no wallet files and no secrets. You own those.
 
 - **Hyprland** with the Panacea pill (Quickshell): launcher, launchpad,
   overview, clipboard, notifications, settings, power menu, lock screen.
-- **fish** with starship, plus the OpenRiot aliases and functions.
+- **fish** with a prompt of its own (hostname, directory, git branch, exit
+  status), plus the OpenRiot aliases and functions.
 - **Helix** (the default editor), Crush, and a plain text editor.
 - **Firefox**, zathura, Thunar, and AbiWord with Gnumeric when `nixriot.office` is on.
 - **Media**: mpv, Lollypop, optional Transmission.
@@ -117,7 +122,8 @@ NixRiot ships no wallet files and no secrets. You own those.
   default, with the GUI in the app launcher and the `mullvad` command line.
 - **Security**: firewall, SSH hardening, sysctl hardening, MAC randomization,
   `restic` and `rclone` for backups.
-- The **NixRiot wallpaper set** (26 WebP images, `00.webp` through `25.webp`).
+- The **NixRiot wallpaper set** (27 WebP images, `00.webp` through `26.webp`).
+- A **night light** for the screen, off until you switch it on (`SUPER + N`).
 - Full-disk encryption (LUKS2) on the root volume, chosen during install.
 
 ---
@@ -144,7 +150,7 @@ Prefer to build the image yourself? See Advanced, at the end of this file.
 ## Requirements
 
 - x86_64 machine that boots UEFI.
-- A USB stick of at least 2 GB.
+- A USB stick of at least 4 GB.
 - A target disk that can be erased.
 - An internet connection during install.
 
@@ -165,6 +171,10 @@ Intel and AMD drivers use.
 - **CPU:** Intel and AMD x86_64. ARM is not built.
 - **Drivers and firmware:** `hardware.graphics` is enabled, and the live image
   turns on all hardware, so GPU, Wi-Fi and Bluetooth firmware load on their own.
+  Installed systems ship a deliberately trimmed `linux-firmware`
+  (`modules/nixriot.nix`): every x86 Wi-Fi, Bluetooth, GPU and audio family is
+  kept, including NVIDIA, while datacentre NICs and the Qualcomm `qcom` blobs
+  are dropped to save space. An unusual network card may need it added back.
 - **Boot:** UEFI only, via systemd-boot. Secure Boot must be off.
 - **Out of scope:** NVIDIA, ARM, and Secure Boot. Fingerprint readers are off by
   default but supported through `fprintd`; see the note below.
@@ -173,7 +183,8 @@ Intel and AMD drivers use.
 
 ### Fingerprint reader
 
-Off by default. To try it, enable the daemon **without** touching PAM first:
+Off by default. To try it, enable the daemon **without** touching PAM first, in
+`/etc/nixriot/hosts/installed/local.nix`, beside your username:
 
 ```nix
 nixriot.fingerprint.enable = true;
@@ -191,6 +202,11 @@ If the reader needs Touch OEM Drivers, set `nixriot.fingerprint.tod.enable =
 true` and point `nixriot.fingerprint.tod.driver` at the matching package (for
 example `pkgs.libfprint-2-tod1-goodix`). Support comes from `libfprint`; a
 reader it does not know cannot be made to work.
+
+One thing to expect once PAM is on: with the lid shut, the reader is out of
+reach, and PAM asks for a finger before falling back to the password. NixRiot
+does not gate on the lid yet; that, and detecting the reader automatically
+instead of leaving it off, is planned.
 
 ---
 
@@ -225,9 +241,10 @@ The install builds the target system from the flake and downloads it from
 ## First boot
 
 The boot splash appears, then the LUKS passphrase prompt, then the session
-starts on its own: NixRiot logs the desktop user in automatically. There is no
-greeter, so the lock screen (`SUPER + L`) is what protects the machine. `sudo`
-asks for the password you set during install.
+starts on its own: NixRiot logs the desktop user in automatically, so the login
+screen is skipped. The lock screen (`SUPER + L`) is what protects the machine,
+and if you log out you land on the themed login screen. `sudo` asks for the
+password you set during install.
 
 NixRiot ships no default user or password.
 
@@ -286,6 +303,9 @@ writes overrides that survive updates.
 | `SUPER + SHIFT + S` or `Print` | Screenshot (region) |
 | `SUPER + P` | Screen recording |
 | `SUPER + SHIFT + F12` | Screen off |
+| `SUPER + N` | Night light on or off |
+| `SUPER + M` or `XF86Mail` | Proton Mail |
+| `SUPER + X` | X (compose with `SUPER + SHIFT + X`) |
 
 ### Workspaces and movement
 
@@ -311,7 +331,9 @@ writes overrides that survive updates.
 | `XF86MonBrightness*` | Brightness |
 | Right Alt (hold) | Voice to text |
 
-Closing the lid locks the screen.
+Closing the lid locks the screen and suspends, unless a second display is
+attached: a closed lid with an external monitor is a machine still in use, so it
+stays awake. Ten minutes with no input locks the screen too.
 
 ---
 
@@ -322,7 +344,7 @@ full set.
 
 | Module | Packages |
 |---|---|
-| `apps/shell.nix` | fish, starship, zoxide, ripgrep, fd, fzf, btop, fastfetch, lsd, bat, pv, jq, gurk-rs |
+| `apps/shell.nix` | fish, zoxide, ripgrep, fd, fzf, btop, fastfetch, lsd, bat, pv, jq, gurk-rs |
 | `apps/editors.nix` | helix, gnome-text-editor, crush, git |
 | `apps/media.nix` | mpv, lollypop, ffmpeg, ffmpegthumbnailer, cava, transmission (optional) |
 | `apps/office.nix` | zathura, firefox, thunar, tumbler, file-roller, abiword and gnumeric (optional) |
@@ -358,20 +380,33 @@ code, with the Linux glyph in the accent colour driven by the Panacea palette.
 
 Panacea's settings live in the pill. `SUPER + I` opens them; every section is
 also reachable from the pill's expanded island. `SUPER + Z` opens the control
-center (Wi-Fi, Bluetooth, audio, power profile). `SUPER + /` lists every current
-binding.
+center (Wi-Fi, Bluetooth, audio, power profile, and **Stay awake**, which stops
+the screen blanking, the machine sleeping and lid-close suspend until you turn it
+off). `SUPER + /` lists every current binding.
 
 ---
 
 ## Wallpapers
 
-The NixRiot set (26 WebP images, `00.webp` through `25.webp`) ships in
+The NixRiot set (27 WebP images, `00.webp` through `26.webp`) ships in
 `panacea/hypr/wallpaper/`, default `16.webp`. Change the wallpaper from
 the pill's appearance settings. The manifest is
 `panacea/hypr/wallpaper/WALLPAPERS.md`.
 
 Adding an image means adding a licence entry to that manifest. Live video
 wallpapers are not shipped.
+
+---
+
+## Night light
+
+Off by default. `SUPER + N` switches it, or **Settings → Display → Night light**
+in the pill, where the temperature sits between 2500K and 6500K and an optional
+schedule turns it on in the evening and off in the morning. 4000K is the default
+when it comes on, the same temperature OpenRiot used.
+
+The filter is applied by `hyprsunset`, so it is part of what the compositor
+draws: screenshots and recordings carry it. The pill shows a moon when it is on.
 
 ---
 
@@ -463,18 +498,25 @@ project and keeps the two machine files (`local.nix` and
 From the pill: **Settings → System → Update**. On the command line:
 
 ```sh
+sudo nixriot-update apply
+```
+
+That clones the project from GitHub, replaces `/etc/nixriot` with it, and
+rebuilds. A timer runs `nixriot-update check` every four hours and writes the
+result to `/var/lib/nixriot/status.json`, which is what the pill reads.
+
+To rebuild without fetching anything:
+
+```sh
 sudo nixos-rebuild switch --flake /etc/nixriot#installed
 ```
 
-That rebuilds against the pinned inputs. To move the packages forward as well:
+`nix flake update` there moves the packages forward, but it only edits the copy:
+the next `nixriot-update apply` replaces the whole tree, `flake.lock` included,
+so the change is discarded.
 
-```sh
-cd /etc/nixriot
-nix flake update
-sudo nixos-rebuild switch --flake .#installed
-```
-
-Panacea's own updater is disabled on purpose; it would fight the flake.
+Panacea's own updater is replaced by an adapter that drives `nixriot-update`;
+the upstream one rewrote the config tree and would fight the flake.
 
 ---
 

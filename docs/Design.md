@@ -5,7 +5,7 @@ internals (decisions, installer contract, update mechanics, verified package
 facts) are in `Internals.md`. This file is the reasoning, architecture, and
 planning.
 
-Status: living document. Last updated 2026-11-18.
+Status: living document. Last updated 2026-11-19.
 
 ## Why this exists
 
@@ -84,7 +84,7 @@ NixRiot/
       sddm.nix               # login theme (unused while autologin is on)
       plymouth.nix           # boot splash, built from the NixRiot artwork
     apps/
-      shell.nix              # fish, starship, zoxide, ripgrep, btop
+      shell.nix              # fish, zoxide, ripgrep, btop
       editors.nix            # Helix, gnome-text-editor, Crush
       media.nix              # mpv, Lollypop, transmission
       office.nix             # zathura, Firefox, Thunar, AbiWord and Gnumeric (optional)
@@ -126,11 +126,13 @@ to read when an install looks stuck.
 ### Update flow
 
 `/etc/nixriot` is a copy of the project; `hosts/installed/local.nix` is the
-machine's. `nixriot-update` clones upstream, `rsync -a --delete` into
-`/etc/nixriot` while excluding those two files, records the new revision in
-`/etc/nixriot-revision`, and runs
-`nixos-rebuild switch --flake /etc/nixriot#installed`. Details, including why the
-revision is a real file rather than something derived from the flake, are in
+machine's. `nixriot-update` clones `https://github.com/<owner>/<repo>` into a
+temporary directory, `rsync -a --delete` that into `/etc/nixriot` while
+excluding those two files, records the new revision in `/etc/nixriot-revision`,
+and runs `nixos-rebuild switch --flake /etc/nixriot#installed`. Because the
+rsync replaces the whole tree, anything edited in place under `/etc/nixriot` —
+`flake.lock` included — is discarded by the next update. Details, including why
+the revision is a real file rather than something derived from the flake, are in
 `Internals.md`.
 
 ### Theming
@@ -166,7 +168,7 @@ asset is carried.
 | i3lock | **Replaced** | Panacea lock screen, via PAM `swaylock` |
 | picom, feh, maim | **Replaced** | Hyprland compositor, hyprpaper, grim/slurp |
 | picom rounded corners | **Replaced** | Hyprland `rounding = 8`, matching OpenRiot's radius |
-| fish + starship prompt | **Reuse** | Home Manager |
+| fish + prompt | **Port** | Own `fish_prompt` in `home/fish.nix`, coloured from the palette |
 | Helix | **Reuse** | nixpkgs `helix` |
 | Crush | **Port** | nixpkgs `crush` |
 | fastfetch + motd | **Reuse** | Home Manager |
@@ -193,6 +195,8 @@ asset is carried.
 | Crypto config (`crypto.toml`) | **Replaced** | `nixriot.crypto.*` options in `local.nix` |
 | Control center | **Replaced** | Panacea settings |
 | Games bundle | **Optional** | Curated subset, opt-in module |
+| Night light | **Port** | `hyprsunset`, off by default, 4000K and `SUPER+N` as OpenRiot used |
+| Idle lock | **Port** | `hypridle`, ten minutes, OpenRiot's `xautolock -time 10` |
 
 ### Dropped, and why
 
@@ -215,15 +219,17 @@ asset is carried.
 Ordered by priority. The live list is in `Internals.md` and `AGENTS.md`.
 
 1. **Install on real hardware.** Nothing has been installed on a physical
-   machine yet.
-2. **Confirm the fish-completions fix.** `programs.fish.generateCompletions = false`
-   is decided but not yet applied; it removes hundreds of local
-   `runCommandLocal` builds from every install.
-3. **gvfs MTP** for phones, untested.
-4. **A binary cache** for the flake's own outputs, so installs stop building our
+   machine yet, which is what leaves the idle lock, the lid behaviour and the
+   night light unverified.
+2. **gvfs MTP** for phones, untested.
+3. **A binary cache** for the flake's own outputs, so installs stop building our
    derivations (the trimmed `linux-firmware`, cursors, fonts, splash).
-5. **Offline installs**, if they are wanted at all. Today the image is a
+4. **Offline installs**, if they are wanted at all. Today the image is a
    netinstall by design, because GitHub caps release assets at 2 GiB.
+5. **Fingerprint, done the Omarchy way.** Detect the reader from sysfs, invite
+   enrolment once by notification, and enable PAM with a clamshell gate ahead of
+   `pam_fprintd`. All of it is opt-in and off today. The design, and why the gate
+   is not optional, are in `Internals.md` (decision 18).
 
 ## Milestones
 
@@ -247,11 +253,17 @@ Ordered by priority. The live list is in `Internals.md` and `AGENTS.md`.
 - **Distribution size.** The image is 1.97 GiB against GitHub's 2 GiB per-asset
   limit. The pre-seed list is what keeps it there, and it is a size decision,
   not a speed one.
-- **UEFI only.** systemd-boot, Secure Update off, no BIOS.
+- **UEFI only.** systemd-boot, Secure Boot off, no BIOS.
 - **The installer builds our own derivations**, because they are in no binary
   cache. That is the slow part of an install.
 - **`hardware.firmware` is `mkForce`d** to a trimmed list; anything that adds
   firmware must be appended there.
+- **Upstream Panacea is a pin, not a following.** `panacea/UPSTREAM` is the
+  revision that has been read; fixes upstream of it are only taken when someone
+  reviews them and ports them by hand.
+- **The idle lock, the clamshell lid and the night light are unverified.**
+  They were added after the last ISO and need a session, and the lid needs a
+  real lid switch.
 - **Cosmetic `buildEnv` collisions** exist for `gvfs` and `bitcoind`.
 
 ## Non-goals
