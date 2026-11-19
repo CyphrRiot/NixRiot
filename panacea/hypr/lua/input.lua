@@ -9,7 +9,7 @@ hl.config({
         -- Alt+Shift switches the layout
         kb_options = input_data.options or "grp:alt_shift_toggle",
         kb_rules   = "",
-        follow_mouse = 1,
+        follow_mouse = 0,
         sensitivity = 0,
         touchpad = {
             -- natural_scroll = true: the content follows the fingers.

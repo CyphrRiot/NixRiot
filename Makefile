@@ -32,10 +32,6 @@ release-major:
 
 do-release:
 	@set -euo pipefail; \
-	  [ -z "$$(git status --porcelain)" ] || { \
-	    echo "Commit your work first: the tag has to match what the ISO is built from."; \
-	    exit 1; \
-	  }; \
 	  old=$$(cat $(VERSION_FILE)); \
 	  major=$${old%%.*}; \
 	  minor=$${old#*.}; \
@@ -73,8 +69,21 @@ do-release:
 	    printf '%s\n' "$$new" > $(VERSION_FILE); \
 	  fi; \
 	  sed -i "s|badge/version-[0-9.]*-|badge/version-$$new-|" README.md; \
-	  if [ -n "$$(git status --porcelain $(VERSION_FILE) $(CHANGELOG) README.md)" ]; then \
-	    git add $(VERSION_FILE) $(CHANGELOG) README.md; \
+	  if [ -n "$$(git status --porcelain)" ]; then \
+	    git add -A; \
+	    echo; \
+	    git --no-pager diff --cached --stat; \
+	    echo; \
+	    read -r -p "Commit everything as 'Release $$new'? [y/N] " commit_answer; \
+	    case "$$commit_answer" in \
+	      y|Y) ;; \
+	      *) \
+	        git reset -q; \
+	        git checkout HEAD -- $(VERSION_FILE) $(CHANGELOG) README.md; \
+	        echo "Nothing committed or tagged. The release files were put back."; \
+	        exit 0; \
+	        ;; \
+	    esac; \
 	    git commit -q -m "Release $$new"; \
 	  fi; \
 	  git tag -a "v$$new" -m "NixRiot v$$new"; \
@@ -113,4 +122,11 @@ do-publish:
 	    gh release create "v$$ver" --title "NixRiot v$$ver" --notes-file <(notes) \
 	      result/iso/NixRiot.iso SHA256SUMS; \
 	  fi; \
+	  gh release edit "v$$ver" --draft=false >/dev/null; \
+	  for f in NixRiot.iso SHA256SUMS; do \
+	    gh release view "v$$ver" --json assets --jq '.assets[].name' | rg -qx "$$f" || { \
+	      echo "v$$ver is missing $$f, or is still a draft."; \
+	      exit 1; \
+	    }; \
+	  done; \
 	  echo "Published v$$ver."

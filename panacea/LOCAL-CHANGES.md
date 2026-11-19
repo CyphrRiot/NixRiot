@@ -75,6 +75,11 @@ tooling; `UPSTREAM` and `LICENSE` stay for attribution.
     OpenRiot shortcuts: `SUPER+M` (and `XF86Mail`) opens Proton Mail, and
     `SUPER+X` opens X with `SUPER+Shift+X` for the compose page. OpenRiot put
     Proton Mail on `SUPER+E`, which Panacea already uses for its Files view.
+17. `hypr/lua/input.lua` sets `follow_mouse = 0`, so focus changes on click
+    instead of on hover. Upstream uses 1, focus follows the mouse, which moves
+    focus whenever the pointer crosses a window. The fallback
+    `hypr/hyprland.conf` keeps upstream's value on purpose: it is a stopgap for
+    a Hyprland without Lua support and is not kept in parity.
 
 ## Not yet changed
 

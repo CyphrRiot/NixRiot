@@ -45,7 +45,7 @@ reproduced. One flake. Packages from a pinned nixpkgs. An installer that builds
 the same system it was built from.
 
 A reproducible NixOS desktop with the [Panacea](https://github.com/EnsixD/Panacea)
-shell and the parts of [OpenRiot](https://github.com/CyphrRiot/OpenRiot) that
+shell and the parts of [OpenRiot](https://OpenRiot.org) that
 make sense on Linux. One flake builds the installer image and the installed
 system, so both stay in step.
 
@@ -62,9 +62,6 @@ roadmap. This file is the manual.
 
 ## Navigate this guide
 
-- [Status of NixRiot](#status-of-nixriot)
-- [Philosophy of NixRiot](#philosophy-of-nixriot)
-- [Screenshots](#screenshots)
 - [The usual free software warning](#the-usual-free-software-warning)
 - [What you get](#what-you-get)
 - [Download](#download)
@@ -370,21 +367,26 @@ wallpapers are not shipped.
 
 ## Blockchain
 
-Enable in `/etc/nixriot/hosts/installed/local.nix`:
+Add the `nixriot` stanza **inside** `/etc/nixriot/hosts/installed/local.nix`,
+next to your username. The file holds both, and an update preserves it:
 
 ```nix
-nixriot = {
-  crypto.monero = true;
-  crypto.bitcoin = true;
-  crypto.glyphriot = true;
-};
+{
+  nixriotUser = "riot";
+  nixriot = {
+    crypto.monero = true;
+    crypto.bitcoin = true;
+    crypto.glyphriot = true;
+  };
+}
 ```
 
 Monero GUI and Bitcoin Core come from nixpkgs. `crypto.glyphriot` installs
 [GlyphRiot](https://github.com/CyphrRiot/glyphriot), a seed-phrase glyph tool
 for self-custody, built from source and pinned to a commit. WireGuard is
-configured through `nixriot.wireguard`. Wallet files and keys, seed phrases
-included, are yours to create and back up; the flake never ships them.
+configured with `nixriot.wireguard.enable = true;` in the same stanza. Wallet
+files and keys, seed phrases included, are yours to create and back up; the
+flake never ships them.
 
 ---
 
@@ -404,7 +406,8 @@ The pill's VPN panel is a status readout: it reports whether a tunnel is up (it
 detects Mullvad's `wg0-mullvad` interface), but connecting and picking a server
 happen in the app.
 
-For a WireGuard config (the OpenRiot workflow), enable `nixriot.wireguard` in
+For a WireGuard config (the OpenRiot workflow), set
+`nixriot.wireguard.enable = true;` in
 `/etc/nixriot/hosts/installed/local.nix` and put your config in
 `/etc/wireguard/wg0.conf`. The Panacea VPN panel detects `wg0` and reports the
 tunnel state.
@@ -433,8 +436,8 @@ Brave, Chromium, and other browsers are not installed by default.
 
 ## Games
 
-Off by default. To install the curated set, set `nixriot.games = true;` in
-`/etc/nixriot/hosts/installed/local.nix`. It pulls supertux, openttd,
+Off by default. To install the curated set, add `nixriot.games = true;` to the
+`nixriot` stanza in `/etc/nixriot/hosts/installed/local.nix`. It pulls supertux, openttd,
 cataclysm-dda, endless-sky, angband, and brogue-ce. It is deliberately a small
 subset of OpenRiot's list; several OpenRiot games are no longer in nixpkgs.
 

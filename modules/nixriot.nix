@@ -135,6 +135,7 @@ in
     system.nixos.distroName = "NixRiot";
 
     boot.consoleLogLevel = 7;
+    boot.zfs.forceImportRoot = false;
 
     # The graphical-desktop profile turns this on by default; it pulls
     # speech-dispatcher and about 270 MB of mbrola voices.
