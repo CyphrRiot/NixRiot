@@ -2,7 +2,6 @@
 {
   home.packages = with pkgs; [
     fish
-    starship
     zoxide
     ripgrep
     fd

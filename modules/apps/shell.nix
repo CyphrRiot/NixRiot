@@ -7,7 +7,6 @@
 
     environment.systemPackages = with pkgs; [
       fish
-      starship
       zoxide
       ripgrep
       fd
