@@ -173,6 +173,7 @@ in
       pkgs.ipw2200-firmware
       pkgs.rt5677-firmware
       pkgs.zd1211fw
+      pkgs.rtl8192su-firmware
     ] ++ lib.optionals cfg.npu [ pkgs.intel-npu-driver.firmware ]);
 
     hardware.cpu.intel.npu.enable = cfg.npu;

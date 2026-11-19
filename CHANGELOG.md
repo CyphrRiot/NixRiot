@@ -11,6 +11,11 @@ nothing else, so the wording here is exactly what a person reads on the pill's
 
 ## Unreleased
 
+## 1.2
+
+- Installing is much faster: the system no longer builds a fish completion file for every package, one at a time.
+- Adds firmware for Realtek RTL8192SU USB Wi-Fi adapters
+
 ## 1.1
 
 - Focus follows a click instead of the pointer: moving the mouse across a window
