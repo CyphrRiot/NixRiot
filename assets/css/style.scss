@@ -72,7 +72,9 @@ body {
     line-height: 1.7;
 }
 
-/* Headings with green gradient */
+/* Headings, blue to violet. width keeps the gradient on the text: a block
+   box paints it across the full column, so short headings show only the
+   first colour. */
 h1,
 h2,
 h3,
@@ -87,6 +89,7 @@ h6 {
     background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+    width: fit-content;
     font-weight: 600;
     font-family: "FiraCode Nerd Font", monospace;
     line-height: 1.5;
