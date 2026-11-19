@@ -22,6 +22,10 @@
 in a virtual machine. It has not been installed on real hardware yet, so treat
 the hardware notes below as untested.
 
+![The NixRiot desktop, with the pill collapsed at the top](docs/img/desktop.webp)
+
+## Philosophy of NixRiot
+
 NixRiot is a small, fast, reproducible desktop, assembled from things we learned
 the hard way.
 
@@ -44,9 +48,7 @@ system, so both stay in step.
 
 ## Screenshots
 
-The desktop, the launcher, and the power menu, all from the Panacea pill:
-
-![The NixRiot desktop, with the pill collapsed at the top](docs/img/desktop.webp)
+The launcher and the power menu:
 
 ![The launcher, searching the curated application list](docs/img/launcher.webp)
 
@@ -57,6 +59,7 @@ roadmap. This file is the manual.
 
 ## Navigate this guide
 
+- [Philosophy of NixRiot](#philosophy-of-nixriot)
 - [Screenshots](#screenshots)
 - [The usual free software warning](#the-usual-free-software-warning)
 - [What you get](#what-you-get)
