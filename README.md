@@ -61,6 +61,7 @@ roadmap. This file is the manual.
 
 ## Navigate this guide
 
+- [Status of NixRiot](#status-of-nixriot)
 - [Philosophy of NixRiot](#philosophy-of-nixriot)
 - [Screenshots](#screenshots)
 - [The usual free software warning](#the-usual-free-software-warning)
