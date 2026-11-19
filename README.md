@@ -25,7 +25,7 @@ parts of it may not work at all. Download and install it at your own risk.**
 What is verified, in a virtual machine only:
 
 - The image builds, installs over the network with LUKS, and reboots.
-- It comes up on the Panacea desktop.
+- It comes up on the NixRiot desktop.
 
 What has not been tested:
 

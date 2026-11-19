@@ -40,7 +40,7 @@ in
     desktop.enable = lib.mkOption {
       type = lib.types.bool;
       default = true;
-      description = "Enable the Panacea desktop stack.";
+      description = "Enable the NixRiot desktop.";
     };
 
     crypto = {
