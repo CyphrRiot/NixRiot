@@ -9,14 +9,10 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    nixos-generators = {
-      url = "github:nix-community/nixos-generators";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
   };
 
   outputs =
-    { self, nixpkgs, home-manager, nixos-generators, ... }@inputs:
+    { self, nixpkgs, home-manager, ... }@inputs:
     let
       system = "x86_64-linux";
       lib = nixpkgs.lib;
@@ -65,25 +61,7 @@
       };
 
       packages.${system} = {
-        iso = nixos-generators.nixosGenerate {
-          inherit system;
-          format = "iso";
-          specialArgs = {
-            inherit self inputs;
-            panaceaSrc = ./panacea;
-          };
-          modules = [
-            ./iso/configuration.nix
-            ({ lib, ... }: {
-              image.baseName = lib.mkForce "NixRiot";
-              isoImage.storeContents = [
-                inputs.nixpkgs.outPath
-                inputs.home-manager.outPath
-                inputs.nixos-generators.outPath
-              ];
-            })
-          ];
-        };
+        iso = self.nixosConfigurations.live.config.system.build.images.iso;
 
         installer = import ./installer { pkgs = nixpkgs.legacyPackages.${system}; };
       };

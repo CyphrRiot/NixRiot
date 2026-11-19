@@ -55,7 +55,6 @@ in
   isoImage.storeContents = [
     inputs.nixpkgs.outPath
     inputs.home-manager.outPath
-    inputs.nixos-generators.outPath
 
     pkgs.mesa
     pkgs.firefox
@@ -79,6 +78,8 @@ in
     pkgs.kora-icon-theme
     pkgs.bibata-cursors
   ];
+
+  image.baseName = lib.mkForce "NixRiot";
 
   # Better ratio than zstd -19; slower build.
   isoImage.squashfsCompression = lib.mkForce "xz -Xdict-size 100%";

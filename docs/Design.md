@@ -34,7 +34,7 @@ installer and the update path are all the same pinned inputs.
 
 Three deliverables:
 
-1. **A live image** built with `nixos-generators` on top of
+1. **A live image** built from nixpkgs' ISO image module on top of
    `installation-cd-base`. It is a minimal installer, not a desktop: tty1
    autologins as `nixos` and runs `nixriot-install`, the serial console gives a
    shell, and the image carries the flake inputs plus a curated pre-seed of the
