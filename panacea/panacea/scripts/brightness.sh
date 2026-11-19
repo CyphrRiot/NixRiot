@@ -5,6 +5,11 @@
 #
 set -u
 
+# Hyprland keybindings run with a reduced PATH, and `qs` is needed for the OSD:
+# add the usual places, as voxtype.sh does.
+PATH="$PATH:/usr/bin:/usr/local/bin:$HOME/.local/bin:/bin:/opt/bin"
+export PATH
+
 RUN="${XDG_RUNTIME_DIR:-/tmp}"
 CACHE="$RUN/panacea-brightness.map"
 STATE="$RUN/panacea-bright.streak"
@@ -154,9 +159,7 @@ cmd_step() {
     fi
     pct="$(cmd_set "$id" "$pct")"
 
-    if pgrep -x qs >/dev/null 2>&1; then
-        qs -c "$HOME/.config/panacea" ipc call pill brightness "$pct" 2>/dev/null &
-    fi
+    qs -c "$HOME/.config/panacea" ipc call pill brightness "$pct" >/dev/null 2>&1
 }
 
 case "${1:-}" in

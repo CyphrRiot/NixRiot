@@ -166,10 +166,6 @@ B("mediaPause", "XF86AudioPause", hl.dsp.exec_cmd("playerctl play-pause"), { loc
 B("mediaPlay", "XF86AudioPlay", hl.dsp.exec_cmd("playerctl play-pause"), { locked = true })
 B("mediaPrevious", "XF86AudioPrev", hl.dsp.exec_cmd("playerctl previous"), { locked = true })
 
--- Switch
-B("lidOn", "switch:on:Lid Switch", hl.dsp.exec_cmd(p.lock), { locked = true })
-B("lidOff", "switch:off:Lid Switch", hl.dsp.exec_cmd(p.lock), { locked = true })
-
 
 -- The pill: panels open inside it
 

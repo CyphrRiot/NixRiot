@@ -12,6 +12,49 @@ ColumnLayout {
     // [{ name, desc, w, h, rr, scale, transform, vrr, x, y, modes: [] }]
     property var mons: []
 
+    // One "HH:MM" field for the schedule. Two of these side by side beat six
+    // spinners, and the format is easy to validate.
+    component NightTimeField: ColumnLayout {
+        id: tf
+
+        property var sys
+        property string label: ""
+        property string value: "22:00"
+        signal committed(string value)
+
+        spacing: 4
+
+        function textValue() { return input.text; }
+        function setTime(v) { input.text = String(v); }
+
+        Text {
+            text: tf.label
+            color: tf.sys.colMuted
+            font { family: tf.sys.fontBody; pixelSize: tf.sys.fontSize - 4 }
+        }
+        Rectangle {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 32
+            radius: 10
+            color: Qt.rgba(tf.sys.colFg.r, tf.sys.colFg.g, tf.sys.colFg.b, 0.07)
+
+            TextInput {
+                id: input
+                anchors.fill: parent
+                anchors.leftMargin: 12
+                anchors.rightMargin: 12
+                verticalAlignment: TextInput.AlignVCenter
+                color: tf.sys.colFg
+                clip: true
+                selectByMouse: true
+                text: tf.value
+                font { family: tf.sys.fontBody; pixelSize: tf.sys.fontSize - 2 }
+                onEditingFinished: tf.committed(text)
+                Keys.onEscapePressed: { input.text = tf.value; input.focus = false; }
+            }
+        }
+    }
+
     Layout.fillWidth: true
     spacing: 12
 
@@ -23,6 +66,14 @@ ColumnLayout {
             if (l[i].name === name) return l[i];
         if (l.length === 1 && page.sys.brightBackend === "backlight") return l[0];
         return null;
+    }
+
+    // Commit both fields together: otherwise one can be saved while the other is
+    // still half-typed. An invalid time snaps the fields back to what is saved.
+    function commitNightTimes() {
+        page.sys.setNightTimes(startField.textValue(), endField.textValue());
+        startField.setTime(page.sys.cfg.nightStart);
+        endField.setTime(page.sys.cfg.nightEnd);
     }
 
     Process {
@@ -335,6 +386,71 @@ ColumnLayout {
                     cursorShape: Qt.PointingHandCursor
                     onClicked: { pMons.running = false; pMons.running = true; }
                 }
+            }
+        }
+    }
+
+    // ------------------------------------------------------------ night light
+    // Its own card in Display: it is about how the picture looks, so it is
+    // looked for next to brightness.
+    SetCard {
+        sys: page.sys
+
+        SetLabel { sys: page.sys; text: page.sys.tr("Night light") }
+
+        Text {
+            Layout.fillWidth: true
+            text: page.sys.tr("A warm filter that takes the blue out of the screen in the evening. "
+                              + "A lower temperature is warmer and yellower.")
+            color: page.sys.colMuted
+            wrapMode: Text.WordWrap
+            font { family: page.sys.fontBody; pixelSize: page.sys.fontSize - 4 }
+        }
+
+        SetToggle {
+            sys: page.sys
+            label: page.sys.tr("Turn on night light")
+            sub: page.sys.tr("Stays on until the next schedule boundary, if automatic switching is on.")
+            on: page.sys.cfg.nightLight
+            onToggled: v => page.sys.setNightLight(v, true)
+        }
+
+        SetSlider {
+            sys: page.sys
+            label: page.sys.tr("Night light temperature")
+            from: 2500; to: 6500; step: 100
+            value: page.sys.cfg.nightTemp
+            suffix: "K"
+            onMoved: v => page.sys.setNightTemp(v)
+        }
+
+        SetToggle {
+            sys: page.sys
+            label: page.sys.tr("Turn on automatically")
+            sub: page.sys.tr("On the schedule below: on in the evening, off in the morning.")
+            on: page.sys.cfg.nightAuto
+            onToggled: v => page.sys.setNightAuto(v)
+        }
+
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: 10
+
+            NightTimeField {
+                id: startField
+                Layout.fillWidth: true
+                sys: page.sys
+                label: page.sys.tr("Turn on at")
+                value: page.sys.cfg.nightStart
+                onCommitted: v => page.commitNightTimes()
+            }
+            NightTimeField {
+                id: endField
+                Layout.fillWidth: true
+                sys: page.sys
+                label: page.sys.tr("Turn off at")
+                value: page.sys.cfg.nightEnd
+                onCommitted: v => page.commitNightTimes()
             }
         }
     }

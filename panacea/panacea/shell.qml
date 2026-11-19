@@ -197,6 +197,13 @@ PanelWindow {
             property bool   featPowermenu: true
             property bool   featPolkit: true
 
+            // ---------------------------------------------- Night light
+            property bool   nightLight: false
+            property int    nightTemp:  4000
+            property bool   nightAuto:  false
+            property string nightStart: "22:00"
+            property string nightEnd:   "07:00"
+
             // ---------------------------------------------- Weather & Widgets
             property string weatherKey: ""
             property string weatherCity: ""
@@ -428,6 +435,7 @@ PanelWindow {
         keyboardLayouts: "us", keyboardVariants: ",", keyboardOptions: "grp:alt_shift_toggle",
         recFps: 60, recDir: "~/Videos", recSysAudio: false, recMic: false, recMicDevice: "",
         weatherKey: "", weatherCity: "", weatherUnits: "metric",
+        nightLight: false, nightTemp: 4000, nightAuto: false, nightStart: "22:00", nightEnd: "07:00",
         weatherOnIsland: false, systemLoadOnIsland: false, keyboardLayoutMap: "", featWidgets: false,
         widgetClockMode: "analog", widgetRightMode: "weather", widgetProgressMode: "day",
         widgetMusic: true,
@@ -2292,6 +2300,104 @@ PanelWindow {
                   "--who=Panacea", "--why=Keep awake", "sleep", "infinity"]
     }
 
+    // ------------------------------------------------------------ night light
+    // The shell owns the state and the schedule. scripts/nightlight.sh owns the
+    // filter, which on Hyprland is hyprsunset through CTM.
+    readonly property bool nightLight: root.cfg.nightLight
+    readonly property int  nightTemp:  root.cfg.nightTemp
+    // Last schedule-window state. Compared on each tick, so the switch happens
+    // on the boundary and a manual toggle is not undone half a minute later.
+    property bool nightAutoWindow: false
+
+    Process { id: pNight }
+    // The slider sends a value on every movement and restarting the filter
+    // flashes the screen, so apply once the hand stops.
+    Timer {
+        id: nightTempApply
+        interval: 180
+        onTriggered: if (root.cfg.nightLight) root.applyNightState(true, true)
+    }
+
+    function cleanClock(s) {
+        var m = /^(\d{1,2}):(\d{2})$/.exec(String(s || "").trim());
+        if (!m) return "";
+        var h = parseInt(m[1]), mi = parseInt(m[2]);
+        if (isNaN(h) || isNaN(mi) || h < 0 || h > 23 || mi < 0 || mi > 59) return "";
+        return (h < 10 ? "0" : "") + h + ":" + (mi < 10 ? "0" : "") + mi;
+    }
+    function inNightWindow(d) {
+        var s = root.cleanClock(root.cfg.nightStart);
+        var e = root.cleanClock(root.cfg.nightEnd);
+        if (s === "" || e === "") return false;
+        var now = d.getHours() * 60 + d.getMinutes();
+        var a = parseInt(s.slice(0, 2)) * 60 + parseInt(s.slice(3, 5));
+        var b = parseInt(e.slice(0, 2)) * 60 + parseInt(e.slice(3, 5));
+        return a <= b ? (now >= a && now < b) : (now >= a || now < b);
+    }
+    function applyNightState(on, silent) {
+        pNight.running = false;
+        pNight.command = ["sh", "-c", root.scriptDir + "/nightlight.sh "
+                          + (on ? "on " + String(root.cfg.nightTemp) : "off")];
+        pNight.running = true;
+        if (!silent) root.showOsd("night", on ? 1 : 0, false);
+    }
+    function setNightLight(on, silent) {
+        var changed = root.cfg.nightLight !== on;
+        root.cfg.nightLight = on;
+        if (changed) root.saveCfg();
+        root.applyNightState(on, silent === true);
+    }
+    function toggleNightLight() { root.setNightLight(!root.cfg.nightLight, false); }
+    function setNightTemp(v) {
+        v = Math.max(2500, Math.min(6500, Math.round(v)));
+        if (root.cfg.nightTemp === v) return;
+        root.cfg.nightTemp = v;
+        root.saveCfg();
+        if (root.cfg.nightLight) nightTempApply.restart();
+    }
+    function setNightTimes(a, b) {
+        var s = root.cleanClock(a);
+        var e = root.cleanClock(b);
+        if (s === "" || e === "") return false;
+        root.cfg.nightStart = s;
+        root.cfg.nightEnd = e;
+        root.saveCfg();
+        root.evaluateNightSchedule(true, true);
+        return true;
+    }
+    function setNightAuto(on) {
+        root.cfg.nightAuto = on;
+        root.saveCfg();
+        if (on) root.evaluateNightSchedule(true, true);
+    }
+    function evaluateNightSchedule(force, silent) {
+        var desired = root.inNightWindow(new Date());
+        if (!root.cfg.nightAuto) {
+            root.nightAutoWindow = desired;
+            return;
+        }
+        if (!force && desired === root.nightAutoWindow) return;
+        root.nightAutoWindow = desired;
+        root.setNightLight(desired, silent === true);
+    }
+    // hyprsunset starts around 6000K, which is not neutral. A moment after
+    // start, put the filter where the saved state says it should be.
+    Timer {
+        interval: 1400
+        running: true
+        onTriggered: {
+            root.nightAutoWindow = root.inNightWindow(new Date());
+            if (root.cfg.nightAuto) root.setNightLight(root.nightAutoWindow, true);
+            else root.applyNightState(root.cfg.nightLight, true);
+        }
+    }
+    Timer {
+        interval: 30000
+        repeat: true
+        running: true
+        onTriggered: root.evaluateNightSchedule(false, false)
+    }
+
     readonly property var audioSinks: {
         var out = [];
         var all = Pipewire.nodes ? Pipewire.nodes.values : [];
@@ -2880,7 +2986,7 @@ PanelWindow {
     }
 
     // ------------------------------------------------------------------ OSD
-    property string osdKind: ""          // "vol" | "mic" | "bright"
+    property string osdKind: ""          // "vol" | "mic" | "bright" | "night"
     property real   osdValue: 0          // 0..1
     property bool   osdMuted: false
     readonly property bool osdActive: osdKind.length > 0 && !expanded
@@ -2899,6 +3005,7 @@ PanelWindow {
     }
 
     readonly property string osdIcon: {
+        if (osdKind === "night")  return String.fromCodePoint(0xF186);        // moon
         if (osdKind === "bright") return String.fromCodePoint(0xF00DE);
         if (osdKind === "mic")
             return String.fromCodePoint(osdMuted ? 0xF036D : 0xF036C);
@@ -3894,6 +4001,9 @@ PanelWindow {
         function audio(): void { root.togglePage("audio"); }
         function calendar(): void { root.togglePage("cal"); }
         function theme(): void { root.toggleWalls(); }
+        // The keybind comes through here, so the state the shell reports cannot
+        // drift from what is actually on screen.
+        function nightlight(): void { root.toggleNightLight(); }
         function widgets(): void { root.cfg.featWidgets = !root.cfg.featWidgets; root.saveCfg(); }
         function record(): void { root.togglePage("record"); }
         function files(): void { root.togglePage("files"); }
@@ -4005,6 +4115,11 @@ PanelWindow {
             item: (root.cfg.pillKeepVisible && !root.settingsMode && (root.expanded || detachedPanel.opacity > 0.005)) ? detachedPanel : null
             intersection: Intersection.Combine
         }
+        // The trace of the collapsed pill: see hoverPad above.
+        Region {
+            item: hoverPad.active ? hoverPad : null
+            intersection: Intersection.Combine
+        }
     }
     mask: root.holdOpen && !root.chatFilePickerOpen ? null : capsuleRegion
     WlrLayershell.keyboardFocus: root.holdOpen && !root.chatFilePickerOpen ? WlrKeyboardFocus.Exclusive
@@ -4064,6 +4179,46 @@ PanelWindow {
             opacity: lit ? 0.9 : 0
             visible: opacity > 0.01
             Behavior on opacity { NumberAnimation { duration: 140 } }
+        }
+    }
+
+    // Invisible trace of the collapsed pill while it expands. A wide pill
+    // (Nothing theme, with mascot, weather and load) can be wider than the
+    // panel: on expanding it slides out from under a stationary cursor, the
+    // hover handler loses it, the panel collapses, and the pill is under the
+    // cursor again. That is an endless "bar <=> control centre" flicker. So the
+    // old trace stays in the window mask and counts as hover too.
+    Item {
+        id: hoverPad
+        readonly property bool active: root.expanded && !root.cfg.pillKeepVisible
+                                       && !root.settingsMode
+        visible: active
+        z: -1
+        width:  root.pillSide ? capsule.idleThick : capsule.idleLen
+        height: root.pillSide ? capsule.idleLen  : capsule.idleThick
+        anchors.horizontalCenter: root.pillSide ? undefined : parent.horizontalCenter
+        anchors.verticalCenter:   root.pillSide ? parent.verticalCenter : undefined
+        anchors.top:    root.pillAtTop    ? parent.top    : undefined
+        anchors.bottom: root.pillAtBottom ? parent.bottom : undefined
+        anchors.left:   root.pillAtLeft   ? parent.left   : undefined
+        anchors.right:  root.pillAtRight  ? parent.right  : undefined
+        anchors.topMargin:    root.pillAtTop    ? capsule.edgeMargin : 0
+        anchors.bottomMargin: root.pillAtBottom ? capsule.edgeMargin : 0
+        anchors.leftMargin:   root.pillAtLeft   ? capsule.sideMargin : 0
+        anchors.rightMargin:  root.pillAtRight  ? capsule.sideMargin : 0
+
+        HoverHandler {
+            id: hoverPadHover
+            acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+            onHoveredChanged: {
+                if (hovered) {
+                    collapseTimer.stop();
+                } else if (!capsuleHover.hovered
+                           && !(detachedHover.hovered && root.cfg.pillKeepVisible)
+                           && !root.holdOpen) {
+                    collapseTimer.restart();
+                }
+            }
         }
     }
 
@@ -4190,10 +4345,12 @@ PanelWindow {
                 : root.acToastActive
                     ? capsule.evenUp(Math.max(acCapsule.implicitWidth + 48, 240))
                 : root.toastActive ? 440
-                : root.osdActive ? capsule.evenUp(osdCapsule.implicitWidth + 32)
+                : root.osdActive ? capsule.evenUp((root.osdKind === "night"
+                                                   ? nightCapsule.implicitWidth
+                                                   : osdCapsule.implicitWidth) + 32)
                 : root.pillSide  ? capsule.evenUp(Math.max(vertCapsule.implicitHeight + 30,
                                                            capsule.collapsedMin))
-                : capsule.evenUp(Math.max(nothingCapsule.implicitWidth + (mascot.active ? 140 : 28),
+                : capsule.evenUp(Math.max(nothingCapsule.implicitWidth + (root.cfg.mascotEnabled ? 140 : 28),
                                           capsule.collapsedMin))
         readonly property real idleThick: (root.fileOverIsland || fileAbsorbAnimation.running) ? 58
                 : (root.btToastActive || root.wifiToastActive || root.acToastActive
@@ -4365,7 +4522,12 @@ PanelWindow {
         Timer {
             id: collapseTimer; interval: 180
             onTriggered: {
-                if (capsuleHover.hovered || (detachedHover.hovered && root.cfg.pillKeepVisible) || root.holdOpen) return;
+                // While the mask is morphing, Wayland can deliver a leave for a
+                // moment even with the cursor sitting still. Let the mask and the
+                // hover state settle, or the panel collapses mid-expansion.
+                if (root.morphing) { collapseTimer.restart(); return; }
+                if (capsuleHover.hovered || hoverPadHover.hovered
+                    || (detachedHover.hovered && root.cfg.pillKeepVisible) || root.holdOpen) return;
                 root.collapse();
             }
         }
@@ -5025,7 +5187,8 @@ PanelWindow {
             anchors.centerIn: parent
             height: root.pillH
             spacing: 12
-            visible: root.osdActive && !root.toastActive && !root.btToastActive && !root.wifiToastActive && !root.acToastActive && !root.recPickActive && !root.voxActive
+            visible: root.osdActive && root.osdKind !== "night"
+                     && !root.toastActive && !root.btToastActive && !root.wifiToastActive && !root.acToastActive && !root.recPickActive && !root.voxActive
             opacity: visible ? 1 : 0
             Behavior on opacity { NumberAnimation { duration: root.animFast } }
 
@@ -5063,6 +5226,35 @@ PanelWindow {
                 text: root.osdMuted ? "—" : Math.round(root.osdValue * 100) + "%"
                 color: root.colMuted
                 font { family: root.fontFam; pixelSize: root.fontSize - 1; bold: true }
+            }
+        }
+
+        // --------------------------------------------------- night light (OSD)
+        // Its own capsule: there is no level to draw as a bar, so the moon and
+        // a word are the whole of it.
+        RowLayout {
+            id: nightCapsule
+            anchors.centerIn: parent
+            height: root.pillH
+            spacing: 11
+            visible: root.osdActive && root.osdKind === "night"
+                     && !root.toastActive && !root.btToastActive && !root.wifiToastActive
+                     && !root.acToastActive && !root.recPickActive && !root.voxActive
+            opacity: visible ? 1 : 0
+            Behavior on opacity { NumberAnimation { duration: root.animFast } }
+
+            Text {
+                text: String.fromCodePoint(0xF186)   // moon
+                color: root.colFg
+                Layout.preferredWidth: mOsdIcon.width + 4
+                horizontalAlignment: Text.AlignHCenter
+                font { family: root.fontFam; pixelSize: root.iconSize }
+            }
+            Text {
+                text: root.osdValue > 0.5 ? root.tr("Night light on")
+                                          : root.tr("Night light off")
+                color: root.colFg
+                font { family: root.fontFam; pixelSize: root.fontSize; bold: true }
             }
         }
 

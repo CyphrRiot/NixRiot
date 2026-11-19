@@ -1277,7 +1277,10 @@ Item {
                 Layout.column: 0
                 Layout.fillWidth: true
                 spacing: 8
-                visible: (view.sys.brightList || []).length > 0
+                // Kept visible even with nothing to dim: on a machine with no
+                // DDC and no backlight the row is where the moon lives, and
+                // hiding it would take the quickest route to night light with it.
+                visible: true
 
                 Repeater {
                     model: view.sys.brightList
@@ -1291,6 +1294,20 @@ Item {
                         bpct: modelData.pct
                         bname: (view.sys.brightList || []).length > 1 ? modelData.name : ""
                     }
+                }
+
+                // Night light is the moon alone, with no label: it sits beside
+                // brightness, and the space is worth more than the words.
+                IconBtn {
+                    Layout.preferredWidth: 56
+                    Layout.preferredHeight: 56
+                    Layout.alignment: Qt.AlignVCenter
+                    glyph: String.fromCodePoint(0xF186)   // moon
+                    tip: ""
+                    active: view.sys.nightLight
+                    glyphColor: view.sys.nightLight ? view.sys.colOn : view.sys.colMuted
+                    activeColor: view.sys.colOn
+                    onAct: view.sys.toggleNightLight()
                 }
             }
 
@@ -1620,7 +1637,7 @@ Item {
                     }
                     Text {
                         Layout.fillWidth: true
-                        text: "Coffee mode"
+                        text: "Stay awake"
                         color: view.sys.keepAwake ? view.sys.colFg : view.sys.colMuted
                         font {
                             family: view.sys.fontFam; pixelSize: view.sys.fontSize - 2

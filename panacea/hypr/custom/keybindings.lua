@@ -49,6 +49,9 @@ hl.bind("SUPER + SHIFT + V", pill("clipboard"))
 -- Power menu (OpenRiot: SUPER+Escape; Panacea: CTRL+ALT+Delete)
 hl.bind("SUPER + Escape", pill("powermenu"))
 
+-- Night light (OpenRiot: SUPER+N)
+hl.bind("SUPER + N", pill("nightlight"))
+
 -- Region screenshot (OpenRiot: SUPER+Shift+S and Print; Panacea: SUPER+Shift+S)
 hl.bind("SUPER + SHIFT + S", hl.dsp.exec_cmd(HOME .. "/.config/panacea/scripts/shot.sh"))
 hl.bind("Print", hl.dsp.exec_cmd(HOME .. "/.config/panacea/scripts/shot.sh"))

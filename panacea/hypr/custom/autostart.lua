@@ -1,9 +1,7 @@
 -- Custom Autostart Programs & Daemons (Lua)
 --
 -- API: hl.exec_cmd(command) inside the "hyprland.start" event
---
--- Examples:
--- hl.on("hyprland.start", function()
---     hl.exec_cmd("discord --start-minimized")
---     hl.exec_cmd("telegram-desktop -autostart")
--- end)
+
+hl.on("hyprland.start", function ()
+  hl.exec_cmd("hypridle")
+end)

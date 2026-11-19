@@ -26,7 +26,7 @@ hl.on("hyprland.start", function ()
   -- The polkit agent is now built into the pill (PolkitAgent in shell.qml).
   -- Two agents cannot register at the same time.
   -- hl.exec_cmd("systemctl --user start hyprpolkitagent")
-  hl.exec_cmd("hyprsunset -t 5000")
+  hl.exec_cmd("hyprsunset")
   -- automounting USB drives and cards: without it the "Removable" section
   -- in the file manager never appears on its own
   hl.exec_cmd("udiskie --no-notify --no-tray")
