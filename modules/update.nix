@@ -50,7 +50,10 @@ let
 
         tmp="$(mktemp -d)"
         trap 'rm -rf "$tmp"' EXIT
-        git clone --quiet "$repo" "$tmp"
+        # $repo is the bare owner/name form, which the rest of this script needs
+        # for raw.githubusercontent.com. git has no such shorthand, so the clone
+        # gets the HTTPS URL built from it.
+        git clone --quiet "https://github.com/$repo" "$tmp"
         rev="$(git -C "$tmp" rev-parse HEAD)"
         rsync -a --delete --exclude .git \
           --exclude hosts/installed/local.nix \
