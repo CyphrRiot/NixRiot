@@ -1,6 +1,6 @@
 { config, lib, pkgs, ... }:
 {
-  config = lib.mkIf config.nixriot.enable {
+  config = lib.mkIf (config.nixriot.enable && config.nixriot.apps) {
     programs.fish.enable = true;
     programs.fish.generateCompletions = false;
     users.defaultUserShell = pkgs.fish;

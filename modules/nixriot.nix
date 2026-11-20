@@ -56,9 +56,10 @@ in
       type = lib.types.bool;
       default = true;
       description = ''
-        Install the desktop application set (editors, media, office, backup).
-        Turn off for the live installer image, which only needs the desktop and
-        the installer.
+        Install the desktop application set (shell and CLI tools, editors,
+        media, office, backup). Turn off for the live installer image, which
+        only needs the desktop and the installer. Everything here rides in the
+        ISO, which is close to GitHub's 2 GiB asset limit.
       '';
     };
 
