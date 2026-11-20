@@ -189,7 +189,12 @@ in
       pkgs.rtl8192su-firmware
     ] ++ lib.optionals cfg.npu [ pkgs.intel-npu-driver.firmware ]);
 
-    hardware.cpu.intel.npu.enable = cfg.npu;
+    # mkDefault, not a plain assignment: on a machine with an Intel NPU,
+    # nixos-generate-config writes `hardware.cpu.intel.npu.enable = true;` into
+    # the generated hardware-configuration.nix, and two plain definitions of one
+    # option is a hard error that stops nixos-install. A virtual machine has no
+    # NPU device, which is why this only ever failed on real hardware.
+    hardware.cpu.intel.npu.enable = lib.mkDefault cfg.npu;
 
     networking.hostName = cfg.hostName;
     time.timeZone = "UTC";
