@@ -216,9 +216,19 @@ qemu-system-x86_64 -enable-kvm -machine q35 -cpu host -smp 4 -m 8G \
   -netdev user,id=n0 -device virtio-net-pci,netdev=n0
 ```
 
-- `-display gtk` under Wayland repaints only when it gains or loses focus, so
-  typing looks dead until you switch windows. `gtk,gl=on` fails outright
-  (`GtkGLArea console lacks DMABUF support`). `-display sdl` avoids both.
+- Run the window under XWayland: `GDK_BACKEND=x11` with `-display gtk`. On
+  native Wayland the gtk client repaints only when it gains or loses focus, so
+  typing looks dead until you flick focus away and back; under X11 it repaints on
+  every keystroke. The window class tells you which you got: `qemu` is the
+  native Wayland client, `Qemu-system-x86_64` is the X11 one. `gtk,gl=on` fails
+  outright (`GtkGLArea console lacks DMABUF support`). `-display sdl` is worse
+  than either: it produced no host window at all, and the guest ran headless
+  with nothing on screen to say so.
+- The gtk window often comes up smaller than the guest's console, so text runs
+  off the right edge and looks like a broken install. `View -> Zoom to Fit` in
+  the window scales it; the setting is not remembered between runs.
+- Copy `OVMF_VARS.fd` out of the store before use and `chmod u+w` the copy: the
+  store's copy is read-only, and QEMU exits with `Permission denied` on it.
 - Keep VM files under `~/vms`, never `/tmp`: `/tmp` is tmpfs, and a qcow2 there
   consumes RAM until the backing store fails with EIO inside the guest.
 - `cache=unsafe` and a fresh qcow2 per run make installs noticeably faster.

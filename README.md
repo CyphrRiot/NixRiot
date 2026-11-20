@@ -3,7 +3,7 @@
 ![NixRiot](docs/img/banner.webp)
 
 ![Status](https://img.shields.io/badge/status-early_release-9a2eef?labelColor=1b2b34)
-![Version](https://img.shields.io/badge/version-1.2-9a2eef?labelColor=1b2b34)
+![Version](https://img.shields.io/badge/version-1.3-9a2eef?labelColor=1b2b34)
 ![Platform](https://img.shields.io/badge/platform-NixOS-9a2eef?logo=nixos&logoColor=white&labelColor=1b2b34)
 ![Shell](https://img.shields.io/badge/shell-Hyprland-9a2eef?logo=hyprland&logoColor=9a2eef&labelColor=1b2b34)
 ![UI](https://img.shields.io/badge/UI-Quickshell-9a2eef?labelColor=1b2b34)
@@ -37,7 +37,7 @@ What has not been tested:
 - Bluetooth, and the Mullvad app under Wayland.
 - Unverified claims under [Supported hardware](#supported-hardware).
 
-![The NixRiot desktop, with the pill collapsed at the top](docs/img/desktop.webp)
+![The NixRiot desktop, running: the pill, its settings, and a terminal](docs/img/desktop-demo.webp)
 
 ## Philosophy of NixRiot
 
@@ -63,7 +63,9 @@ system, so both stay in step.
 
 ## Screenshots
 
-The launcher and the power menu:
+The desktop, the launcher and the power menu:
+
+![The NixRiot desktop, with the pill collapsed at the top](docs/img/desktop.webp)
 
 ![The launcher, searching the curated application list](docs/img/launcher.webp)
 

@@ -230,6 +230,12 @@ Ordered by priority. The live list is in `Internals.md` and `AGENTS.md`.
    enrolment once by notification, and enable PAM with a clamshell gate ahead of
    `pam_fprintd`. All of it is opt-in and off today. The design, and why the gate
    is not optional, are in `Internals.md` (decision 18).
+6. **A fat ISO, if the substitution wait is worth 4 GB.** Pre-seeding the whole
+   closure turns the installer's network phase into a local copy. A full pre-seed
+   is about 4 GB, and GitHub caps each release asset at 2 GiB, so the image would
+   ship split (`split -b 1900M`, rejoined with `cat` and checked against
+   `SHA256SUMS`) and want an 8 GB stick. It does nothing for the local builds,
+   which need the cache in item 3 either way.
 
 ## Milestones
 

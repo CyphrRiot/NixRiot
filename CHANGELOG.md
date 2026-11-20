@@ -11,11 +11,14 @@ nothing else, so the wording here is exactly what a person reads on the pill's
 
 ## Unreleased
 
+## 1.3
+
 - The screen locks itself after ten minutes without input.
 - Closing the lid suspends, unless a second display is attached: a laptop on an
   external monitor stays awake with the lid shut instead of locking and sleeping.
 - Night light, off until you switch it on with `SUPER + N` or from the card in
   Settings → Display. It comes on at 4000K and can follow an evening schedule.
+- Updating from the pill works: it could report an update but never install one.
 
 ## 1.2
 
