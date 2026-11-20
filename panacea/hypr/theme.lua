@@ -2,10 +2,11 @@ return {
     gaps_in = 0,
     gaps_out = 0,
     border_size = 1,
-    -- Active window border. The red end of the former gradient crept into the
-    -- frame as a stripe under the island and clashed with the black and white
-    -- shell; here it marked nothing, it was simply a colour.
-    active_border = { colors = { "rgba(ffffffff)","rgba(8a8a8aff)" }, angle = 45 },
+    -- Active window border carries the accent at two brightnesses, the way
+    -- OpenRiot frames a window. Upstream took this from the pill's own white
+    -- (Themes.js), which leaked a black-and-white frame onto an accent-coloured
+    -- desktop.
+    active_border = { colors = { "rgba(a04232ff)", "rgba(c65a47ff)" }, angle = 45 },
     inactive_border = "rgba(2a2a2aaa)",
     rounding = 8,
     rounding_power = 4.0,

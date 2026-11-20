@@ -129,6 +129,13 @@ revision has been reviewed, so `UPSTREAM` is the reviewed baseline.
     `home/gtk.nix` and `modules/desktop/theme.nix`. The two disagreed, so the
     compositor drew a black cursor over a desktop whose applications drew a
     white one. OpenRiot uses Ice throughout, which is what this restores.
+24. `hypr/theme.lua` and the fallback `hypr/theme.conf` frame the active window
+    with the accent at two brightnesses, `#A04232` to `#c65a47`, and
+    `hypr/palette.conf` gains `$accent_dim` for the darker end. Upstream used a
+    white-to-grey gradient taken from the pill's own theme (`Themes.js` is black
+    and white), which put a white frame on an accent-coloured desktop; OpenRiot
+    derives its border from its accent instead, so this follows OpenRiot. The
+    fallback conf also held a stale terracotta-to-blue gradient and now matches.
 
 ## Not yet changed
 
