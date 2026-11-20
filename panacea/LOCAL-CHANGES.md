@@ -123,6 +123,12 @@ revision has been reviewed, so `UPSTREAM` is the reviewed baseline.
     width in `pillSide` and `pillKeepVisible`; and `hoverPad`, an invisible trace
     of the collapsed pill kept in the window mask, stops the "bar <-> control
     centre" flicker when a wide pill expands out from under a stationary cursor.
+23. `hypr/lua/env.lua` sets the cursor to `Bibata-Modern-Ice`, and so does
+    `HYPRCURSOR_THEME`. Upstream sets `Bibata-Modern-Classic`, which is the dark
+    variant, while NixRiot told GTK and the session to use Ice in
+    `home/gtk.nix` and `modules/desktop/theme.nix`. The two disagreed, so the
+    compositor drew a black cursor over a desktop whose applications drew a
+    white one. OpenRiot uses Ice throughout, which is what this restores.
 
 ## Not yet changed
 

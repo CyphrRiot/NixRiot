@@ -7,12 +7,12 @@
 -- language.
 hl.env("LC_TIME", "en_GB.UTF-8")
 
--- Cursor: Bibata Modern Classic, black, without outline or shadow, a match for
--- the dark shell. The theme name is needed both in the variables (read by
--- Xwayland and GTK/Qt programs) and in Hyprland itself, which draws the cursor
--- on its own.
-hl.env("XCURSOR_THEME", "Bibata-Modern-Classic")
-hl.env("HYPRCURSOR_THEME", "Bibata-Modern-Classic")
+-- Cursor: Bibata Modern Ice, white, a match for OpenRiot. The theme name is
+-- needed both in the variables (read by Xwayland and GTK/Qt programs) and in
+-- Hyprland itself, which draws the cursor on its own. Upstream ships Classic
+-- here, which made the compositor's cursor black while GTK drew a white one.
+hl.env("XCURSOR_THEME", "Bibata-Modern-Ice")
+hl.env("HYPRCURSOR_THEME", "Bibata-Modern-Ice")
 hl.env("XCURSOR_SIZE", "24")
 hl.env("HYPRCURSOR_SIZE", "24")
 hl.env("GDK_SCALE", "1")
