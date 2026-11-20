@@ -11,6 +11,12 @@ nothing else, so the wording here is exactly what a person reads on the pill's
 
 ## Unreleased
 
+## 1.8
+
+- Fix conflicting NPU settings in hardware
+- Support ThinkPad X1 series laptops
+- Other minor bug fixes
+
 ## 1.7
 
 - The pill's System page names NixRiot, links to it, and shows the NixRiot
