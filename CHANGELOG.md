@@ -11,6 +11,11 @@ nothing else, so the wording here is exactly what a person reads on the pill's
 
 ## Unreleased
 
+## 1.5
+
+- Signal Desktop is included, and the launcher's Signal opens it. The terminal
+  client it used to open, gurk, is now Signal TUI.
+
 ## 1.4
 
 - Upgrading updates the desktop itself, not just the system: changes to
