@@ -11,6 +11,12 @@ nothing else, so the wording here is exactly what a person reads on the pill's
 
 ## Unreleased
 
+- Upgrading updates the desktop itself, not just the system: changes to
+  keybindings, the cursor and the shell's scripts used to reach fresh installs
+  only.
+- The pointer is white again. The compositor drew a black cursor while
+  applications drew a white one, because the two were told different themes.
+
 ## 1.3
 
 - The screen locks itself after ten minutes without input.

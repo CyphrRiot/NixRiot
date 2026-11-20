@@ -105,6 +105,18 @@ Last updated: 2026-11-19.
       **nixpkgs has no equivalent**, so anything that turns `fprintAuth` on must
       carry the gate itself. `security.pam.services.<name>.rules` and its
       per-rule `order` are how to place it without editing PAM files.
+19. **Panacea's config is refreshed on every rebuild.** It used to be copied only
+    when `~/.config/<tree>` was absent, which meant a fix under `panacea/` — a
+    keybinding, a cursor, a script — reached a fresh install and nobody else. An
+    upgrade rebuilt the system and left the desktop alone. `home/panacea.nix`
+    now rsyncs each tree with `--delete` on every activation, so upgrading does
+    what it says. What is not ours to ship is excluded: `hypr/custom/` (the
+    override layer Panacea sources last, and where a user's own changes belong),
+    `settings.json`, `clipboard_pins.json` and `.whatsnew` under `panacea/`, and
+    `wallpaper.conf` and `hyprpaper.conf`, which `switch_theme.sh` writes as the
+    wallpaper state. `foot/` and `fastfetch/` are refreshed whole because
+    `palette.sh` regenerates their theming later in the same activation. rsync is
+    called by store path so activation does not depend on PATH.
 
 ## Verified package facts
 

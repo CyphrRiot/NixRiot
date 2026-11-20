@@ -139,5 +139,6 @@ revision has been reviewed, so `UPSTREAM` is the reviewed baseline.
   there, and the pin is already at that revision, so this is the one hunk left.
 - `panacea/scripts/*.sh` still assume common Arch tool names in a few
   places. Audit and patch as each feature is exercised.
-- `hypr/scripts/*.sh` still write to `~/.config` directly. That is fine
-  for now because Home Manager copies the tree once and leaves it alone.
+- `hypr/scripts/*.sh` still write to `~/.config` directly. That is fine: Home
+  Manager now refreshes the tree on every rebuild and those files are
+  regenerated afterwards, in the same activation.

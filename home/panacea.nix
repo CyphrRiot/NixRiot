@@ -1,11 +1,19 @@
-{ config, lib, panaceaSrc, ... }:
+{ config, lib, pkgs, panaceaSrc, ... }:
 let
-  copyIfMissing = name: ''
-    if [ ! -e "$HOME/.config/${name}" ]; then
-      run mkdir -p "$HOME/.config"
-      run cp -r ${panaceaSrc}/${name} "$HOME/.config/${name}"
-      run chmod -R u+w "$HOME/.config/${name}"
-    fi
+  # Ship the config trees on every rebuild rather than only when absent, so a fix
+  # under hypr/ or panacea/ reaches an installed machine instead of being copied
+  # once at first login and never again. What is not ours to ship is excluded:
+  # hypr/custom/ is the override layer Panacea sources last, settings.json is
+  # written by the pill, and wallpaper.conf and hyprpaper.conf are the wallpaper
+  # state that switch_theme.sh writes at run time.
+  #
+  # rsync by absolute path: activation should not depend on what happens to be in
+  # PATH.
+  refresh = name: extraExcludes: ''
+    run mkdir -p "$HOME/.config"
+    run ${pkgs.rsync}/bin/rsync -a --delete ${lib.concatStringsSep " " (map (e: "--exclude ${e}") extraExcludes)} \
+      ${panaceaSrc}/${name}/ "$HOME/.config/${name}/"
+    run chmod -R u+w "$HOME/.config/${name}"
   '';
 
   # Panacea ships its desktop entries with an @HOME@ placeholder that upstream's
@@ -26,10 +34,10 @@ in
   };
 
   home.activation.panaceaConfig = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    ${copyIfMissing "panacea"}
-    ${copyIfMissing "hypr"}
-    ${copyIfMissing "foot"}
-    ${copyIfMissing "fastfetch"}
+    ${refresh "panacea" [ "settings.json" "clipboard_pins.json" ".whatsnew" ]}
+    ${refresh "hypr" [ "custom" "wallpaper.conf" "hyprpaper.conf" ]}
+    ${refresh "foot" []}
+    ${refresh "fastfetch" []}
 
     run chmod -R u+x "$HOME/.config/panacea/scripts" "$HOME/.config/hypr/scripts" 2>/dev/null || true
 
