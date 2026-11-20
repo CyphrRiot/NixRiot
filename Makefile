@@ -5,9 +5,9 @@ SHELL := bash
 VERSION_FILE = VERSION
 CHANGELOG = CHANGELOG.md
 EDITOR ?= hx
-# bump leaves the version untagged on purpose: 'make release' then releases it as
-# it stands, so the ISO follows the update instead of racing it.
-TAG ?= 1
+# The tag marks the version; the release marks the artifact. So bump tags and
+# stops, and PUBLISH=0 only skips the ISO build and the GitHub release.
+PUBLISH ?= 1
 
 check:
 	nix flake check
@@ -27,10 +27,11 @@ update:
 fmt:
 	nix fmt
 
-# Bump the version and commit it, so installed machines see the update, without
-# building or tagging anything. 'make release' later releases that same version.
+# Bump the version, commit and tag it, so installed machines see the update,
+# without building an ISO or creating a GitHub release. 'make release' then
+# publishes that same version.
 bump:
-	@$(MAKE) --no-print-directory do-release BUMP=minor TAG=0
+	@$(MAKE) --no-print-directory do-release BUMP=minor PUBLISH=0
 
 release:
 	@$(MAKE) --no-print-directory do-release BUMP=minor
@@ -44,7 +45,7 @@ do-release:
 	  major=$${old%%.*}; \
 	  minor=$${old#*.}; \
 	  if [ -n "$$(git tag -l "v$$old")" ]; then \
-	    if gh auth status >/dev/null 2>&1 && ! gh release view "v$$old" >/dev/null 2>&1; then \
+	    if [ "$(PUBLISH)" = 1 ] && gh auth status >/dev/null 2>&1 && ! gh release view "v$$old" >/dev/null 2>&1; then \
 	      echo "v$$old is tagged but not published. Publishing it now."; \
 	      $(MAKE) --no-print-directory do-publish; \
 	      exit 0; \
@@ -75,7 +76,7 @@ do-release:
 	    exit 1; \
 	  }; \
 	  if [ "$$section" = "Unreleased" ]; then \
-	    if [ "$(TAG)" = 1 ]; then echo "Releasing $$old -> $$new"; else echo "Bumping $$old -> $$new"; fi; \
+	    if [ "$(PUBLISH)" = 1 ]; then echo "Releasing $$old -> $$new"; else echo "Bumping $$old -> $$new"; fi; \
 	    awk -v new="## $$new" \
 	      '/^## Unreleased/ { print "## Unreleased"; print ""; print new; next } { print }' \
 	      $(CHANGELOG) > $(CHANGELOG).tmp; \
@@ -83,7 +84,7 @@ do-release:
 	    printf '%s\n' "$$new" > $(VERSION_FILE); \
 	  fi; \
 	  sed -i "s|badge/version-[0-9.]*-|badge/version-$$new-|" README.md; \
-	  if [ "$(TAG)" = 1 ]; then msg="Release $$new"; else msg="Version $$new"; fi; \
+	  if [ "$(PUBLISH)" = 1 ]; then msg="Release $$new"; else msg="Version $$new"; fi; \
 	  if [ -n "$$(git status --porcelain)" ]; then \
 	    git add -A; \
 	    echo; \
@@ -101,12 +102,12 @@ do-release:
 	    esac; \
 	    git commit -q -m "$$msg"; \
 	  fi; \
-	  if [ "$(TAG)" = 1 ]; then \
-	    git tag -a "v$$new" -m "NixRiot v$$new"; \
-	    echo "Tagged v$$new."; \
+	  git tag -a "v$$new" -m "NixRiot v$$new"; \
+	  echo "Tagged v$$new."; \
+	  if [ "$(PUBLISH)" = 1 ]; then \
 	    $(MAKE) --no-print-directory do-publish; \
 	  else \
-	    echo "VERSION is $$new and untagged. 'make release' will release it as it stands."; \
+	    echo "No ISO built. 'make release' publishes v$$new when it is wanted."; \
 	  fi
 
 publish:

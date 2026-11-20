@@ -182,10 +182,12 @@ Checked against nixpkgs. Do not re-add removed packages, and use these names.
   fails soft.
 - **`VERSION` is the trigger, not the commit.** A commit pushed to main without
   a version bump is invisible: the check sees the same version and reports
-  nothing. `make bump` exists for that, committing a new `VERSION` and its notes
-  without tagging or building an ISO; `make release` then releases that version
-  as it stands. A hand-run `nixriot-update apply` fetches main at HEAD whatever
-  the version, which is how unreleased work gets onto a machine during testing.
+  nothing. `make bump` exists for that, committing a new `VERSION`, its notes and
+  the tag, without building an ISO or creating a release. The tag marks the
+  version and the release marks the artifact, so `make release` afterwards
+  publishes that same version instead of bumping past it. A hand-run
+  `nixriot-update apply` fetches main at HEAD whatever the version, which is how
+  unreleased work gets onto a machine during testing.
 - `nixriot-update.service` is a privileged oneshot, startable by `wheel` through
   a polkit rule. `apply`:
   - clones upstream into a temp dir,
