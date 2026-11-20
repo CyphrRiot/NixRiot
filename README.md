@@ -208,14 +208,20 @@ instead of leaving it off, is planned.
 
 ## Install
 
+**A network connection is required.** The installer builds the target system from
+the flake and fetches the rest from `cache.nixos.org`, and it will not touch a
+disk until that answers.
+
 1. Boot the USB stick (disable Secure Boot first if the firmware refuses it).
 2. It comes up on a text console, logs in as `nixos`, and starts the installer by
    itself.
 3. It asks for a username, then a password for that user. The username uses
    lowercase letters, digits, underscore or hyphen, and does not start with a
    digit or underscore.
-4. It checks for a network. If there is none, press `w` to run `nmtui` and
-   connect. The installer waits, and will not touch a disk until it is online.
+4. It checks that it can reach `cache.nixos.org`, and will not touch a disk until
+   it can. If the check fails it offers `retry`, `w` to run `nmtui`, or `skip`;
+   `skip` is for a machine whose store already holds everything, not for a broken
+   connection.
 5. It lists the disks it can see. Type the target disk, for example
    `/dev/nvme0n1`.
 6. Type `ERASE` to confirm. This is the point of no return.
