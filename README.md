@@ -540,13 +540,22 @@ access for the first `nix flake lock`.
 
 ## Troubleshooting
 
-- **Notes are not installed.** Panacea's `notes` action points at Obsidian, which
-  NixRiot does not ship, so `SUPER + O` is rebound to the text editor. Install
-  Obsidian or rebind it from the settings panel.
+Anything not covered here belongs in a [GitHub
+issue](https://github.com/CyphrRiot/NixRiot/issues). If it came from an install,
+attach the log.
+
 - **The install failed partway.** Re-run `sudo nixriot-install`; it wipes and
   starts over.
 - **No network during install.** The installer refuses to touch a disk until
   `cache.nixos.org` answers. Press `w` at the prompt to run `nmtui`.
+- **The install failed and you want to report it.** The entire run is in
+  `/tmp/nixriot-install.log` inside the live system. Send it with:
+
+  ```sh
+  curl --data-binary @/tmp/nixriot-install.log https://paste.rs
+  ```
+
+  That prints a URL on stdout; put it in the issue.
 
 ---
 
