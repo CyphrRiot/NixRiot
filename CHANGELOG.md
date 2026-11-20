@@ -11,6 +11,10 @@ nothing else, so the wording here is exactly what a person reads on the pill's
 
 ## Unreleased
 
+## 1.6
+
+- Windows are framed with the accent colour, not white.
+
 ## 1.5
 
 - Signal Desktop is included, and the launcher's Signal opens it. The terminal
