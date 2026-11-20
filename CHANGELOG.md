@@ -11,6 +11,8 @@ nothing else, so the wording here is exactly what a person reads on the pill's
 
 ## Unreleased
 
+## 1.4
+
 - Upgrading updates the desktop itself, not just the system: changes to
   keybindings, the cursor and the shell's scripts used to reach fresh installs
   only.
