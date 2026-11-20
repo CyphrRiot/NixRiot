@@ -155,7 +155,7 @@
 
     alias helix='hx'
 
-    # Signal Messenger
+    # Signal in the terminal
     alias signal gurk
 
     # Directory listing with lsd (better ls)

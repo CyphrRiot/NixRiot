@@ -54,6 +54,12 @@ in
     };
     "applications/signal.desktop" = appFile {
       name = "Signal";
+      exec = "signal-desktop";
+      icon = "signal-desktop";
+      categories = "Network;Chat;";
+    };
+    "applications/signal-tui.desktop" = appFile {
+      name = "Signal TUI";
       exec = "foot -e gurk";
       categories = "Network;Chat;";
     };

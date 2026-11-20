@@ -111,6 +111,8 @@ NixRiot ships no wallet files and no secrets. You own those.
 - **Helix** (the default editor), Crush, and a plain text editor.
 - **Firefox**, zathura, Thunar, and AbiWord with Gnumeric when `nixriot.office` is on.
 - **Media**: mpv, Lollypop, optional Transmission.
+- **Signal** Desktop, with `gurk` for the terminal, which is the only Signal
+  OpenRiot could have: OpenBSD has no desktop client.
 - **Crypto** (opt-in): Monero GUI, Bitcoin Core, WireGuard.
 - **Mullvad VPN**: the daemon and the desktop app are installed and enabled by
   default, with the GUI in the app launcher and the `mullvad` command line.
@@ -338,7 +340,7 @@ full set.
 
 | Module | Packages |
 |---|---|
-| `apps/shell.nix` | fish, zoxide, ripgrep, fd, fzf, btop, fastfetch, lsd, bat, pv, jq, gurk-rs |
+| `apps/shell.nix` | fish, zoxide, ripgrep, fd, fzf, btop, fastfetch, lsd, bat, pv, jq, signal-desktop, gurk-rs |
 | `apps/editors.nix` | helix, gnome-text-editor, crush, git |
 | `apps/media.nix` | mpv, lollypop, ffmpeg, ffmpegthumbnailer, cava, transmission (optional) |
 | `apps/office.nix` | zathura, firefox, thunar, tumbler, file-roller, abiword and gnumeric (optional) |
@@ -359,7 +361,7 @@ for NixOS.
 |---|---|
 | `vim`, `vi` | Helix (`hx`) |
 | `helix` | `hx` |
-| `signal` | Signal desktop (`gurk`) |
+| `signal` | Signal TUI (`gurk`) |
 | `ls`, `ll`, `la` | `lsd`, `lsd -l`, `lsd -la` |
 | `music` | `lollypop` |
 | `more` | `more -e` |

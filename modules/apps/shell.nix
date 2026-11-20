@@ -17,6 +17,7 @@
       bat
       pv
       jq
+      signal-desktop
       gurk-rs
     ];
   };
