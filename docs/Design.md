@@ -130,8 +130,8 @@ machine's. `nixriot-update` clones `https://github.com/<owner>/<repo>` into a
 temporary directory, `rsync -a --delete` that into `/etc/nixriot` while
 excluding those two files, records the new revision in `/etc/nixriot-revision`,
 and runs `nixos-rebuild switch --flake /etc/nixriot#installed`. Because the
-rsync replaces the whole tree, anything edited in place under `/etc/nixriot` —
-`flake.lock` included — is discarded by the next update. Details, including why
+rsync replaces the whole tree, anything edited in place under `/etc/nixriot`
+(including `flake.lock`) is discarded by the next update. Details, including why
 the revision is a real file rather than something derived from the flake, are in
 `Internals.md`.
 

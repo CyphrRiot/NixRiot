@@ -60,11 +60,11 @@ Last updated: 2026-11-19.
     Panacea's own `lock.sh` at 600s, `hypr/custom/autostart.lua` starts
     `hypridle`, and Coffee mode still wins: it holds a `systemd-inhibit` for
     `idle`, which hypridle honours at its default `ignore_systemd_inhibit`.
-    Display-off is deliberately absent — Hyprland 0.56 replaced the `dpms`
+    Display-off is deliberately absent: Hyprland 0.56 replaced the `dpms`
     dispatcher with Lua `hl.dpms`, so there is no version-independent command.
 16. **Closing the lid is logind's business.** NixRiot does not bind the lid
     switch at all: upstream bound it to a lock, which locked a machine that was
-    still in use on an external display. logind's own rule does what is wanted —
+    still in use on an external display. logind's own rule does what is wanted:
     more than one connected display counts as docked and
     `HandleLidSwitchDocked` is `ignore`, so a clamshell lid does not suspend,
     and `modules/nixriot.nix` states the three values explicitly so a logind
@@ -106,8 +106,8 @@ Last updated: 2026-11-19.
       carry the gate itself. `security.pam.services.<name>.rules` and its
       per-rule `order` are how to place it without editing PAM files.
 19. **Panacea's config is refreshed on every rebuild.** It used to be copied only
-    when `~/.config/<tree>` was absent, which meant a fix under `panacea/` — a
-    keybinding, a cursor, a script — reached a fresh install and nobody else. An
+    when `~/.config/<tree>` was absent, which meant a fix under `panacea/` (a
+    keybinding, a cursor, a script) reached a fresh install and nobody else. An
     upgrade rebuilt the system and left the desktop alone. `home/panacea.nix`
     now rsyncs each tree with `--delete` on every activation, so upgrading does
     what it says. What is not ours to ship is excluded: `hypr/custom/` (the
@@ -167,8 +167,15 @@ Checked against nixpkgs. Do not re-add removed packages, and use these names.
 - `modules/update.nix` installs `nixriot-update` and two systemd units.
 - `nixriot-update-check.timer`: `OnBootSec=5min`, `OnUnitActiveSec=4h`,
   `RandomizedDelaySec=10min`, `Persistent=false`. It compares
-  `/etc/nixriot-revision` against GitHub main and writes
-  `/var/lib/nixriot/status.json`. It fails soft.
+  `/etc/nixriot/VERSION` with `VERSION` on main, takes the one-line subject from
+  the matching changelog section, and writes `/var/lib/nixriot/status.json`. It
+  fails soft.
+- **`VERSION` is the trigger, not the commit.** A commit pushed to main without
+  a version bump is invisible: the check sees the same version and reports
+  nothing. `make bump` exists for that, committing a new `VERSION` and its notes
+  without tagging or building an ISO; `make release` then releases that version
+  as it stands. A hand-run `nixriot-update apply` fetches main at HEAD whatever
+  the version, which is how unreleased work gets onto a machine during testing.
 - `nixriot-update.service` is a privileged oneshot, startable by `wheel` through
   a polkit rule. `apply`:
   - clones upstream into a temp dir,
@@ -176,7 +183,9 @@ Checked against nixpkgs. Do not re-add removed packages, and use these names.
     `hosts/installed/local.nix` and `hosts/installed/hardware-configuration.nix`**,
   - writes the new revision to `/etc/nixriot-revision`,
   - `nixos-rebuild switch --flake /etc/nixriot#installed`,
-  - writes `/var/lib/nixriot/release-notes.txt` from `git log`.
+  - writes `/var/lib/nixriot/release-notes.txt` from the changelog sections
+    above the installed version, falling back to `git log` subjects only if the
+    changelog is unreadable or the old version is unknown.
 - `/etc/nixriot-revision` is a real file, written by the installer and the
   updater. It is not derived from the flake: the machine's tree is evaluated as
   a path input, which has no `self.rev`. On the ISO,
