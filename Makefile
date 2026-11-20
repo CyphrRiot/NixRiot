@@ -1,10 +1,13 @@
 SHELL := bash
 
-.PHONY: check build iso switch update fmt release release-major do-release publish
+.PHONY: check build iso switch update fmt bump release release-major do-release publish
 
 VERSION_FILE = VERSION
 CHANGELOG = CHANGELOG.md
 EDITOR ?= hx
+# bump leaves the version untagged on purpose: 'make release' then releases it as
+# it stands, so the ISO follows the update instead of racing it.
+TAG ?= 1
 
 check:
 	nix flake check
@@ -23,6 +26,11 @@ update:
 
 fmt:
 	nix fmt
+
+# Bump the version and commit it, so installed machines see the update, without
+# building or tagging anything. 'make release' later releases that same version.
+bump:
+	@$(MAKE) --no-print-directory do-release BUMP=minor TAG=0
 
 release:
 	@$(MAKE) --no-print-directory do-release BUMP=minor
@@ -75,12 +83,13 @@ do-release:
 	    printf '%s\n' "$$new" > $(VERSION_FILE); \
 	  fi; \
 	  sed -i "s|badge/version-[0-9.]*-|badge/version-$$new-|" README.md; \
+	  if [ "$(TAG)" = 1 ]; then msg="Release $$new"; else msg="Version $$new"; fi; \
 	  if [ -n "$$(git status --porcelain)" ]; then \
 	    git add -A; \
 	    echo; \
 	    git --no-pager diff --cached --stat; \
 	    echo; \
-	    read -r -p "Commit everything as 'Release $$new'? [y/N] " commit_answer; \
+	    read -r -p "Commit everything as '$$msg'? [y/N] " commit_answer; \
 	    case "$$commit_answer" in \
 	      y|Y) ;; \
 	      *) \
@@ -90,11 +99,15 @@ do-release:
 	        exit 0; \
 	        ;; \
 	    esac; \
-	    git commit -q -m "Release $$new"; \
+	    git commit -q -m "$$msg"; \
 	  fi; \
-	  git tag -a "v$$new" -m "NixRiot v$$new"; \
-	  echo "Tagged v$$new."; \
-	  $(MAKE) --no-print-directory do-publish
+	  if [ "$(TAG)" = 1 ]; then \
+	    git tag -a "v$$new" -m "NixRiot v$$new"; \
+	    echo "Tagged v$$new."; \
+	    $(MAKE) --no-print-directory do-publish; \
+	  else \
+	    echo "VERSION is $$new and untagged. 'make release' will release it as it stands."; \
+	  fi
 
 publish:
 	@$(MAKE) --no-print-directory do-publish
