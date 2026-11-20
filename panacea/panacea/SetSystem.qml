@@ -152,12 +152,12 @@ ColumnLayout {
                 Layout.fillWidth: true
                 spacing: 1
                 Text {
-                    text: "github.com/EnsixD"
+                    text: "github.com/CyphrRiot/NixRiot"
                     color: page.sys.colFg
                     font { family: page.sys.fontDisplay; pixelSize: page.sys.fontSize + 1 }
                 }
                 Text {
-                    text: page.sys.tr("The author of the shell — GitHub profile")
+                    text: page.sys.tr("The NixRiot project. The shell is Panacea, by EnsixD.")
                     color: page.sys.colMuted
                     font { family: page.sys.fontBody; pixelSize: page.sys.fontSize - 4 }
                 }
@@ -174,7 +174,7 @@ ColumnLayout {
             anchors.fill: parent
             hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
-            onClicked: { pOpen.url = "https://github.com/EnsixD"; pOpen.running = true; }
+            onClicked: { pOpen.url = "https://github.com/CyphrRiot/NixRiot"; pOpen.running = true; }
         }
     }
 
@@ -210,9 +210,8 @@ ColumnLayout {
                     visible: text.length > 0
                     text: page.sys.updError.length ? page.sys.updErrorText
                         : page.sys.updateAvailable ? page.sys.updSubject
-                        : "Panacea " + page.sys.version
-                          + (page.sys.updCurrent.length
-                             ? " · " + page.sys.tr("build") + " " + page.sys.updCurrent.substring(0, 7) : "")
+                        : "NixRiot " + (page.sys.updCurrent.length
+                                        ? page.sys.updCurrent : page.sys.tr("version unknown"))
                     color: page.sys.updError.length ? page.sys.colCrit : page.sys.colMuted
                     wrapMode: Text.WordWrap
                     font { family: page.sys.fontBody; pixelSize: page.sys.fontSize - 4 }

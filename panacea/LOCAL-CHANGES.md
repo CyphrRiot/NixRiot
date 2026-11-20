@@ -136,6 +136,14 @@ revision has been reviewed, so `UPSTREAM` is the reviewed baseline.
     and white), which put a white frame on an accent-coloured desktop; OpenRiot
     derives its border from its accent instead, so this follows OpenRiot. The
     fallback conf also held a stale terracotta-to-blue gradient and now matches.
+25. `panacea/SetSystem.qml` names NixRiot where upstream names the shell. The
+    System page's only project link pointed at `github.com/EnsixD`, the shell's
+    author, so there was no route to NixRiot from the island at all, and the
+    version line rendered `Panacea <shell version>` with NixRiot's version
+    demoted to a field labelled "build". The link now opens the NixRiot
+    repository, the subtitle keeps Panacea's author as attribution, and the
+    version line reads `NixRiot <version>` from the updater's own status, which
+    is the installed version.
 
 ## Not yet changed
 
