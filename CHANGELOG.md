@@ -11,11 +11,14 @@ nothing else, so the wording here is exactly what a person reads on the pill's
 
 ## Unreleased
 
+## 1.7
+
+- The pill's System page names NixRiot, links to it, and shows the NixRiot
+  version instead of the shell's.
+
 ## 1.6
 
 - Windows are framed with the accent colour, not white.
-- The pill's System page names NixRiot, links to it, and shows the NixRiot
-  version instead of the shell's.
 
 ## 1.5
 
