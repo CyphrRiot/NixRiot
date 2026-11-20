@@ -75,7 +75,7 @@ do-release:
 	    exit 1; \
 	  }; \
 	  if [ "$$section" = "Unreleased" ]; then \
-	    echo "Releasing $$old -> $$new"; \
+	    if [ "$(TAG)" = 1 ]; then echo "Releasing $$old -> $$new"; else echo "Bumping $$old -> $$new"; fi; \
 	    awk -v new="## $$new" \
 	      '/^## Unreleased/ { print "## Unreleased"; print ""; print new; next } { print }' \
 	      $(CHANGELOG) > $(CHANGELOG).tmp; \

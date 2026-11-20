@@ -117,6 +117,16 @@ Last updated: 2026-11-19.
     wallpaper state. `foot/` and `fastfetch/` are refreshed whole because
     `palette.sh` regenerates their theming later in the same activation. rsync is
     called by store path so activation does not depend on PATH.
+20. **Crypto holdings are not displayed yet.** OpenRiot's `~/.config/crypto.toml`
+    held coins, amounts and an optional API key, and its polybar module showed
+    prices from CoinGecko when that file existed, refreshing on click. NixRiot
+    ships the wallets but nothing reads holdings, so the feature was lost in the
+    port. It maps onto the pill as it stands: a `scripts/crypto.sh` that parses
+    the file and prints JSON, a `Process` in `shell.qml` polling it the way the
+    weather widget polls `weather.sh`, one glyph and the total in the collapsed
+    pill shown only when the file exists, and a page listing each holding that
+    opens when that glyph is clicked. The file stays the user's: never shipped,
+    never in the ISO, and back in `.gitignore` with a comment explaining why.
 
 ## Verified package facts
 

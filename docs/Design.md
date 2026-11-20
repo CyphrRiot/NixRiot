@@ -236,6 +236,10 @@ Ordered by priority. The live list is in `Internals.md` and `AGENTS.md`.
    ship split (`split -b 1900M`, rejoined with `cat` and checked against
    `SHA256SUMS`) and want an 8 GB stick. It does nothing for the local builds,
    which need the cache in item 3 either way.
+7. **Crypto holdings in the pill.** OpenRiot showed prices from a user-owned
+   `crypto.toml`; the port lost it. The shape is decided: a script, a poll, a
+   glyph in the collapsed pill and a page of holdings. See decision 20 in
+   `Internals.md`.
 
 ## Milestones
 
