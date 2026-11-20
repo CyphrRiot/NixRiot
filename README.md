@@ -19,23 +19,13 @@
 
 ## Status of NixRiot
 
-**This is an early release. It has not been fully tested on real hardware, so
-parts of it may not work at all. Download and install it at your own risk.**
+**Early release.** It installs over the network with LUKS and boots to the
+NixRiot desktop: the pill, the launcher, its settings, the terminal. That path
+runs end to end in a virtual machine today.
 
-What is verified, in a virtual machine only:
-
-- The image builds, installs over the network with LUKS, and reboots.
-- It comes up on the NixRiot desktop.
-
-What has not been tested:
-
-- A full install on real hardware.
-- The lock screen and the password vault.
-- Media keys and the pill's media capsule.
-- The night light, the idle lock, and the lid behaviour an external monitor
-  changes.
-- Bluetooth, and the Mullvad app under Wayland.
-- Unverified claims under [Supported hardware](#supported-hardware).
+Four things have not met real hardware yet: the lock screen and the password
+vault, the media keys, Bluetooth, and the Mullvad app under Wayland. The
+hardware notes below are what has actually been checked.
 
 ![The NixRiot desktop: the pill, its settings pages, and a terminal](docs/img/desktop-demo.gif)
 
@@ -60,6 +50,8 @@ A reproducible NixOS desktop with the [Panacea](https://github.com/EnsixD/Panace
 shell and the parts of [OpenRiot](https://OpenRiot.org) that
 make sense on Linux. One flake builds the installer image and the installed
 system, so both stay in step.
+
+The reasoning behind it is in the [article on X](https://x.com/CyphrRiot/status/2123604405975134647).
 
 ## Screenshots
 
