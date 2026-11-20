@@ -39,8 +39,8 @@ taught us what the desktop should feel like. Omarchy then covered much of that
 ground, so we stopped rather than duplicate it. What we could not fix on Arch was
 trust: the AUR means running code from strangers, and that is not a defensible
 default for a desktop you have to keep patched. OpenBSD came next and remains the
-Unix we trust most, but hardware support there is narrow, and a modern GPU
-desktop on it is a permanent fight.
+Unix we trust most, but modern hardware there is a permanent fight: network
+cards, GPUs, Bluetooth, and the rest of what a desktop needs.
 
 NixRiot takes all of that and puts it on a foundation that can be trusted and
 reproduced. One flake. Packages from a pinned nixpkgs. An installer that builds
