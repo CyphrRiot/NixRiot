@@ -37,7 +37,7 @@ What has not been tested:
 - Bluetooth, and the Mullvad app under Wayland.
 - Unverified claims under [Supported hardware](#supported-hardware).
 
-![The NixRiot desktop, running: the pill, its settings, and a terminal](docs/img/desktop-demo.webp)
+![The NixRiot desktop: the pill, its settings pages, and a terminal](docs/img/desktop-demo.gif)
 
 ## Philosophy of NixRiot
 
