@@ -11,6 +11,18 @@ nothing else, so the wording here is exactly what a person reads on the pill's
 
 ## Unreleased
 
+## 1.10
+
+- The pill shows an Update button when a release is available. The System
+  page's Check asks GitHub directly and reports an offline network instead of
+  showing stale data.
+- The updater checks that your user is still configured, builds the new system
+  before switching, keeps a copy of the previous tree, and prints the rollback
+  command if the switch fails.
+- Five more wallpapers; the default is `22.webp`.
+- Labels that showed a literal `\u2026` or `\u0026` now render as characters.
+- The keyboard layout badge appears only when more than one layout is set.
+
 ## 1.9
 
 - Thunar is gone. Panacea Files is the only file manager, and folders open

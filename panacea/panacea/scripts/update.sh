@@ -13,39 +13,44 @@
 # the shell, which the flake replaces.
 set -u
 
-STATUS=/var/lib/nixriot/status.json
 SERVICE=nixriot-update.service
+RAW="${NIXRIOT_RAW:-https://raw.githubusercontent.com/CyphrRiot/NixRiot/main}"
+INSTALLED=/etc/nixriot/VERSION
 
 emit() { printf '%s=%s\n' "$1" "$2"; }
 
 case "${1:-check}" in
     check)
-        if ! command -v jq >/dev/null 2>&1 || [ ! -r "$STATUS" ]; then
+        installed=$(tr -d ' \n' < "$INSTALLED" 2>/dev/null)
+        if ! command -v curl >/dev/null 2>&1; then
             emit status unknown
             exit 0
         fi
 
-        # A status older than a day means the check has been failing.
-        if [ -n "$(find "$STATUS" -mmin +1440 2>/dev/null)" ]; then
-            emit status unknown
+        available=$(curl -fsS --max-time 10 "$RAW/VERSION" 2>/dev/null | tr -d ' \n')
+        if [ -z "$available" ]; then
+            emit status offline
             emit error offline
+            [ -n "$installed" ] && emit current "$installed"
             exit 0
         fi
 
-        installed=$(jq -r '.installed // ""' "$STATUS" 2>/dev/null)
-        available=$(jq -r '.available // ""' "$STATUS" 2>/dev/null)
-        subject=$(jq -r '.subject // ""' "$STATUS" 2>/dev/null)
-        flag=$(jq -r '.updateAvailable // false' "$STATUS" 2>/dev/null)
-
-        if [ -z "$installed" ] || [ -z "$available" ]; then
+        if [ -z "$installed" ]; then
             emit status unknown
+            emit latest "$available"
             exit 0
+        fi
+
+        subject=""
+        if [ "$installed" != "$available" ]; then
+            subject=$(curl -fsS --max-time 10 "$RAW/CHANGELOG.md" 2>/dev/null \
+                | awk -v h="## $available" '$0 == h { found = 1; next } found && /^- / { sub(/^- /, ""); print; exit }')
         fi
 
         emit current "$installed"
         emit latest "$available"
-        emit subject "$subject"
-        if [ "$flag" = "true" ]; then
+        [ -n "$subject" ] && emit subject "$subject"
+        if [ "$installed" != "$available" ]; then
             emit status behind
         else
             emit status current

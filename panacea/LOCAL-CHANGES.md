@@ -28,9 +28,9 @@ revision has been reviewed, so `UPSTREAM` is the reviewed baseline.
 ## Changes made
 
 1. `hypr/wallpaper/` is replaced with the NixRiot wallpaper set, `00.webp`
-   through `28.webp`, generated for the project.
+   through `32.webp`, generated for the project.
 2. `hypr/wallpaper.conf` and `hypr/hyprpaper.conf` point at
-   `~/.config/hypr/wallpaper/27.webp`.
+   `~/.config/hypr/wallpaper/22.webp`.
 3. Upstream `assets/logo*.png` moved to `panacea/assets/` so the shell
    finds them after the config tree is copied.
 4. `hypr/scripts/switch_theme.sh` fallback now includes `*.webp`.
@@ -156,7 +156,7 @@ revision has been reviewed, so `UPSTREAM` is the reviewed baseline.
     `monitor.added` and `monitor.removed` re-evaluate the state, so plugging in
     an external display with the lid already shut works without a manual
     `hyprctl` command.
-27. The default wallpaper is `27.webp`. The checked-in `wallpaper.conf` and
+27. The default wallpaper is `22.webp`. The checked-in `wallpaper.conf` and
     `hyprpaper.conf` said `16.webp`, so the first launch depended on the restore
     script winning its race with hyprpaper. `home/panacea.nix` now seeds both
     state files from those defaults with `~` expanded when they are absent; the

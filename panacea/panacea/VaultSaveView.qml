@@ -184,7 +184,7 @@ FocusScope {
                 color: noMa.containsMouse ? Qt.rgba(1, 1, 1, 0.13) : Qt.rgba(1, 1, 1, 0.06)
                 Text {
                     anchors.centerIn: parent
-                    text: view.sys.tr("Don\\u0027t save")
+                    text: view.sys.tr("Don't save")
                     color: view.sys.colFg
                     font { family: view.sys.fontFam; pixelSize: view.sys.fontSize - 2 }
                 }

@@ -29,6 +29,12 @@ ColumnLayout {
     property real diskTotal: 0
     property real selfMb: 0
 
+    function checkedLabel() {
+        if (!page.sys.updCheckedAt) return "";
+        return page.sys.tr("checked ")
+             + new Date(page.sys.updCheckedAt).toLocaleTimeString(Qt.locale(), "HH:mm");
+    }
+
     function stepName(st) {
         return st === "download"      ? page.sys.tr("downloading")
              : st === "selfupdate"    ? page.sys.tr("updating the updater")
@@ -195,12 +201,12 @@ ColumnLayout {
                     Layout.fillWidth: true
                     text: page.sys.updBusy
                           ? page.sys.tr("Updating…") + " " + page.stepName(page.sys.updStep)
-                          : page.sys.updChecking ? page.sys.tr("Checking\\u2026")
+                          : page.sys.updChecking ? page.sys.tr("Checking…")
                           : page.sys.updateAvailable ? page.sys.tr("A new version is available")
                           : page.sys.updStatus === "current" ? page.sys.tr("You are on the latest version")
                           : page.sys.updStatus === "offline" ? page.sys.tr("Cannot reach GitHub")
                           : page.sys.updStatus === "unknown" ? page.sys.tr("Version unknown: this was not installed by the installer")
-                          : page.sys.tr("Checking\\u2026")
+                          : page.sys.tr("Checking…")
                     color: page.sys.updateAvailable ? page.sys.colOn : page.sys.colFg
                     wrapMode: Text.WordWrap
                     font { family: page.sys.fontBody; pixelSize: page.sys.fontSize - 1 }
@@ -212,6 +218,8 @@ ColumnLayout {
                         : page.sys.updateAvailable ? page.sys.updSubject
                         : "NixRiot " + (page.sys.updCurrent.length
                                         ? page.sys.updCurrent : page.sys.tr("version unknown"))
+                          + (page.sys.updStatus === "current" && page.sys.updCheckedAt
+                             ? " · " + page.checkedLabel() : "")
                     color: page.sys.updError.length ? page.sys.colCrit : page.sys.colMuted
                     wrapMode: Text.WordWrap
                     font { family: page.sys.fontBody; pixelSize: page.sys.fontSize - 4 }
@@ -252,8 +260,10 @@ ColumnLayout {
                     }
 
                     Text {
-                        text: page.sys.updChecking ? page.sys.tr("Checking\\u2026")
-                                                   : page.sys.tr("Check")
+                        text: page.sys.updChecking ? page.sys.tr("Checking…")
+                                                   : page.sys.updCheckedAt
+                                                     ? page.sys.tr("Check again")
+                                                     : page.sys.tr("Check")
                         color: page.sys.updChecking ? page.sys.colFg : page.sys.colMuted
                         font { family: page.sys.fontBody; pixelSize: page.sys.fontSize - 3 }
                     }
@@ -283,7 +293,7 @@ ColumnLayout {
 
                 Text {
                     anchors.centerIn: parent
-                    text: page.sys.updBusy ? page.sys.tr("Working…") : page.sys.tr("Refresh")
+                    text: page.sys.updBusy ? page.sys.tr("Working…") : page.sys.tr("Update")
                     color: page.sys.colFg
                     font { family: page.sys.fontBody; pixelSize: page.sys.fontSize - 3; bold: true }
                 }

@@ -472,7 +472,7 @@ ColumnLayout {
             BindRow { bindId: "closeWindow"; label: page.sys.tr("Close window") }
             BindRow { bindId: "fullscreen";  label: page.sys.tr("Fullscreen") }
             BindRow { bindId: "floatToggle"; label: page.sys.tr("Floating window") }
-            BindRow { bindId: "floatCenter"; label: page.sys.tr("Float \\u0026 centre") }
+            BindRow { bindId: "floatCenter"; label: page.sys.tr("Float & centre") }
             BindRow { bindId: "toggleSplit"; label: page.sys.tr("Toggle split") }
             BindRow { bindId: "closeMouse"; label: page.sys.tr("Close with middle click"); manual: true }
             BindRow { bindId: "dragWindow"; label: page.sys.tr("Drag window"); manual: true }

@@ -172,7 +172,7 @@ FocusScope {
 
                 Text {
                     visible: view.sys.vaultBusy
-                    text: view.sys.tr("Checking\\u2026")
+                    text: view.sys.tr("Checking…")
                     color: view.sys.colMuted
                     font { family: view.sys.fontFam; pixelSize: view.sys.fontSize - 4 }
                 }

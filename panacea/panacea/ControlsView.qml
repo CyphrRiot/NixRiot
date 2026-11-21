@@ -1989,7 +1989,7 @@ Item {
                     TextField {
                         id: pwField
                         Layout.fillWidth: true
-                        placeholderText: view.sys.tr("Password for \\u00ab") + wifiPage.passwordFor + "»"
+                        placeholderText: view.sys.tr("Password for «") + wifiPage.passwordFor + "»"
                         echoMode: TextInput.Password
                         color: view.sys.colFg
                         placeholderTextColor: view.sys.colMuted

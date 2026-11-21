@@ -912,6 +912,7 @@ PanelWindow {
     property string updStep: ""
     property string updError: ""
     property string updNotified: ""
+    property real   updCheckedAt: 0
 
     readonly property bool updateAvailable: updStatus === "behind"
 
@@ -1034,6 +1035,7 @@ PanelWindow {
             else if (k === "version") root.updCurrent = v;
         }
         if (!done) return;
+        root.updCheckedAt = Date.now();
         if (root.updStatus === "behind" && root.updLatest.length
                 && root.updLatest !== root.cfg.updNotifiedVer) {
             root.updNotified = root.updLatest;
@@ -5847,6 +5849,53 @@ PanelWindow {
             }
         }
 
+        Rectangle {
+            id: updBtn
+            parent: (root.cfg.pillKeepVisible && root.expanded && !root.settingsMode) ? detachedPanel : capsule
+            anchors.top: parent.top
+            anchors.topMargin: 12
+            anchors.left: islandTabs.right
+            anchors.leftMargin: 8
+            height: 34
+            radius: 17
+            width: updRow.implicitWidth + (root.updateAvailable ? 26 : 14)
+            color: root.updateAvailable ? root.colFg
+                 : updHover.containsMouse ? Qt.rgba(1, 1, 1, 0.10) : "transparent"
+            Behavior on color { ColorAnimation { duration: root.animFast } }
+            visible: root.expanded && !root.settingsMode
+                     && (root.page === "main" || root.page === "chat" || root.page === "vpn")
+
+            Row {
+                id: updRow
+                anchors.centerIn: parent
+                spacing: 6
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: String.fromCodePoint(root.updateAvailable ? 0xF019
+                                               : root.updStatus === "" || root.updChecking ? 0xF017
+                                               : root.updStatus === "current" ? 0xF00C : 0xF071)
+                    color: root.updateAvailable ? root.colBg
+                         : root.updStatus === "current" ? root.colMuted : root.colFg
+                    font { family: root.fontFam; pixelSize: 12 }
+                }
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    visible: root.updateAvailable
+                    text: root.tr("Update")
+                    color: root.colBg
+                    font { family: root.fontBody; pixelSize: 12; bold: true }
+                }
+            }
+
+            MouseArea {
+                id: updHover
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: root.openSettingsAt("system")
+            }
+        }
+
         Item {
             id: pillTray
             parent: (root.cfg.pillKeepVisible && root.expanded && !root.settingsMode) ? detachedPanel : capsule
@@ -6021,7 +6070,6 @@ PanelWindow {
             }
             HeaderBtn {
                 glyph: String.fromCodePoint(0xF0425)
-                glyphColor: root.colCrit
                 onAct: root.togglePage("power")
             }
         }

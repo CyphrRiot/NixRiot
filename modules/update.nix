@@ -15,6 +15,7 @@ let
       pkgs.coreutils
       pkgs.gawk
       pkgs.rsync
+      pkgs.nixos-rebuild
     ]}:$PATH
 
     dir="${statusDir}"
@@ -55,13 +56,46 @@ let
         # gets the HTTPS URL built from it.
         git clone --quiet "https://github.com/$repo" "$tmp"
         rev="$(git -C "$tmp" rev-parse HEAD)"
+
+        # Keep the working tree the running system was built from. A failed
+        # update restores this instead of leaving /etc/nixriot half replaced.
+        previous="$dir/previous"
+        rm -rf "$previous"
+        mkdir -p "$previous"
+        cp -a /etc/nixriot/. "$previous/"
+
         rsync -a --delete --exclude .git \
           --exclude hosts/installed/local.nix \
           --exclude hosts/installed/hardware-configuration.nix \
           "$tmp/" /etc/nixriot/
-        printf '%s\n' "$rev" > /etc/nixriot-revision
+        chmod 755 /etc/nixriot
 
-        nixos-rebuild switch --flake /etc/nixriot#installed
+        local_nix="/etc/nixriot/hosts/installed/local.nix"
+        if ! grep -q 'nixriotUser' "$local_nix" 2>/dev/null \
+                || grep -q 'CHANGEME' "$local_nix" 2>/dev/null; then
+          echo "local.nix is missing a real user; restoring the previous tree." >&2
+          rsync -a --delete "$previous/" /etc/nixriot/
+          chmod 755 /etc/nixriot
+          exit 1
+        fi
+
+        # Evaluate and build before activating. A broken tree fails here, on the
+        # running system, not after the switch.
+        if ! ( cd "$tmp" && nixos-rebuild build --flake /etc/nixriot#installed ); then
+          echo "The new tree does not build; restoring the previous tree." >&2
+          rsync -a --delete "$previous/" /etc/nixriot/
+          chmod 755 /etc/nixriot
+          exit 1
+        fi
+
+        if ! nixos-rebuild switch --flake /etc/nixriot#installed; then
+          echo "The switch failed. The previous generation is still bootable:" >&2
+          echo "  sudo nixos-rebuild switch --rollback" >&2
+          echo "  previous tree: $previous" >&2
+          exit 1
+        fi
+
+        printf '%s\n' "$rev" > /etc/nixriot-revision
 
         if [ -r /etc/nixriot/CHANGELOG.md ] && [ -n "$oldver" ] && [ "$oldver" != unknown ]; then
           awk -v stop="## $oldver" '

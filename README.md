@@ -2,8 +2,8 @@
 
 ![NixRiot](docs/img/banner.webp)
 
-![Status](https://img.shields.io/badge/status-early_release-9a2eef?labelColor=1b2b34)
-![Version](https://img.shields.io/badge/version-1.9-9a2eef?labelColor=1b2b34)
+![Status](https://img.shields.io/badge/status-release-9a2eef?labelColor=1b2b34)
+![Version](https://img.shields.io/badge/version-1.10-9a2eef?labelColor=1b2b34)
 ![Platform](https://img.shields.io/badge/platform-NixOS-9a2eef?logo=nixos&logoColor=white&labelColor=1b2b34)
 ![Shell](https://img.shields.io/badge/shell-Hyprland-9a2eef?logo=hyprland&logoColor=9a2eef&labelColor=1b2b34)
 ![UI](https://img.shields.io/badge/UI-Quickshell-9a2eef?labelColor=1b2b34)
@@ -19,12 +19,13 @@
 
 ## Status of NixRiot
 
-**Early release.** It installs over the network with LUKS and boots to the
-NixRiot desktop: the pill, the launcher, its settings, the terminal. It is
-running on real hardware now, a Bluetooth keyboard included.
+**Released.** It installs over the network with LUKS and boots to the NixRiot
+desktop: the pill, the launcher, its settings, the terminal. It runs on real
+hardware, with Bluetooth input, the lock screen, the password vault, the media
+capsule and the night light all in use.
 
-Still unverified: the password vault, the media keys, and the pill's media
-capsule. The hardware notes below are what has actually been checked.
+Still unverified: the media keys, the clamshell lid switch, and a full
+fifteen-minute idle run. The hardware notes below are what has been checked.
 
 ![The NixRiot desktop: the pill, its settings pages, and a terminal](docs/img/desktop-demo.gif)
 
@@ -120,7 +121,7 @@ NixRiot ships no wallet files and no secrets. You own those.
   default, with the GUI in the app launcher and the `mullvad` command line.
 - **Security**: firewall, SSH hardening, sysctl hardening, MAC randomization,
   `restic` and `rclone` for backups.
-- The **NixRiot wallpaper set** (29 WebP images, `00.webp` through `28.webp`).
+- The **NixRiot wallpaper set** (33 WebP images, `00.webp` through `32.webp`).
 - A **night light** for the screen, off until you switch it on (`SUPER + N`).
 - Full-disk encryption (LUKS2) on the root volume, chosen during install.
 
@@ -402,8 +403,8 @@ off). `SUPER + /` lists every current binding.
 
 ## Wallpapers
 
-The NixRiot set (29 WebP images, `00.webp` through `28.webp`) ships in
-`panacea/hypr/wallpaper/`, default `27.webp`. Change the wallpaper from
+The NixRiot set (33 WebP images, `00.webp` through `32.webp`) ships in
+`panacea/hypr/wallpaper/`, default `22.webp`. Change the wallpaper from
 Settings > Appearance > Wallpapers, or with `SUPER + SHIFT + T` or
 `SUPER + SHIFT + D`. The manifest is
 `panacea/hypr/wallpaper/WALLPAPERS.md`.
@@ -447,6 +448,7 @@ next to your username. The file holds both, and an update preserves it:
 ```nix
 {
   nixriotUser = "riot";
+  nixriot.hostName = "riot";
   nixriot = {
     crypto.monero = true;
     crypto.bitcoin = true;
@@ -470,15 +472,18 @@ Mullvad VPN is installed and enabled by default: the daemon starts at boot and
 the desktop app is in the app launcher. The `mullvad` command line works too:
 
 ```sh
-sudo mullvad account login <your-16-digit-account>
+sudo mullvad account login
 sudo mullvad relay set location us nyc
 sudo mullvad connect
 mullvad status
 ```
 
+`mullvad account login` opens a prompt; paste the 16-digit account number
+there. It is not accepted as a command-line argument.
+
 The pill's VPN panel is a status readout: it reports whether a tunnel is up (it
-detects Mullvad's `wg0-mullvad` interface), but connecting and picking a server
-happen in the app.
+detects Mullvad's `wg0-mullvad` interface), and the header chip shows the exit
+city when connected. Connecting and picking a server happen in the app.
 
 For a WireGuard config (the OpenRiot workflow), set
 `nixriot.wireguard.enable = true;` in
@@ -531,8 +536,28 @@ sudo nixriot-update apply
 ```
 
 That clones the project from GitHub, replaces `/etc/nixriot` with it, and
-rebuilds. A timer runs `nixriot-update check` every four hours and writes the
-result to `/var/lib/nixriot/status.json`, which is what the pill reads.
+rebuilds. A timer runs `nixriot-update check` every four hours; when it finds a
+newer version, the pill shows an **Update** button beside the VPN indicator. The
+System page shows the same state, with a Check button that asks GitHub directly.
+
+![The Update button in the pill, next to the VPN indicator](docs/img/update-pill.webp)
+
+![Settings, System page, with the update ready to install](docs/img/update-settings.webp)
+
+Before switching, the updater copies the current tree to
+`/var/lib/nixriot/previous` and builds the new one with `nixos-rebuild build`.
+If `local.nix` is missing its user or the build fails, it restores the previous
+tree and stops. The previous generation stays in the boot menu, so
+`sudo nixos-rebuild switch --rollback` is always available.
+
+**Upgrading from 1.9 or older:** the updater in those releases could not find
+`nixos-rebuild` and left `/etc/nixriot` unreadable. Run this once, which also
+installs the fixed updater:
+
+```sh
+sudo env PATH=/run/current-system/sw/bin:$PATH nixriot-update apply
+```
+
 
 To rebuild without fetching anything, run the same `rebuild` alias:
 
@@ -597,7 +622,7 @@ attach the log.
   That prints a URL on stdout; put it in the issue.
 
 - **The time zone cannot be changed from Panacea.** The pill runs
-  `pkexec timedatectl set-timezone`. On a generation that still manages
+  `timedatectl set-timezone` directly. On a generation that still manages
   `/etc/localtime`, that path points into the read-only Nix store and
   `timedatectl` fails with `Read-only file system`. NixRiot sets
   `time.timeZone = null` so `timedatectl` owns the file, and a polkit rule
