@@ -35,6 +35,7 @@ ShellRoot {
             property bool lockShowMedia: true
             property bool lockShowNotif: true
             property string lockHint: ""
+            property bool clock12: false
         }
     }
     readonly property var cfg: cfgFile.adapter
@@ -92,7 +93,7 @@ ShellRoot {
     property string dateText: ""
     function tick() {
         var d = new Date();
-        root.timeText = Qt.formatDateTime(d, "HH:mm");
+        root.timeText = Qt.formatDateTime(d, root.cfg.clock12 ? "h:mm AP" : "HH:mm");
         root.dateText = Qt.formatDateTime(d, "dddd, d MMMM");
     }
     Timer {

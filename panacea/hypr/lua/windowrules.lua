@@ -64,6 +64,14 @@ hl.window_rule({
 })
 
 hl.window_rule({
+    name  = "floating-terminal",
+    match = { class = "nixriot-float-term" },
+    float = true,
+    size  = "990 775",
+    center = true,
+})
+
+hl.window_rule({
     name  = "spotify",
     match = { class = "^(Spotify|spotify)$" },
     float = true,

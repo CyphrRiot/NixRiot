@@ -65,6 +65,7 @@ end)
 -- Letters are case-insensitive in Hyprland: SUPER+f == SUPER+F
 local CLOSE = os.getenv("HOME") .. "/.config/panacea/scripts/smart_close.sh"
 B("terminal",     mainMod .. " + Return",    hl.dsp.exec_cmd(p.terminal))
+B("terminalFloat", mainMod .. " + SHIFT + Return", hl.dsp.exec_cmd(p.terminalFloat))
 B("processViewer", mainMod .. " + T",        hl.dsp.exec_cmd(p.processViewer))
 B("closeWindow",  mainMod .. " + Q",         hl.dsp.exec_cmd(CLOSE))
 B("browser",      mainMod .. " + B",         hl.dsp.exec_cmd(p.browser))

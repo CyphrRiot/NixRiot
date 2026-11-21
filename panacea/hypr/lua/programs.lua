@@ -5,6 +5,7 @@ local programs = {}
 -- which is how menus and a power menu ended up pointing at scripts that are not
 -- in the repository.
 programs.terminal = "footclient"
+programs.terminalFloat = "footclient --app-id nixriot-float-term"
 programs.fileManagerTui = "footclient yazi" -- in the terminal, on Super+Shift+E
 -- Absolute path, no "~": exec without a shell does not expand a tilde, and the
 -- island silently never started, leaving a black screen after login.

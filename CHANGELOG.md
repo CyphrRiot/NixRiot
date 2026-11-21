@@ -11,6 +11,12 @@ nothing else, so the wording here is exactly what a person reads on the pill's
 
 ## Unreleased
 
+## 1.11
+
+- `SUPER + SHIFT + Return` opens a centred floating terminal.
+- The lock screen follows the pill's 12/24-hour setting.
+- The CPU and GPU lines in the shell welcome wrap without repeating their labels.
+
 ## 1.10
 
 - The pill shows an Update button when a release is available. The System
