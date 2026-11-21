@@ -106,7 +106,7 @@ PanelWindow {
             // Full opt-out of animation: every duration counts as zero.
             property string vpnPreferredClient: ""
             property string vpnPreferred: ""
-            property bool   mascotEnabled: true
+            property bool   mascotEnabled: false
             property bool   reduceMotion: false
             property int    animMove: 230      // size and position, ms
             property int    animFade: 200      // opacity and colour, ms
@@ -139,7 +139,7 @@ PanelWindow {
             property bool   recMic: false        // microphone
             property string recMicDevice: ""     // "" means the default microphone
             // password manager: offer to save passwords seen on the clipboard
-            property bool   vaultCapture: true
+            property bool   vaultCapture: false
             // file manager as its own Hyprland window instead of a pill page
             property bool   filesWindow: false
             // Show dotfiles. Yes by default: in a home directory almost
@@ -172,7 +172,7 @@ PanelWindow {
             property string keyboardOptions: "grp:alt_shift_toggle"
 
             property bool   featLauncher: true
-            property string searchEngine: "duckduckgo"
+            property string searchEngine: "brave"
             property string agentEventFilter: "all"
             property string aiUrl: ""
             property string updNotifiedVer: ""
@@ -208,13 +208,13 @@ PanelWindow {
             property string weatherKey: ""
             property string weatherCity: ""
             property string weatherUnits: "metric"   // metric | imperial
-            property bool   weatherOnIsland: false
-            property bool   systemLoadOnIsland: false
+            property bool   weatherOnIsland: true
+            property bool   systemLoadOnIsland: true
             // Desktop widgets. Off by default: they are drawn over the
             // wallpaper and change how the desktop looks, and that is
             // something people turn on themselves rather than discover after
             // an update.
-            property bool   featWidgets: false
+            property bool   featWidgets: true
             property string widgetClockMode: "analog"
             property string widgetRightMode: "weather"
             property string widgetProgressMode: "day"
@@ -236,14 +236,14 @@ PanelWindow {
             property string bind_overview: "SUPER + Tab"
             property string bind_pillWifi: "SUPER + SHIFT + W"
             property string bind_pillBt: "SUPER + SHIFT + B"
-            property string bind_pillClip: "SUPER + V"
-            property string bind_pillPower: "CTRL + ALT + delete"
+            property string bind_pillClip: "SUPER + SHIFT + V"
+            property string bind_pillPower: "SUPER + Escape"
             property string bind_pillNotif: "SUPER + SHIFT + N"
             property string bind_pillRecord: "SUPER + P"
-            property string bind_terminal: "SUPER + T"
-            property string bind_terminalAlt: "SUPER + Return"
+            property string bind_terminal: "SUPER + Return"
+            property string bind_processViewer: "SUPER + T"
             property string bind_closeWindow: "SUPER + Q"
-            property string bind_browser: "SUPER + F"
+            property string bind_browser: "SUPER + B"
             property string bind_fullscreen: "SUPER + SHIFT + F"
             property string bind_exitHypr: "SUPER + SHIFT + M"
             property string bind_floatToggle: "SUPER + W"
@@ -253,11 +253,20 @@ PanelWindow {
             // keybindings.lua.
             property string bind_voxDictate: "Alt_R"
             property string bind_floatCenter: "SUPER + SHIFT + Space"
-            property string bind_fileManager: "SUPER + E"
+            property string bind_fileManager: "SUPER + F"
+            property string bind_fileManagerAlt: "SUPER + E"
             property string bind_fileManagerTui: "SUPER + SHIFT + E"
             property string bind_toggleSplit: "SUPER + J"
             property string bind_notes: "SUPER + O"
+            property string bind_crush: "SUPER + C"
+            property string bind_music: "SUPER + SHIFT + K"
+            property string bind_mail: "SUPER + M"
+            property string bind_mailKey: "XF86Mail"
+            property string bind_x: "SUPER + X"
+            property string bind_xPost: "SUPER + SHIFT + X"
+            property string bind_nightlight: "SUPER + N"
             property string bind_screenshot: "SUPER + SHIFT + S"
+            property string bind_screenshotKey: "Print"
             property string bind_screenOff: "SUPER + SHIFT + F12"
             property string bind_packWorkspaces: "SUPER + SHIFT + A"
             property string bind_emptyWorkspace: "SUPER + Space"
@@ -283,6 +292,7 @@ PanelWindow {
             property string bind_moveWorkspace9: "SUPER + SHIFT + 9"
             property string bind_moveWorkspace10: "SUPER + SHIFT + 0"
             property string bind_themeSwitch: "SUPER + SHIFT + T"
+            property string bind_themeSwitchAlt: "SUPER + SHIFT + D"
             property string bind_lockScreen: "SUPER + L"
             property string bind_closeMouse: "mouse:277"
             property string bind_focusLeft: "SUPER + left"
@@ -332,21 +342,30 @@ PanelWindow {
         pillPower:    "CTRL + ALT + delete",
         pillNotif:    "SUPER + SHIFT + N",
         pillRecord:   "SUPER + P",
-        terminal:       "SUPER + T",
-        terminalAlt:    "SUPER + Return",
+        terminal:       "SUPER + Return",
+        processViewer:  "SUPER + T",
         closeWindow:    "SUPER + Q",
-        browser:        "SUPER + F",
+        browser:        "SUPER + B",
         fullscreen:     "SUPER + SHIFT + F",
         exitHypr:       "SUPER + SHIFT + M",
         floatToggle:    "SUPER + W",
         pillVault:      "SUPER + SHIFT + P",
         voxDictate:     "Alt_R",
         floatCenter:    "SUPER + SHIFT + Space",
-        fileManager:    "SUPER + E",
+        fileManager:    "SUPER + F",
+        fileManagerAlt: "SUPER + E",
         fileManagerTui: "SUPER + SHIFT + E",
         toggleSplit:    "SUPER + J",
         notes:          "SUPER + O",
+        crush:          "SUPER + C",
+        music:          "SUPER + SHIFT + K",
+        mail:           "SUPER + M",
+        mailKey:        "XF86Mail",
+        x:              "SUPER + X",
+        xPost:          "SUPER + SHIFT + X",
+        nightlight:     "SUPER + N",
         screenshot:     "SUPER + SHIFT + S",
+        screenshotKey:  "Print",
         screenOff:      "SUPER + SHIFT + F12",
         packWorkspaces: "SUPER + SHIFT + A",
         emptyWorkspace: "SUPER + Space",
@@ -373,6 +392,7 @@ PanelWindow {
         moveWorkspace9: "SUPER + SHIFT + 9",
         moveWorkspace10: "SUPER + SHIFT + 0",
         themeSwitch: "SUPER + SHIFT + T",
+        themeSwitchAlt: "SUPER + SHIFT + D",
         closeMouse: "mouse:277",
         focusLeft: "SUPER + left",
         focusRight: "SUPER + right",
@@ -430,13 +450,13 @@ PanelWindow {
         notifDnd: false, notifTimeout: 5000, notifCritTimeout: 0, notifPreview: true,
         lockBlur: 32, lockHint: "",
         ccLayout: "", filesWindow: false, filesHidden: true, filesMode: "list",
-        vaultCapture: true,
+        vaultCapture: false,
         vibrance: 50, mouseSens: 0, mouseRaw: false,
         keyboardLayouts: "us", keyboardVariants: ",", keyboardOptions: "grp:alt_shift_toggle",
         recFps: 60, recDir: "~/Videos", recSysAudio: false, recMic: false, recMicDevice: "",
         weatherKey: "", weatherCity: "", weatherUnits: "metric",
         nightLight: false, nightTemp: 4000, nightAuto: false, nightStart: "22:00", nightEnd: "07:00",
-        weatherOnIsland: false, systemLoadOnIsland: false, keyboardLayoutMap: "", featWidgets: false,
+        weatherOnIsland: true, systemLoadOnIsland: true, keyboardLayoutMap: "", featWidgets: true,
         widgetClockMode: "analog", widgetRightMode: "weather", widgetProgressMode: "day",
         widgetMusic: true,
         widgetScratchpad: true,
@@ -1214,6 +1234,7 @@ PanelWindow {
     readonly property color colFg:     theme.fg
     readonly property color colMuted:  Qt.rgba(colFg.r, colFg.g, colFg.b, cfg.mutedAlpha)
     readonly property color colLine:   Qt.rgba(colFg.r, colFg.g, colFg.b, 0.10)
+    readonly property color colPillBorder: Qt.rgba(colFg.r, colFg.g, colFg.b, 0.16)
     readonly property color colHover:  Qt.rgba(colFg.r, colFg.g, colFg.b, 0.10)
     readonly property color colOn:     theme.on
     readonly property color colOk:     theme.ok
@@ -1303,6 +1324,7 @@ PanelWindow {
     // "main" | "wifi" | "bt" | "battery" | "launcher"
     property string vpnCountry: "--"
     property string vpnCountryName: ""
+    property string vpnCity: ""
     property bool vpnConnected: false
     property var vpnActiveIds: []
     readonly property bool vpnBusy: vpnQuick.running || vpnClientState === "busy"
@@ -1337,7 +1359,7 @@ PanelWindow {
         command: ["python3", root.scriptDir + "/vpn.py", "geo"]
         stdout: StdioCollector { onStreamFinished: {
             var d = {}; try { d = JSON.parse(text); } catch(e) {}
-            if (d.country) { root.vpnCountry = d.country; root.vpnCountryName = d.name || ""; }
+            if (d.country) { root.vpnCountry = d.country; root.vpnCountryName = d.name || ""; root.vpnCity = d.city || ""; }
             if (root.vpnAnnouncement) {
                 var title = root.vpnAnnouncement === "up" ? root.tr("VPN connected") : root.tr("VPN disconnected");
                 vpnNotify.command = ["notify-send", "--app-name", "Panacea VPN", title,
@@ -4305,7 +4327,7 @@ PanelWindow {
 
         readonly property real freeGap: root.cfg.notchMode ? 0 : root.cfg.islandGap
         readonly property real edgeMargin: root.settingsMode && !root.pillSide
-                                           ? Math.max(24, (root.height - targetH) / 2)
+                                           ? 24
                                            : root.pillHidden ? -(targetH + 4) : freeGap
         readonly property real sideMargin: root.settingsMode && root.pillSide
                                            ? Math.max(24, (root.width - width) / 2)
@@ -4350,8 +4372,8 @@ PanelWindow {
                                                    : osdCapsule.implicitWidth) + 32)
                 : root.pillSide  ? capsule.evenUp(Math.max(vertCapsule.implicitHeight + 30,
                                                            capsule.collapsedMin))
-                : capsule.evenUp(Math.max(nothingCapsule.implicitWidth + (root.cfg.mascotEnabled ? 140 : 28),
-                                          capsule.collapsedMin))
+                : Math.min(root.panelW, capsule.evenUp(Math.max(nothingCapsule.implicitWidth + (root.cfg.mascotEnabled ? 140 : 28),
+                                                               capsule.collapsedMin)))
         readonly property real idleThick: (root.fileOverIsland || fileAbsorbAnimation.running) ? 58
                 : (root.btToastActive || root.wifiToastActive || root.acToastActive
                     || root.recPickActive || root.voxActive)
@@ -4435,13 +4457,8 @@ PanelWindow {
         Behavior on topLeftRadius  { NumberAnimation { duration: root.animMs; easing.type: Easing.InOutCubic } }
         Behavior on topRightRadius { NumberAnimation { duration: root.animMs; easing.type: Easing.InOutCubic } }
 
-        // Niente bordo, in nessuno stato: e' l'unica differenza di stile che
-        // c'era fra pillola e pannello. Un bordo largo 1 viene disegnato
-        // *dentro* al rettangolo, quindi anche quando era trasparente lasciava
-        // passare 1px di sfondo sul lato superiore: da qui l'impressione che
-        // la pillola non fosse attaccata al bordo dello schermo e che il fondo
-        // cambiasse all'apertura.
-        border.width: 0
+        border.width: 1
+        border.color: root.colPillBorder
 
         Behavior on width {
             NumberAnimation {
@@ -5432,7 +5449,8 @@ PanelWindow {
             DotText {
                 id: nClock
                 anchors.centerIn: parent
-                anchors.horizontalCenterOffset: mascot.active ? -80 : 0
+                anchors.horizontalCenterOffset: mascot.active ? -80
+                    : Math.round((nLeft.implicitWidth - nRight.implicitWidth) / 2)
                 Behavior on anchors.horizontalCenterOffset { enabled: !root.expanded && capsule.height <= root.pillH + 2; NumberAnimation { duration: root.animMs; easing.type: Easing.InOutCubic } }
                 value: root.timeText
                 size: root.dotHClock
@@ -5471,11 +5489,20 @@ PanelWindow {
                     color: root.wifiOn ? root.colFg : root.colMuted
                     font { family: root.fontFam; pixelSize: root.iconSize - 2 }
                 }
+                Text {
+                    Layout.alignment: Qt.AlignVCenter
+                    visible: root.vpnConnected
+                    text: "\uf132"
+                    color: root.colFg
+                    font { family: root.fontFam; pixelSize: root.iconSize - 4 }
+                }
 
                 //
                 //
                 FlipText {
                     Layout.alignment: Qt.AlignVCenter
+                    visible: String(root.cfg.keyboardLayouts || "")
+                             .split(",").filter(function(s) { return s.trim().length > 0; }).length > 1
                     value: root.kbLayout
                     textColor: root.colFg
                     fontFam: root.fontFam
@@ -5794,18 +5821,98 @@ PanelWindow {
             spacing: 6
             visible: root.expanded && !root.settingsMode && (root.page === "main" || root.page === "chat" || root.page === "vpn")
             Repeater {
-                model: [{page:"main", title:root.tr("Home"), icon:0xF02DC}, {page:"chat", title:root.tr("Chat"), icon:0xF0181}]
+                model: [
+                    {page:"home", title:root.tr("Home"), icon:0xF02DC},
+                    {page:"apps", title:root.tr("Apps"), icon:0xF02DC}
+                ]
                 delegate: Rectangle {
                     required property var modelData
-                    width: root.page === modelData.page ? tabText.implicitWidth + 48 : 40
+                    readonly property bool active: root.page === modelData.page
+                    width: active ? tabText.implicitWidth + 48 : 40
                     height: 34; radius: 17
-                    color: root.page === modelData.page ? Qt.rgba(1,1,1,0.12) : "transparent"
+                    color: active ? Qt.rgba(1,1,1,0.12) : "transparent"
                     Row {
                         anchors.centerIn: parent; spacing: 8
-                        IslandTabIcon { anchors.verticalCenter: parent.verticalCenter; width: 19; height: 19; kind: modelData.page === "main" ? "home" : "chat"; tint: root.page === modelData.page ? root.colFg : root.colMuted }
-                        Text { id: tabText; anchors.verticalCenter: parent.verticalCenter; visible: root.page === modelData.page; text: modelData.title; color: root.colFg; font { family: root.fontBody; pixelSize: 12; bold: true } }
+                        IslandTabIcon { anchors.verticalCenter: parent.verticalCenter; width: 19; height: 19; kind: modelData.page === "home" ? "home" : "grid"; tint: active ? root.colFg : root.colMuted }
+                        Text { id: tabText; anchors.verticalCenter: parent.verticalCenter; visible: active; text: modelData.title; color: root.colFg; font { family: root.fontBody; pixelSize: 12; bold: true } }
                     }
-                    MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: { root.page = modelData.page; root.holdOpen = modelData.page === "chat"; } }
+                    MouseArea {
+                        anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            if (modelData.page === "apps") root.openLauncher();
+                            else root.openFilesAt(Quickshell.env("HOME"));
+                        }
+                    }
+                }
+            }
+        }
+
+        Item {
+            id: pillTray
+            parent: (root.cfg.pillKeepVisible && root.expanded && !root.settingsMode) ? detachedPanel : capsule
+            anchors.top: parent.top
+            anchors.topMargin: 12
+            anchors.right: vpnTab.left
+            anchors.rightMargin: 12
+            height: 34
+            width: trayRow.implicitWidth
+            visible: root.expanded && !root.settingsMode
+                     && root.trayItems && root.trayItems.values.length > 0
+                     && (root.page === "main" || root.page === "chat" || root.page === "vpn")
+
+            Row {
+                id: trayRow
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: 8
+
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "\u276F"
+                    color: root.colMuted
+                    font { family: root.fontFam; pixelSize: 11 }
+                }
+
+                Repeater {
+                    model: root.trayItems
+
+                    Rectangle {
+                        required property var modelData
+                        readonly property bool hovered: trayMa.containsMouse
+                        width: 22; height: 22
+                        anchors.verticalCenter: parent.verticalCenter
+                        radius: 6
+                        color: hovered ? Qt.rgba(1, 1, 1, 0.13) : "transparent"
+                        Behavior on color { ColorAnimation { duration: 150 } }
+
+                        Image {
+                            anchors.fill: parent
+                            anchors.margins: 3
+                            source: String(modelData.icon || "")
+                            fillMode: Image.PreserveAspectFit
+                            smooth: true
+                        }
+
+                        MouseArea {
+                            id: trayMa
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
+                            onClicked: mouse => {
+                                if (mouse.button === Qt.RightButton) {
+                                    if (!modelData.hasMenu) return;
+                                    root.trayMenuItem = modelData;
+                                    root.page = "traymenu";
+                                    root.holdOpen = true;
+                                    return;
+                                }
+                                if (mouse.button === Qt.MiddleButton) modelData.secondaryActivate();
+                                else modelData.activate();
+                                root.collapse();
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -5814,12 +5921,42 @@ PanelWindow {
             id: vpnTab
             parent: (root.cfg.pillKeepVisible && root.expanded && !root.settingsMode) ? detachedPanel : capsule
             anchors.top: parent.top; anchors.topMargin: 12
-            anchors.right: parent.right; anchors.rightMargin: 18
-            z: 65; width: 34; height: 34; radius: 17
+            anchors.right: parent.right
+            anchors.rightMargin: 18 + pillQuick.width + 8
+            z: 65
+            readonly property string label: root.vpnCity.length ? root.vpnCity : root.vpnCountry
+            width: Math.max(34, vpnChipLabel.implicitWidth + (root.vpnBusy ? 20 : 40))
+            height: 34; radius: 17
             visible: root.expanded && !root.settingsMode && (root.page === "main" || root.page === "chat" || root.page === "vpn")
             color: root.vpnConnected ? root.colFg : (root.page === "vpn" ? Qt.rgba(1,1,1,0.12) : "transparent")
             Behavior on color { ColorAnimation { duration: root.animFast } }
-            Text { anchors.centerIn: parent; text: root.vpnBusy ? "···" : root.vpnCountry; color: root.vpnConnected ? root.colBg : root.colFg; font { family: root.fontBody; pixelSize: 12; bold: true } }
+            Text {
+                id: vpnChipLabel
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.left: vpnChipGlobe.right
+                anchors.leftMargin: 6
+                visible: !root.vpnBusy
+                text: parent.label
+                color: root.vpnConnected ? root.colBg : root.colFg
+                font { family: root.fontBody; pixelSize: 12; bold: true }
+            }
+            Text {
+                id: vpnChipGlobe
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.left: parent.left
+                anchors.leftMargin: 10
+                visible: !root.vpnBusy
+                text: "\uf0ac"
+                color: root.vpnConnected ? root.colBg : root.colFg
+                font { family: root.fontFam; pixelSize: 12 }
+            }
+            Text {
+                anchors.centerIn: parent
+                visible: root.vpnBusy
+                text: "···"
+                color: root.vpnCountry ? root.colFg : root.colMuted
+                font { family: root.fontBody; pixelSize: 12; bold: true }
+            }
             Canvas {
                 anchors.fill: parent; anchors.margins: -3; visible: root.vpnBusy
                 onPaint: { var c = getContext("2d"); c.reset(); c.strokeStyle = root.colFg; c.lineWidth = 2; c.lineCap = "round"; c.beginPath(); c.arc(width / 2, height / 2, width / 2 - 2, 0, Math.PI * 1.4); c.stroke(); }
@@ -5831,6 +5968,61 @@ PanelWindow {
                     if (mouse.button === Qt.RightButton || (!root.cfg.vpnPreferred && !root.cfg.vpnPreferredClient)) { root.page = "vpn"; root.holdOpen = true; }
                     else root.togglePreferredVpn();
                 }
+            }
+        }
+
+        Row {
+            id: pillQuick
+            parent: (root.cfg.pillKeepVisible && root.expanded && !root.settingsMode) ? detachedPanel : capsule
+            anchors.top: parent.top
+            anchors.topMargin: 12
+            anchors.left: undefined
+            anchors.right: parent.right
+            anchors.rightMargin: 18
+            height: 34
+            spacing: 6
+            visible: root.expanded && !root.settingsMode
+                     && (root.page === "main" || root.page === "chat" || root.page === "vpn")
+
+            component HeaderBtn: Rectangle {
+                property string glyph: ""
+                property color glyphColor: root.colFg
+                signal act()
+
+                width: 26; height: 26
+                anchors.verticalCenter: parent.verticalCenter
+                radius: 8
+                color: hbMa.containsMouse ? Qt.rgba(1, 1, 1, 0.13) : "transparent"
+                Behavior on color { ColorAnimation { duration: 150 } }
+                Text {
+                    anchors.centerIn: parent
+                    text: parent.glyph
+                    color: parent.glyphColor
+                    font { family: root.fontFam; pixelSize: 13 }
+                }
+                MouseArea {
+                    id: hbMa
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: parent.act()
+                }
+            }
+
+            HeaderBtn {
+                visible: root.cfg.featNotifications
+                glyph: String.fromCodePoint(root.dnd ? 0xF009B : 0xF009A)
+                glyphColor: root.dnd ? root.colMuted : root.colFg
+                onAct: root.togglePage("notif")
+            }
+            HeaderBtn {
+                glyph: String.fromCodePoint(0xF0493)
+                onAct: root.togglePage("settings")
+            }
+            HeaderBtn {
+                glyph: String.fromCodePoint(0xF0425)
+                glyphColor: root.colCrit
+                onAct: root.togglePage("power")
             }
         }
 
@@ -6053,6 +6245,8 @@ PanelWindow {
         id: notchBefore
         side: root.pillSide ? (root.pillAtLeft ? "right" : "left") : "left"
         fill: root.colBg
+        stroke: root.colPillBorder
+        strokeWidth: 1
         r: root.cornerR
         transform: Scale {
             origin.y: root.cornerR / 2
@@ -6070,6 +6264,8 @@ PanelWindow {
         id: notchAfter
         side: root.pillSide ? (root.pillAtLeft ? "right" : "left") : "right"
         fill: root.colBg
+        stroke: root.colPillBorder
+        strokeWidth: 1
         r: root.cornerR
         transform: Scale {
             origin.y: root.cornerR / 2

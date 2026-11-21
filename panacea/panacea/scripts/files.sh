@@ -442,6 +442,26 @@ try:
 except Exception:
     pass
 
+try:
+    out = subprocess.run(["gio", "mount", "-li"], capture_output=True, text=True).stdout
+    name = ""; usb = ""; is_mtp = False; mounted = False
+    def add_mtp():
+        if is_mtp and usb and name and not mounted:
+            results.append(f"removable||{name}|0|0|mtp:{usb}")
+    for line in out.split("\n"):
+        m = re.match(r"\s*Volume\(\d+\):\s*(.+)", line)
+        if m:
+            add_mtp()
+            name = m.group(1).strip(); usb = ""; is_mtp = False; mounted = False
+            continue
+        if line.strip().startswith("Mount("): mounted = True
+        if "GProxyVolumeMonitorMTP" in line: is_mtp = True
+        if "unix-device:" in line:
+            usb = line.split("unix-device:", 1)[1].strip().strip(chr(39) + chr(34))
+    add_mtp()
+except Exception:
+    pass
+
 for r in results:
     print(r)
 '
@@ -450,6 +470,16 @@ for r in results:
 mountdisk)
     dev="$2"
     [ -n "$dev" ] || exit 1
+    case "$dev" in
+        mtp:*)
+            gio mount -d "${dev#mtp:}" >/dev/null 2>&1
+            mp=$(ls -d /run/user/"$(id -u)"/gvfs/mtp:* 2>/dev/null | head -1)
+            if [ -n "$mp" ] && [ -d "$mp" ]; then
+                printf '%s\n' "$mp"
+                exit 0
+            fi
+            ;;
+    esac
     mp=$(findmnt -n -o TARGET "$dev" 2>/dev/null | head -1)
     if [ -n "$mp" ] && [ -d "$mp" ]; then
         printf '%s\n' "$mp"

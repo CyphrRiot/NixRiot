@@ -54,12 +54,13 @@ Last updated: 2026-11-19.
 14. **Zed is not installed.** If it is wanted, it is a one-line option plus a
     writable `~/.config/zed/settings.json` so Panacea's `palette.sh` can theme
     it. Helix and Crush are the defaults.
-15. **The screen locks itself after ten minutes idle.** Upstream Panacea ships a
-    manual lock only; this is OpenRiot's behaviour restored
-    (`xautolock -time 10`). `panacea/hypr/hypridle.conf` locks through
-    Panacea's own `lock.sh` at 600s, `hypr/custom/autostart.lua` starts
-    `hypridle`, and Coffee mode still wins: it holds a `systemd-inhibit` for
-    `idle`, which hypridle honours at its default `ignore_systemd_inhibit`.
+15. **The screen locks itself after fifteen minutes idle.** Upstream Panacea
+    ships a manual lock only; this is OpenRiot's behaviour restored
+    (`xautolock -time 10`), raised to 15 minutes.
+    `panacea/hypr/hypridle.conf` locks through Panacea's own `lock.sh` at
+    900s, `hypr/lua/autostart.lua` starts `hypridle`, and Coffee mode still
+    wins: it holds a `systemd-inhibit` for `idle`, which hypridle honours at
+    its default `ignore_systemd_inhibit`.
     Display-off is deliberately absent: Hyprland 0.56 replaced the `dpms`
     dispatcher with Lua `hl.dpms`, so there is no version-independent command.
 16. **Closing the lid is logind's business.** NixRiot does not bind the lid
@@ -139,7 +140,6 @@ Checked against nixpkgs. Do not re-add removed packages, and use these names.
 | `zed-editor` | present, 1.27.0; not installed. There is no `zed` package |
 | `mpd`, `rmpc` | present, but removed from the system (no MPRIS) |
 | `kora-icon-theme` | present; pulls `breeze-icons.dev` and Qt dev outputs |
-| `tumbler` | present; pulls `webkitgtk` via `libgepub` |
 | `mullvad` / `mullvad-vpn` | the CLI+daemon, and the Electron GUI |
 | `intel-npu-driver`, `level-zero` | present; `nixriot.npu` wires them up |
 | `kate` | **not shipped**: use `kdePackages.kate` if ever readded |
@@ -147,7 +147,7 @@ Checked against nixpkgs. Do not re-add removed packages, and use these names.
 | `noto-fonts-emoji` | **renamed**: `noto-fonts-color-emoji` |
 | `noto-fonts-extra` | **gone**: use `noto-fonts-lgc-plus` |
 | `gnome-disks` | **renamed**: `gnome-disk-utility` |
-| `crush` | present, 0.99.0, `fsl11Mit` (unfree; `allowUnfree` is set) |
+| `crush` | present, 0.101.0, `fsl11Mit` (unfree; `allowUnfree` is set) |
 | `gurk-rs` | present, 0.10.2; the `signal` alias and its launcher entry |
 | `quickshell` | present, 0.3.2 |
 | `zeroad`, `frozen-bubble` | **removed from nixpkgs** |
@@ -156,7 +156,8 @@ Checked against nixpkgs. Do not re-add removed packages, and use these names.
 
 - `installer/default.nix` builds the `nixriot-install` script. Run it with
   `sudo nixriot-install`.
-- Prompt order: username, password, network, disk, `ERASE`, LUKS twice, install,
+- Prompt order: username, hostname, password, network, disk, `ERASE`, LUKS
+  twice, install,
   reboot. It creates a 512M ESP labeled `BOOT` and the rest as LUKS2 `nixos`,
   `mkfs.ext4` on the mapped volume, and mounts the ESP with
   `fmask=0077,dmask=0077`.
@@ -168,9 +169,10 @@ Checked against nixpkgs. Do not re-add removed packages, and use these names.
   runs `nixos-install --root /mnt --flake /mnt/etc/nixriot#installed`.
 - Everything is teed to `/tmp/nixriot-install.log` **in the guest**. When an
   install looks stuck, read that file over the serial console before guessing.
-- Environment: `NIXRIOT_USER`, `NIXRIOT_DISK`, `NIXRIOT_PASSPHRASE`,
-  `NIXRIOT_PASSWORD`, `NIXRIOT_FLAKE`, `NIXRIOT_OFFLINE`, `NIXRIOT_REBOOT`.
-  Setting `NIXRIOT_DISK` makes the whole run unattended.
+- Environment: `NIXRIOT_USER`, `NIXRIOT_HOSTNAME`, `NIXRIOT_DISK`,
+  `NIXRIOT_PASSPHRASE`, `NIXRIOT_PASSWORD`, `NIXRIOT_FLAKE`, `NIXRIOT_OFFLINE`,
+  `NIXRIOT_REBOOT`. Setting `NIXRIOT_DISK` makes the whole run unattended;
+  `NIXRIOT_HOSTNAME` falls back to `nixriot`.
 
 ## Update path
 

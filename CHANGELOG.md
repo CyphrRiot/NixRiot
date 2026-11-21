@@ -11,6 +11,33 @@ nothing else, so the wording here is exactly what a person reads on the pill's
 
 ## Unreleased
 
+## 1.9
+
+- Thunar is gone. Panacea Files is the only file manager, and folders open
+  there from every application.
+- The pill shows Home and Apps tabs, Applets beside the VPN indicator, and
+  notifications, settings and power in the header, with the VPN location
+  instead of a bare country code.
+- CPU/GPU and weather are on by default; the mascot is off.
+- A connected phone appears in Files over MTP.
+- The installer asks for a hostname, so a new machine is named from the start.
+- Crush 0.101, along with the rest of the November package bump.
+- Bluetooth mice and other devices that need a pairing confirmation now pair
+  and stay connected.
+- LibreOffice replaces AbiWord and Gnumeric, with dark mode. It is opt-in:
+  turn on `nixriot.office` if you need it.
+- Super+F opens the file manager again, on the same keys OpenRiot used:
+  Super+B browser, Super+T process viewer, Super+O text editor, Super+C Crush,
+  Super+Shift+K music, Super+M mail, Super+N night light, Print screenshot.
+- Web search in the launcher defaults to Brave.
+- The window border follows the accent colour instead of red.
+- Settings opens at the top of the screen instead of sliding to the middle.
+- The pill keeps its width when it opens, and its border is visible again.
+- Wallpaper previews no longer fail on a newly added image.
+- The display scale suggestion is 1.67, which is what the compositor uses.
+- Light-themed GTK dialogs, including Firefox's file picker, follow the dark
+  theme.
+
 ## 1.8
 
 - Fix conflicting NPU settings in hardware

@@ -25,7 +25,8 @@ list)
         [ "$w" = "$cur" ] && act=yes || act=no
         case "$w" in "$CUSTOM"/*) own=yes ;; *) own=no ;; esac
         thumb="$THUMB_DIR/$name.jpg"
-        [ -f "$thumb" ] && [ ! "$w" -nt "$thumb" ] || thumb="$w"
+        thumb=$("$THUMBS" thumb "$w")
+        [ -f "$thumb" ] || thumb="$w"
         printf '%s|%s|%s|%s|%s\n' "$name" "$thumb" "$act" "$own" "$w"
     done
     ;;

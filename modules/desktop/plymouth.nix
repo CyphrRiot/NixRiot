@@ -12,9 +12,28 @@ let
     Window.SetBackgroundBottomColor(0, 0, 0);
 
     nixriot.image = Image("nixriot-splash.png");
-    nixriot.sprite = Sprite(nixriot.image.Scale(Window.GetWidth(), Window.GetHeight()));
+    nixriot.sprite = Sprite();
     nixriot.sprite.SetPosition(Window.GetX(), Window.GetY(), -1000);
     nixriot.sprite.SetOpacity(1);
+    nixriot.fit_width = -1;
+    nixriot.fit_height = -1;
+
+    # The script runs before the display mode is necessarily known, so scaling
+    # once here can produce a 0x0 image and abort the rest of the script.
+    fun nixriot_fit_splash ()
+      {
+        local w = Window.GetWidth();
+        local h = Window.GetHeight();
+        if (w <= 0 || h <= 0)
+          return;
+        if (w == nixriot.fit_width && h == nixriot.fit_height)
+          return;
+        nixriot.sprite.SetImage(nixriot.image.Scale(w, h));
+        nixriot.sprite.SetX(Window.GetX());
+        nixriot.sprite.SetY(Window.GetY());
+        nixriot.fit_width = w;
+        nixriot.fit_height = h;
+      }
 
     # --- NixRiot: the passphrase prompt ------------------------------------
     # Drawn here rather than with the upstream dialogue, whose box, lock and
@@ -59,19 +78,48 @@ let
           }
       }
 
+    fun nixriot_hide_prompt ()
+      {
+        nixriot.label.SetOpacity(0);
+        if (!nixriot.dot)
+          return;
+        for (index = 0; nixriot.dot[index]; index++)
+          nixriot.dot[index].sprite.SetOpacity(0);
+      }
+
+    # Delegate to the upstream callbacks so Plymouth's own state and sprite
+    # bookkeeping stay intact, then hide the dialogue and draw ours instead.
     fun nixriot_password_callback (prompt, bullets)
       {
+        display_password_callback(prompt, bullets);
+        dialog_opacity(0);
         nixriot_place_label(prompt);
         nixriot_place_dots(bullets);
       }
 
     fun nixriot_prompt_callback (prompt)
       {
+        display_password_callback(prompt, 0);
+        dialog_opacity(0);
         nixriot_place_label(prompt);
       }
 
+    fun nixriot_normal_callback ()
+      {
+        display_normal_callback();
+        nixriot_hide_prompt();
+      }
+
+    fun nixriot_refresh_callback ()
+      {
+        refresh_callback();
+        nixriot_fit_splash();
+      }
+
+    Plymouth.SetDisplayNormalFunction(nixriot_normal_callback);
     Plymouth.SetDisplayPasswordFunction(nixriot_password_callback);
     Plymouth.SetDisplayPromptFunction(nixriot_prompt_callback);
+    Plymouth.SetRefreshFunction(nixriot_refresh_callback);
   '';
 
   nixriotTheme = pkgs.runCommand "plymouth-theme-nixriot" { } ''

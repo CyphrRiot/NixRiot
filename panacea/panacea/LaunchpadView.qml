@@ -397,6 +397,7 @@ FocusScope {
         view.rememberApp(String(app.id));
         app.execute();
         view.sys.closeLaunchpad();
+        view.sys.sayToast(app.name, view.sys.tr("Launching..."));
     }
     function activate(e) {
         if (!e) return;

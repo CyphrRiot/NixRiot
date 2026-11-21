@@ -82,13 +82,13 @@ fish_dir = os.path.expanduser('~/.config/fish/conf.d')
 if os.path.isdir(fish_dir):
     with open(os.path.join(fish_dir, 'theme_colors.fish'), 'w') as f:
         f.write("set -e fish_color_command\nset -e fish_color_param\n")
-        f.write(f"set -g fish_color_command #{syntax_accent} --bold\n")
-        f.write(f"set -g fish_color_param #{color_param}\n")
-        f.write(f"set -g fish_color_quote #{color_quote}\n")
-        f.write(f"set -g fish_color_redirection {accent}\n")
-        f.write(f"set -g fish_color_end {accent}\n")
-        f.write("set -g fish_color_error ff5555\n")
-        f.write(f"set -g fish_color_selection --background={accent} --foreground={bg}\n")
+        f.write("set -g fish_color_command blue\n")
+        f.write(f"set -g fish_color_param '{fg}'\n")
+        f.write("set -g fish_color_quote cyan\n")
+        f.write("set -g fish_color_redirection magenta\n")
+        f.write("set -g fish_color_end magenta\n")
+        f.write("set -g fish_color_error red\n")
+        f.write("set -g fish_color_selection --background=cyan --foreground=black\n")
         f.write("set -g fish_color_autosuggestion 707070\n")
 
 # 2. FOOT

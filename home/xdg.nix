@@ -22,7 +22,9 @@
       "x-scheme-handler/http" = "firefox.desktop";
       "x-scheme-handler/https" = "firefox.desktop";
       "application/pdf" = "org.pwmt.zathura.desktop";
-      "inode/directory" = "thunar.desktop";
+      "text/markdown" = "org.gnome.TextEditor.desktop";
+      "text/x-markdown" = "org.gnome.TextEditor.desktop";
+      "inode/directory" = "panacea-files.desktop";
 
       "image/png" = "panacea-media.desktop";
       "image/jpeg" = "panacea-media.desktop";
@@ -37,6 +39,20 @@
       "video/x-matroska" = "mpv.desktop";
       "video/quicktime" = "mpv.desktop";
     };
+  };
+
+  xdg.dataFile = {
+    "applications/mpv.desktop".text = ''
+      [Desktop Entry]
+      Type=Application
+      Name=Media Player
+      GenericName=Multimedia player
+      Exec=mpv --player-operation-mode=pseudo-gui -- %U
+      Icon=mpv
+      Terminal=false
+      Categories=AudioVideo;Player;
+      MimeType=video/mp4;video/webm;video/x-matroska;video/quicktime;audio/mpeg;audio/flac;audio/ogg;audio/wav;
+    '';
   };
 
   programs.mpv = {

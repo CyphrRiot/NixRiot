@@ -17,6 +17,8 @@
       noto-fonts-lgc-plus
     ];
 
+    fonts.fontconfig.defaultFonts.monospace = [ "JetBrainsMono Nerd Font" ];
+
     environment.systemPackages = with pkgs; [
       (runCommand "nixriot-cursors" { } ''
         mkdir -p $out/share/icons

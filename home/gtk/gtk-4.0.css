@@ -1,0 +1,60 @@
+/* OpenRiot GTK4 - Dark theme */
+root { color-scheme: dark; }
+
+window {
+    background-color: #16161e;
+}
+
+decoration {
+    background-color: #16161e;
+}
+
+headerbar {
+    background-color: #16161e;
+    border-bottom: 1px solid #292e42;
+    min-height: 0px;
+    padding: 2px 6px;
+}
+
+headerbar:focus,
+headerbar:active,
+headerbar:focus-within {
+    background-color: #16161e;
+}
+
+.center-box > * {
+    background-color: #16161e;
+}
+
+decoration:active {
+    background-color: #16161e;
+}
+
+window.titlebar navigationbar,
+window.titlebar headerbar,
+.navigationbar {
+    background-color: #16161e;
+}
+
+headerbar button {
+    min-height: 18px;
+    padding: 0 6px;
+}
+
+tabbar {
+    background-color: transparent;
+}
+
+tabbar tab {
+    color: #c0caf5;
+}
+
+tabbar tab:selected {
+    background-color: transparent;
+    border-bottom: 3px solid #50c9c3;
+    color: #c0caf5;
+}
+
+tabbar tab:hover {
+    background-color: #292e42;
+}

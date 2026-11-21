@@ -358,7 +358,7 @@ QtObject {
         "Notch flare": "Çentik çıkıntısı",
         "Notch mode": "Çentik modu",
         "Notes": "Notlar",
-        "Nothing Analog": "Analog Nothing",
+        "Analog": "Analog",
         "Nothing found": "Bir şey bulunamadı",
         "Nothing is saved for this network.": "Bu ağ için kayıtlı bilgi yok.",
         "Nothing new in the browsers": "Tarayıcılarda yeni bir şey yok",

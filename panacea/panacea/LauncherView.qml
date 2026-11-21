@@ -51,14 +51,7 @@ FocusScope {
     }
 
     //
-    readonly property var builtins: [{
-        builtin: "agents",
-        id: "panacea:agents",
-        glyph: String.fromCodePoint(0xF1719),      // md-robot_outline
-        name: view.sys.tr("Agents"),
-        genericName: view.sys.tr("Plans and limits of the AI agents you have installed"),
-        keys: "agents agent ai claude codex gemini copilot cursor limits usage plan"
-    }]
+    readonly property var builtins: []
 
     //
     property var systems: []
@@ -254,6 +247,7 @@ FocusScope {
         rememberApp(app);
         app.execute();
         sys.closeLauncher();
+        view.sys.sayToast(app.name, view.sys.tr("Launching..."));
     }
     function move(delta) {
         if (results.length === 0) return;

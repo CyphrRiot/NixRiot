@@ -312,7 +312,7 @@ Item {
 
                     Caption {
                         Layout.alignment: Qt.AlignHCenter
-                        text: "NOTHING"
+                        text: "NIXRIOT"
                         color: view.sys ? Qt.rgba(view.sys.colFg.r, view.sys.colFg.g, view.sys.colFg.b, 0.4) : "#666666"
                     }
 

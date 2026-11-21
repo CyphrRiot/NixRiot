@@ -28,9 +28,9 @@ revision has been reviewed, so `UPSTREAM` is the reviewed baseline.
 ## Changes made
 
 1. `hypr/wallpaper/` is replaced with the NixRiot wallpaper set, `00.webp`
-   through `25.webp`, generated for the project.
+   through `28.webp`, generated for the project.
 2. `hypr/wallpaper.conf` and `hypr/hyprpaper.conf` point at
-   `~/.config/hypr/wallpaper/16.webp`.
+   `~/.config/hypr/wallpaper/27.webp`.
 3. Upstream `assets/logo*.png` moved to `panacea/assets/` so the shell
    finds them after the config tree is copied.
 4. `hypr/scripts/switch_theme.sh` fallback now includes `*.webp`.
@@ -44,10 +44,13 @@ revision has been reviewed, so `UPSTREAM` is the reviewed baseline.
    privileged `nixriot-update` service. The upstream updater is not used.
 8. `grub/` is not carried: NixRiot boots with systemd-boot, so the upstream
    GRUB theme is unused.
-9. `hypr/custom/keybinds.conf` and `hypr/custom/keybindings.lua` carry an
-   OpenRiot-compatible keybinding overlay: the launcher, browser, file manager,
-   process viewer, editor, Crush, music player, clipboard, power menu, and
-   screenshot move back to OpenRiot's keys.
+9. The OpenRiot-compatible keymap lives in the defaults of
+   `hypr/lua/keybindings.lua` and the matching `bind_*` values in
+   `panacea/shell.qml`: the launcher, browser, file manager, process viewer,
+   editor, Crush, music player, clipboard, power menu, night light and
+   screenshot use OpenRiot's keys. The `hypr/custom/` overlay files are no
+   longer carried, because the settings panel generates `binds_data.lua` from
+   the same ids.
 10. `hypr/lua/binds_data.lua`, `hypr/lua/monitors_data.lua` and
     `hypr/lua/input_data.lua` ship as empty defaults. Upstream lets them be
     absent and relies on `pcall`; shipping them keeps Hyprland's Lua loader
@@ -73,26 +76,28 @@ revision has been reviewed, so `UPSTREAM` is the reviewed baseline.
 15. `panacea/Mascot.qml` draws smaller eyes: the pupils go from 7x21 to 5x15,
     the containers from 15x29 to 11x21, and the spacing from 7 to 5. The two
     eyes filled most of the 46x38 face before.
-16. `hypr/custom/keybindings.lua` and `hypr/custom/keybinds.conf` carry two more
-    OpenRiot shortcuts: `SUPER+M` (and `XF86Mail`) opens Proton Mail, and
-    `SUPER+X` opens X with `SUPER+Shift+X` for the compose page. OpenRiot put
-    Proton Mail on `SUPER+E`, which Panacea already uses for its Files view.
+16. Two more OpenRiot shortcuts are part of those defaults: `SUPER+M` (and
+    `XF86Mail`) opens Proton Mail, and `SUPER+X` opens X with `SUPER+Shift+X`
+    for the compose page. OpenRiot put Proton Mail on `SUPER+E`, which Panacea
+    already uses for its Files view.
 17. `hypr/lua/input.lua` sets `follow_mouse = 0`, so focus changes on click
     instead of on hover. Upstream uses 1, focus follows the mouse, which moves
     focus whenever the pointer crosses a window. The fallback
     `hypr/hyprland.conf` keeps upstream's value on purpose: it is a stopgap for
     a Hyprland without Lua support and is not kept in parity.
-18. `hypr/hypridle.conf` is new, and `hypr/custom/autostart.lua` starts
+18. `hypr/hypridle.conf` is new, and `hypr/lua/autostart.lua` starts
     `hypridle`. Upstream ships a manual lock only; OpenRiot locked the screen
     after 10 minutes idle (`xautolock -time 10`), so that is what this
-    restores. Display-off is deliberately not configured: Hyprland 0.56
+    restores, raised to 15 minutes.
+    Display-off is deliberately not configured: Hyprland 0.56
     replaced the `dpms` dispatcher with the Lua `hl.dpms`, and there is no
     version-independent shell command for it yet. If the reader needs it,
     `hyprctl` accepts a Lua dispatcher expression.
-19. The lid binds are removed: `hypr/lua/keybindings.lua` loses `lidOn` and
-    `lidOff`, and `hypr/hyprland.conf` loses its `switch:on:Lid Switch` line.
-    Both locked the screen on every lid close, which is wrong in clamshell
-    mode: a closed lid with a display still attached is a machine in use.
+19. The lid binds no longer lock the screen. `hypr/hyprland.conf` loses its
+    `switch:on:Lid Switch` line, and the Lua `lidOn`/`lidOff` binds now drive
+    output handling instead (see 26). Locking on every lid close is wrong in
+    clamshell mode: a closed lid with a display still attached is a machine in
+    use.
     Suspending on lid close and *not* suspending when a display is attached are
     both logind's own behaviour (`HandleLidSwitchDocked` defaults to `ignore`,
     and more than one connected display counts as docked), and the lock now
@@ -107,7 +112,8 @@ revision has been reviewed, so `UPSTREAM` is the reviewed baseline.
     default, which changes the screen: hyprsunset used to be started at a fixed
     5000K, so it was always warm. `hypr/hyprsunset.conf` now sits at 6000K (the
     daemon's own default) and autostart starts it bare, leaving the saved state
-    in charge. `hypr/custom/keybindings.lua` binds `SUPER+N`, as OpenRiot did.
+    in charge. The defaults in `hypr/lua/keybindings.lua` bind `SUPER+N`, as
+    OpenRiot did.
     Upstream's `wlsunset`/niri branch and its `nightAvailable` probe are not
     carried.
 21. `panacea/scripts/brightness.sh` gets the PATH prelude already used by
@@ -130,12 +136,10 @@ revision has been reviewed, so `UPSTREAM` is the reviewed baseline.
     compositor drew a black cursor over a desktop whose applications drew a
     white one. OpenRiot uses Ice throughout, which is what this restores.
 24. `hypr/theme.lua` and the fallback `hypr/theme.conf` frame the active window
-    with the accent at two brightnesses, `#A04232` to `#c65a47`, and
-    `hypr/palette.conf` gains `$accent_dim` for the darker end. Upstream used a
-    white-to-grey gradient taken from the pill's own theme (`Themes.js` is black
-    and white), which put a white frame on an accent-coloured desktop; OpenRiot
-    derives its border from its accent instead, so this follows OpenRiot. The
-    fallback conf also held a stale terracotta-to-blue gradient and now matches.
+    with OpenRiot's cyan to blue to purple gradient, `#50c9c3`, `#7aa2f7`, and
+    `#997DE1`. Upstream used a white-to-grey gradient taken from the pill's own
+    theme (`Themes.js` is black and white), which put a white frame on an
+    accent-coloured desktop.
 25. `panacea/SetSystem.qml` names NixRiot where upstream names the shell. The
     System page's only project link pointed at `github.com/EnsixD`, the shell's
     author, so there was no route to NixRiot from the island at all, and the
@@ -144,6 +148,30 @@ revision has been reviewed, so `UPSTREAM` is the reviewed baseline.
     repository, the subtitle keeps Panacea's author as attribution, and the
     version line reads `NixRiot <version>` from the updater's own status, which
     is the installed version.
+26. `hypr/lua/lid.lua` disables the internal panel while the lid is closed and
+    an external monitor is enabled, and restores it when either condition ends.
+    logind decides whether a closed lid suspends, but it does not manage
+    outputs, so a docked laptop used to keep drawing the internal panel. The
+    existing `lidOn` and `lidOff` bindings are now connected to it, and
+    `monitor.added` and `monitor.removed` re-evaluate the state, so plugging in
+    an external display with the lid already shut works without a manual
+    `hyprctl` command.
+27. The default wallpaper is `27.webp`. The checked-in `wallpaper.conf` and
+    `hyprpaper.conf` said `16.webp`, so the first launch depended on the restore
+    script winning its race with hyprpaper. `home/panacea.nix` now seeds both
+    state files from those defaults with `~` expanded when they are absent; the
+    exclusions remain, so a chosen wallpaper still survives rebuilds.
+28. `panacea/scripts/themes.sh list` builds a missing thumbnail synchronously
+    instead of returning the raw image. The shipped Qt has no WebP image
+    plugin, so the wallpaper view errored on any image without a cached JPG.
+29. `panacea/shell.qml` caps the collapsed island at `panelW`, so the closed
+    pill can no longer be wider than the open panel, and settings pages use a
+    24px top margin instead of vertical centring.
+30. `panacea/SetDisplay.qml` steps the scale by 0.01 and `genmonitors.sh`
+    rounds it to four decimals. Hyprland quantises 1.7 to 1.6666667 and
+    rejected the stored value.
+31. The pill keeps a 1px border drawn from the foreground colour, including
+    through the notch corners (`NotchCorner.stroke`).
 
 ## Not yet changed
 

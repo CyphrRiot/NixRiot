@@ -6,12 +6,16 @@ Canvas {
 
     property string side: "left"
     property color fill: "#000000"
+    property color stroke: "transparent"
+    property real strokeWidth: 0
     property real r: 12
 
     width: r
     height: r
 
     onFillChanged: requestPaint()
+    onStrokeChanged: requestPaint()
+    onStrokeWidthChanged: requestPaint()
     onRChanged: requestPaint()
     onSideChanged: requestPaint()
 
@@ -35,5 +39,17 @@ Canvas {
 
         ctx.closePath();
         ctx.fill();
+
+        if (corner.strokeWidth > 0) {
+            ctx.beginPath();
+            if (side === "left") {
+                ctx.arc(0, r, r, 0, -Math.PI / 2, true);
+            } else {
+                ctx.arc(r, r, r, Math.PI, -Math.PI / 2, false);
+            }
+            ctx.strokeStyle = corner.stroke;
+            ctx.lineWidth = corner.strokeWidth;
+            ctx.stroke();
+        }
     }
 }

@@ -57,9 +57,7 @@ ColumnLayout {
 
     function run(cmd) { pApply.args = cmd; pApply.running = true; }
     function root(args, legacy) {
-        if (!page.sys.rootHelperOk) return "pkexec " + legacy;
-        return "pkexec " + page.sys.rootHelper + " "
-             + args.map(function (a) { return "'" + String(a).replace(/'/g, "") + "'"; }).join(" ");
+        return legacy;
     }
 
     SetCard {

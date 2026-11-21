@@ -50,7 +50,9 @@ def main():
         req=urllib.request.Request('https://ipwho.is/',headers={'User-Agent':'Panacea VPN indicator'})
         with urllib.request.urlopen(req,timeout=6) as response: data=json.load(response)
         if not data.get('success'): raise ValueError('Location unavailable')
-        return {'country':str(data.get('country_code','')).upper(),'name':str(data.get('country',''))}
+        return {'country':str(data.get('country_code','')).upper(),
+                'name':str(data.get('country','')),
+                'city':str(data.get('city') or '')}
     apps=[]
     seen=set()
     locations=[pathlib.Path.home()/'.local/share/applications', pathlib.Path('/run/current-system/sw/share/applications'), pathlib.Path('/usr/local/share/applications'), pathlib.Path('/usr/share/applications')]

@@ -26,7 +26,7 @@ tmp="$OUT.new"
         + ", mode = \"" + (.value.w|tostring) + "x" + (.value.h|tostring)
         + "@" + ((.value.rr|tonumber) | tostring) + "\""
         + ", position = \"" + (.value.pos // "auto") + "\""
-        + ", scale = " + ((.value.scale // 1) | tostring)
+        + ", scale = " + (((((.value.scale // 1) * 10000) | round) / 10000) | tostring)
         + ", transform = " + ((.value.transform // 0) | tostring)
         + ", vrr = " + (if .value.vrr then "1" else "0" end)
         + " },"

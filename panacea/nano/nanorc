@@ -1,7 +1,4 @@
 ## --- INTERFACCIA MINIMALE ---
-set nohelp      # Nasconde le due righe di scorciatoie in basso (^X Exit, ecc.)
-set minibar     # Rimuove la barra del titolo in alto (mette info in una riga sottile)
-set zero        # Nasconde tutto il possibile: avrai solo il testo a schermo intero
 set softwrap    # Va a capo automaticamente senza spezzare le parole
 set noconvert   # Non cambiare il formato dei file (Unix/DOS)
 

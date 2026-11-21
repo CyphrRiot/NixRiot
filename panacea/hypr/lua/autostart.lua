@@ -27,6 +27,7 @@ hl.on("hyprland.start", function ()
   -- Two agents cannot register at the same time.
   -- hl.exec_cmd("systemctl --user start hyprpolkitagent")
   hl.exec_cmd("hyprsunset")
+  hl.exec_cmd("hypridle")
   -- automounting USB drives and cards: without it the "Removable" section
   -- in the file manager never appears on its own
   hl.exec_cmd("udiskie --no-notify --no-tray")

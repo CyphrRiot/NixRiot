@@ -19,10 +19,12 @@ end
 -- Absolute path for the same reason as programs.bar: "~" survives as-is into
 -- qs when the command is not launched through a shell.
 local QS = "qs -c " .. os.getenv("HOME") .. "/.config/panacea ipc call pill "
+local lid = require("lua.lid")
 
 
 -- ---------------------------------------------------------------- the pill
 B("pillLauncher", mainMod .. " + A",             hl.dsp.exec_cmd(QS .. "launcher"))
+hl.bind("SUPER + D", hl.dsp.exec_cmd(QS .. "launcher"))
 B("launchpad",    mainMod .. " + G",             hl.dsp.exec_cmd(QS .. "launchpad"))
 B("overview",     mainMod .. " + Tab",           hl.dsp.exec_cmd(QS .. "overview"))
 B("pillControls", mainMod .. " + Z",             hl.dsp.exec_cmd(QS .. "controls"))
@@ -30,8 +32,8 @@ B("pillSettings", mainMod .. " + I",             hl.dsp.exec_cmd(QS .. "settings
 B("pillShortcuts",mainMod .. " + slash",         hl.dsp.exec_cmd(QS .. "shortcuts"))
 B("pillWifi",     mainMod .. " + SHIFT + W",     hl.dsp.exec_cmd(QS .. "wifi"))
 B("pillBt",       mainMod .. " + SHIFT + B",     hl.dsp.exec_cmd(QS .. "bluetooth"))
-B("pillClip",     mainMod .. " + V",             hl.dsp.exec_cmd(QS .. "clipboard"))
-B("pillPower",    "CTRL + ALT + delete",         hl.dsp.exec_cmd(QS .. "powermenu"))
+B("pillClip",     mainMod .. " + SHIFT + V",     hl.dsp.exec_cmd(QS .. "clipboard"))
+B("pillPower",    mainMod .. " + Escape",        hl.dsp.exec_cmd(QS .. "powermenu"))
 B("pillNotif",    mainMod .. " + SHIFT + N",     hl.dsp.exec_cmd(QS .. "notifications"))
 B("pillRecord",   mainMod .. " + P",             hl.dsp.exec_cmd(QS .. "record"))
 B("pillVault",    mainMod .. " + SHIFT + P",     hl.dsp.exec_cmd(QS .. "passwords"))
@@ -62,14 +64,18 @@ end)
 -- Basic binds
 -- Letters are case-insensitive in Hyprland: SUPER+f == SUPER+F
 local CLOSE = os.getenv("HOME") .. "/.config/panacea/scripts/smart_close.sh"
-B("terminal",     mainMod .. " + T",         hl.dsp.exec_cmd(p.terminal))
-B("terminalAlt",  mainMod .. " + Return",    hl.dsp.exec_cmd(p.terminal))
+B("terminal",     mainMod .. " + Return",    hl.dsp.exec_cmd(p.terminal))
+B("processViewer", mainMod .. " + T",        hl.dsp.exec_cmd(p.processViewer))
 B("closeWindow",  mainMod .. " + Q",         hl.dsp.exec_cmd(CLOSE))
-B("browser",      mainMod .. " + F",         hl.dsp.exec_cmd(p.browser))
+B("browser",      mainMod .. " + B",         hl.dsp.exec_cmd(p.browser))
 B("fullscreen",   mainMod .. " + SHIFT + F", hl.dsp.window.fullscreen())
 B("exitHypr",     mainMod .. " + SHIFT + M", hl.dsp.exit())
 B("lockScreen",   mainMod .. " + L",         hl.dsp.exec_cmd(p.lock))
 B("themeSwitch",  mainMod .. " + SHIFT + T", hl.dsp.exec_cmd(QS .. "theme"))
+B("themeSwitchAlt", mainMod .. " + SHIFT + D", hl.dsp.exec_cmd(QS .. "theme"))
+-- Lid switch: the internal panel follows the docked state (see lua/lid.lua).
+B("lidOn",  "switch:on:Lid Switch",  function() lid.apply() end)
+B("lidOff", "switch:off:Lid Switch", function() lid.apply() end)
 -- window into "floating" and back
 B("floatToggle",  mainMod .. " + W",         hl.dsp.window.float({ action = "toggle" }))
 -- settings panel: the dynamic island unfolds in the centre
@@ -78,11 +84,20 @@ B("floatCenter", mainMod .. " + SHIFT + Space", function()
     hl.dispatch(hl.dsp.window.resize({ x = 800, y = 600, relative = false }))
     hl.dispatch(hl.dsp.window.center())
 end)
-B("fileManager",  mainMod .. " + E",         hl.dsp.exec_cmd(QS .. "files"))
+B("fileManager",  mainMod .. " + F",         hl.dsp.exec_cmd(QS .. "files"))
+B("fileManagerAlt", mainMod .. " + E",       hl.dsp.exec_cmd(QS .. "files"))
 B("fileManagerTui", mainMod .. " + SHIFT + E", hl.dsp.exec_cmd(p.fileManagerTui))
 B("toggleSplit",  mainMod .. " + J",         hl.dsp.layout("togglesplit"))
-B("notes",        mainMod .. " + O",         hl.dsp.exec_cmd(p.note))
+B("notes",        mainMod .. " + O",         hl.dsp.exec_cmd(p.editor))
+B("crush",        mainMod .. " + C",         hl.dsp.exec_cmd(p.crush))
+B("music",        mainMod .. " + SHIFT + K", hl.dsp.exec_cmd(p.music))
+B("mail",         mainMod .. " + M",         hl.dsp.exec_cmd(p.mail))
+B("mailKey",      "XF86Mail",                hl.dsp.exec_cmd(p.mail))
+B("x",            mainMod .. " + X",         hl.dsp.exec_cmd("firefox https://x.com/"))
+B("xPost",        mainMod .. " + SHIFT + X", hl.dsp.exec_cmd("firefox --new-window https://x.com/compose/post"))
+B("nightlight",   mainMod .. " + N",         hl.dsp.exec_cmd(QS .. "nightlight"))
 B("screenshot",   mainMod .. " + SHIFT + S", hl.dsp.exec_cmd(p.screenshot))
+B("screenshotKey", "Print",                  hl.dsp.exec_cmd(p.screenshot))
 B("screenOff",    mainMod .. " + SHIFT + F12", hl.dsp.exec_cmd("brightnessctl s 0"))
 B("closeMouse", "mouse:277", hl.dsp.window.close())
 -- Super+B was removed along with the shell's power-saving mode: power profiles
@@ -134,6 +149,10 @@ B("resizeRight", "ALT + right", hl.dsp.window.resize({ x = 30,  y = 0,  relative
 B("resizeLeft", "ALT + left",  hl.dsp.window.resize({ x = -30, y = 0,  relative = true }), { repeating = true })
 B("resizeUp", "ALT + up",    hl.dsp.window.resize({ x = 0,   y = -30, relative = true }), { repeating = true })
 B("resizeDown", "ALT + down",  hl.dsp.window.resize({ x = 0,   y = 30,  relative = true }), { repeating = true })
+B("resizeWider",    mainMod .. " + bracketright", hl.dsp.window.resize({ x = 30,  y = 0,  relative = true }), { repeating = true })
+B("resizeNarrower", mainMod .. " + bracketleft",  hl.dsp.window.resize({ x = -30, y = 0,  relative = true }), { repeating = true })
+B("resizeTaller",   mainMod .. " + SHIFT + bracketright", hl.dsp.window.resize({ x = 0, y = 30,  relative = true }), { repeating = true })
+B("resizeShorter",  mainMod .. " + SHIFT + bracketleft",  hl.dsp.window.resize({ x = 0, y = -30, relative = true }), { repeating = true })
 
 -- Workspaces
 B("emptyWorkspace", mainMod .. " + Space",   hl.dsp.focus({ workspace = "empty" }))

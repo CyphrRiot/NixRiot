@@ -414,6 +414,7 @@ ColumnLayout {
             BindRow { bindId: "screenOff";  label: page.sys.tr("Turn screen off") }
             BindRow { bindId: "exitHypr";   label: page.sys.tr("Exit Hyprland") }
             BindRow { bindId: "themeSwitch"; label: page.sys.tr("Switch theme") }
+            BindRow { bindId: "themeSwitchAlt"; label: page.sys.tr("Wallpapers (alternate)") }
 
             Head { text: page.sys.tr("Workspaces") }
             Repeater {
@@ -453,11 +454,19 @@ ColumnLayout {
 
             Head { text: page.sys.tr("Applications") }
             BindRow { bindId: "terminal";       label: page.sys.tr("Terminal") }
-            BindRow { bindId: "terminalAlt";    label: page.sys.tr("Terminal (alt)") }
+            BindRow { bindId: "processViewer";  label: page.sys.tr("Process viewer") }
             BindRow { bindId: "browser";        label: page.sys.tr("Browser") }
             BindRow { bindId: "fileManagerTui"; label: page.sys.tr("Files (TUI)") }
-            BindRow { bindId: "notes";          label: page.sys.tr("Notes") }
+            BindRow { bindId: "notes";          label: page.sys.tr("Text editor") }
+            BindRow { bindId: "crush";          label: page.sys.tr("Crush") }
+            BindRow { bindId: "music";          label: page.sys.tr("Music player") }
+            BindRow { bindId: "mail";           label: page.sys.tr("Proton Mail") }
+            BindRow { bindId: "mailKey";        label: page.sys.tr("Proton Mail (mail key)"); manual: true }
+            BindRow { bindId: "x";              label: page.sys.tr("X") }
+            BindRow { bindId: "xPost";          label: page.sys.tr("Compose post on X") }
+            BindRow { bindId: "nightlight";     label: page.sys.tr("Night light") }
             BindRow { bindId: "screenshot";     label: page.sys.tr("Screenshot") }
+            BindRow { bindId: "screenshotKey";  label: page.sys.tr("Screenshot (Print)"); manual: true }
 
             Head { text: page.sys.tr("Windows") }
             BindRow { bindId: "closeWindow"; label: page.sys.tr("Close window") }

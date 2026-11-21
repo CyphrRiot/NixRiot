@@ -15,7 +15,7 @@ Item {
     property bool preview: false
     property var ccOrderOverride: null
 
-    readonly property var ccDefault: ["clock", "toggles", "sliders", "media", "power", "quick", "tray"]
+    readonly property var ccDefault: ["clock", "toggles", "sliders", "media", "power", "quick"]
     readonly property var ccOrder: {
         if (view.ccOrderOverride) return view.ccOrderOverride;
         var saved = String(view.sys.cfg.ccLayout || "").split(",").filter(x => x.length);
@@ -1671,27 +1671,6 @@ Item {
                     onClicked: view.sys.keepAwake = !view.sys.keepAwake
                 }
             }
-
-            IconBtn {
-                glyph: String.fromCodePoint(0xF0425)
-                tip: view.sys.tr("Power")
-                activeColor: view.sys.colCrit
-                onAct: view.sys.togglePage("power")
-            }
-
-            IconBtn {
-                visible: view.sys.cfg.featNotifications
-                glyph: String.fromCodePoint(view.sys.dnd ? 0xF009B : 0xF009A)
-                tip: view.sys.dnd ? view.sys.tr("Do not disturb") : view.sys.tr("Notifications")
-                badge: view.sys.notifications.count
-                onAct: view.sys.togglePage("notif")
-            }
-
-            IconBtn {
-                glyph: String.fromCodePoint(0xF0493)
-                tip: view.sys.tr("Settings")
-                onAct: view.sys.togglePage("settings")
-            }
             }
 
             RowLayout {
@@ -1702,9 +1681,10 @@ Item {
                 Layout.topMargin: 2
                 spacing: 8
                 visible: view.sys.trayItems.values.length > 0
+                         && view.ccOrder.indexOf("tray") >= 0
 
                 Text {
-                    text: view.sys.tr("Tray")
+                    text: view.sys.tr("Applets")
                     color: view.sys.colMuted
                     font {
                         family: view.sys.fontFam; pixelSize: view.sys.fontSize - 4

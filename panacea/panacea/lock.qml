@@ -388,6 +388,8 @@ ShellRoot {
                     width: 1; height: 1
                     opacity: 0
                     echoMode: TextInput.Password
+                    inputMethodHints: Qt.ImhHiddenText | Qt.ImhSensitiveData
+                                       | Qt.ImhNoPredictiveText
                     activeFocusOnPress: false
 
                     Component.onCompleted: forceActiveFocus()

@@ -317,7 +317,7 @@ ColumnLayout {
             SetSlider {
                 sys: page.sys
                 label: page.sys.tr("Scale")
-                from: 1; to: 3; step: 0.05
+                from: 1; to: 3; step: 0.01
                 decimals: 2
                 value: card.modelData.scale
                 suffix: "×"

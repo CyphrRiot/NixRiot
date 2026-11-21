@@ -8,6 +8,13 @@ in
     ../../modules/nixriot.nix
   ];
 
+  assertions = [
+    {
+      assertion = local.nixriotUser != "CHANGEME";
+      message = "hosts/installed/local.nix is the repository template. Build from the machine's /etc/nixriot copy, or set the real username in local.nix.";
+    }
+  ];
+
   nixriot = {
     enable = true;
     user = local.nixriotUser;

@@ -1,0 +1,19 @@
+/* ═══════════════════════════════════════════════════════════════════════════════
+ * NixRiot GTK3 Custom CSS - Dark Theme
+ * Dark overrides for GTK3 applications
+ * ═══════════════════════════════════════════════════════════════════════════════ */
+
+menubar, .menubar {
+    background-color: #16161e;
+    color: #c0caf5;
+}
+menubar > menuitem { color: #c0caf5; }
+menubar > menuitem:hover { background-color: #292e42; }
+
+menu, .menu {
+    background-color: #16161e;
+    color: #c0caf5;
+    border: 1px solid #292e42;
+}
+menu menuitem, .menu menuitem { color: #c0caf5; }
+menu menuitem:hover, .menu menuitem:hover { background-color: #292e42; }

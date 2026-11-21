@@ -5,7 +5,7 @@ internals (decisions, installer contract, update mechanics, verified package
 facts) are in `Internals.md`. This file is the reasoning, architecture, and
 planning.
 
-Status: living document. Last updated 2026-11-19.
+Status: living document. Last updated 2026-11-20.
 
 ## Why this exists
 
@@ -87,7 +87,7 @@ NixRiot/
       shell.nix              # fish, zoxide, ripgrep, btop
       editors.nix            # Helix, gnome-text-editor, Crush
       media.nix              # mpv, Lollypop, transmission
-      office.nix             # zathura, Firefox, Thunar, AbiWord and Gnumeric (optional)
+      office.nix             # zathura, Firefox, LibreOffice (optional)
       games.nix              # optional curated game set
     crypto/                  # monero, bitcoin, wireguard, glyphriot
     security/                # hardening, backup
@@ -108,14 +108,15 @@ NixRiot/
    symlink makes it always the newest build.
 2. Boot it. tty1 autologins as `nixos` and runs `nixriot-install`; the guard in
    `iso/configuration.nix` keeps it from running on any other getty.
-3. The installer asks for a username, then an account password, then checks that
-   `cache.nixos.org` answers. With no network it waits, offering `nmtui`, and
-   will not touch a disk.
+3. The installer asks for a username and a hostname, then an account password,
+   then checks that `cache.nixos.org` answers. With no network it waits,
+   offering `nmtui`, and will not touch a disk.
 4. It takes a disk, requires `ERASE`, and asks for the LUKS passphrase twice
    (once to set, once to confirm; the same key file then unlocks the volume).
 5. It partitions a 512M ESP labeled `BOOT` and the rest as LUKS2 `nixos`,
    formats, mounts, copies `/etc/nixriot` to `/mnt/etc/nixriot`, generates the
-   hardware configuration into `hosts/installed/`, writes `local.nix`, and runs
+   hardware configuration into `hosts/installed/`, writes `local.nix` with the
+   user and hostname, and runs
    `nixos-install --root /mnt --flake /mnt/etc/nixriot#installed`.
 6. It applies the account password with `chpasswd`, unmounts, and reboots into
    the installed system.
@@ -139,9 +140,9 @@ the revision is a real file rather than something derived from the flake, are in
 
 `panacea/hypr/palette.conf` is the single palette: terracotta accent `#c65a47`,
 background `#1b2b34`, foreground `#e5d1c5`. `hypr/scripts/palette.sh` spreads it
-over fastfetch, foot (including the full 16-colour ANSI set), fish, btop, Zed,
-neovim and Obsidian, and `switch_theme.sh` puts the wallpaper behind the login
-screen. Firefox is deliberately not themed.
+over fastfetch, foot (including the full 16-colour ANSI set), fish, btop and
+neovim, plus Zed and Obsidian when their configs exist, and `switch_theme.sh`
+puts the wallpaper behind the login screen. Firefox is deliberately not themed.
 
 Because these files are rewritten at run time, Panacea's config trees are copied
 into `~/.config` as writable files rather than Home Manager store symlinks.
@@ -186,7 +187,7 @@ asset is carried.
 | Transmission | **Port** | nixpkgs `transmission_4-gtk` |
 | Proton Drive sync | **Port** | `rclone` |
 | Signal (gurk) | **Port** | nixpkgs `gurk-rs`, with a launcher entry |
-| AbiWord, Gnumeric, Firefox | **Port** | nixpkgs |
+| LibreOffice, Firefox | **Port** | nixpkgs |
 | Backup and restore | **Port** | `restic` |
 | Disk manager | **Port** | `gnome-disk-utility` or `gparted` |
 | MAC randomization | **Port** | NetworkManager setting |

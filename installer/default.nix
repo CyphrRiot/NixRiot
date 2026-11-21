@@ -65,6 +65,32 @@ pkgs.writeScriptBin "nixriot-install" ''
     done
   fi
 
+  if [ -n "''${NIXRIOT_HOSTNAME:-}" ]; then
+    host="$NIXRIOT_HOSTNAME"
+  else
+    while :; do
+      read -r -p "Hostname for this machine [nixriot]: " host
+      host="''${host:-nixriot}"
+      case "$host" in
+        -*|*-|"")
+          echo "No leading or trailing hyphen." >&2
+          continue
+          ;;
+        *[!a-z0-9-]*)
+          echo "Use lowercase letters, digits and hyphens only." >&2
+          continue
+          ;;
+      esac
+      if [ "''${#host}" -gt 63 ]; then
+        echo "Keep it to 63 characters or fewer." >&2
+        continue
+      fi
+      break
+    done
+  fi
+
+  host="''${host:-nixriot}"
+
   if [ -n "''${NIXRIOT_PASSWORD:-}" ]; then
     user_pass="$NIXRIOT_PASSWORD"
   else
@@ -201,7 +227,7 @@ pkgs.writeScriptBin "nixriot-install" ''
     echo "Detecting hardware ..."
     nixos-generate-config --root /mnt --dir /mnt/etc/nixriot/hosts/installed
 
-    printf '{\n  nixriotUser = "%s";\n}\n' "$user" > /mnt/etc/nixriot/hosts/installed/local.nix
+    printf '{\n  nixriotUser = "%s";\n  nixriot.hostName = "%s";\n}\n' "$user" "$host" > /mnt/etc/nixriot/hosts/installed/local.nix
 
     flake_ref="/mnt/etc/nixriot#installed"
   fi

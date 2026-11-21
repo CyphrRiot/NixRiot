@@ -22,6 +22,10 @@ programs.bar = os.getenv("HOME") .. "/.config/panacea/scripts/start.sh"   -- the
 programs.screenshot = os.getenv("HOME") .. "/.config/panacea/scripts/shot.sh"
 programs.browser = "firefox"
 programs.lock = os.getenv("HOME") .. "/.config/panacea/scripts/lock.sh"
-programs.note = "obsidian"
+programs.editor = "gnome-text-editor"
+programs.processViewer = "foot -e btop"
+programs.crush = "foot -e crush"
+programs.music = "lollypop"
+programs.mail = "firefox https://mail.proton.me/inbox"
 
 return programs

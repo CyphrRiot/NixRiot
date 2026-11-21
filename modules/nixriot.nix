@@ -76,9 +76,8 @@ in
       type = lib.types.bool;
       default = false;
       description = ''
-        Install the word processor and spreadsheet (AbiWord and Gnumeric). Off
-        by default; the rest of the office set (zathura, Thunar, file-roller)
-        is always installed.
+        Install LibreOffice, about 1 GB of closure. Off by default; the rest
+        of the office set (zathura, file-roller) is always installed.
       '';
     };
 
@@ -135,8 +134,25 @@ in
 
     system.nixos.distroName = "NixRiot";
 
+    system.activationScripts.binbash = ''
+      ln -sfn ${pkgs.bashInteractive}/bin/bash /bin/bash
+    '';
+
     boot.consoleLogLevel = 7;
     boot.zfs.forceImportRoot = false;
+
+    # Compressed RAM swap keeps cold pages out of the way without a disk
+    # swapfile. The dirty caps stop a large copy, such as an rsync from a USB
+    # disk, from accumulating unflushed writes until the whole session stalls.
+    zramSwap = {
+      enable = true;
+      memoryPercent = 50;
+    };
+
+    boot.kernel.sysctl = {
+      "vm.dirty_background_bytes" = 67108864;
+      "vm.dirty_bytes" = 268435456;
+    };
 
     # The graphical-desktop profile turns this on by default; it pulls
     # speech-dispatcher and about 270 MB of mbrola voices.
@@ -197,7 +213,9 @@ in
     hardware.cpu.intel.npu.enable = lib.mkDefault cfg.npu;
 
     networking.hostName = cfg.hostName;
-    time.timeZone = "UTC";
+    # Null lets /etc/localtime be set at run time (the pill uses timedatectl).
+    # A fixed value here would overwrite it on every rebuild and update.
+    time.timeZone = null;
     i18n.defaultLocale = "en_US.UTF-8";
 
     users.users.${cfg.user} = lib.mkIf cfg.desktop.enable {

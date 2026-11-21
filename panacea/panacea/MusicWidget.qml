@@ -138,7 +138,7 @@ Rectangle {
     Rectangle { x: 16; y: 17; width: 5; height: 5; radius: 3; color: card.playing ? "#e84343" : "#77777b" }
     Text {
         x: 28; y: 12; width: 164; height: 14
-        text: card.playing ? "NOW PLAYING" : (card.hasTrack ? "PAUSED" : "NOTHING MUSIC")
+        text: card.playing ? "NOW PLAYING" : (card.hasTrack ? "PAUSED" : "MUSIC")
         color: "#a8a8ad"
         font { family: card.sys ? card.sys.fontFam : "sans-serif"; pixelSize: 9; bold: true; letterSpacing: 1.2 }
         elide: Text.ElideRight

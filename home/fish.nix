@@ -110,13 +110,15 @@
         # Accent follows the palette, grafted by conf.d/theme_colors.fish.
         # Fall back to plain white when the palette value is unusable.
         set -l accent
-        if set -q fish_color_command
-            set accent $fish_color_command[1]
+        if set -q fish_color_quote
+            set accent $fish_color_quote[1]
         end
         string match -qr '^(#?[0-9a-fA-F]{6}|[a-z_]+)$' -- "$accent"; or set accent ffffff
+        set -l icon 50c9c3
 
+        set_color $icon
+        printf '\uf313  '
         set_color $accent
-        printf '\uf17c  '
         printf "%s " $host
         set_color normal
         printf "%s" (string replace $HOME "~" (pwd))
@@ -165,6 +167,9 @@
 
     # Music
     alias music='lollypop'
+
+    # Rebuild after editing /etc/nixriot/hosts/installed/local.nix
+    alias rebuild='sudo nixos-rebuild switch --flake /etc/nixriot#installed'
 
     # Disk usage -- top 10 largest items by size
     function dum

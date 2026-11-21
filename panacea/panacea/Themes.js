@@ -7,7 +7,7 @@
 //
 //
 var list = [
-    { id: "nothing",  name: "Nothing",     bg: "#000000", fg: "#ffffff", on: "#ffffff", ok: "#ffffff", crit: "#d71921" }
+    { id: "nothing",  name: "NixRiot",     bg: "#000000", fg: "#ffffff", on: "#ffffff", ok: "#ffffff", crit: "#d71921" }
 ];
 
 function of(id) {

@@ -75,7 +75,7 @@ ColumnLayout {
         SetToggle {
             sys: page.sys
             label: page.sys.tr("Desktop widgets")
-            sub: page.sys.tr("Nothing OS cards on the wallpaper: date, clock, weather, system monitor, and a progress bar. Click the cards to switch modes.")
+            sub: page.sys.tr("Cards on the wallpaper: date, clock, weather, system monitor, and a progress bar. Click the cards to switch modes.")
             on: page.sys.cfg.featWidgets
             onToggled: v => { page.sys.cfg.featWidgets = v; page.sys.saveCfg(); }
         }
@@ -85,7 +85,7 @@ ColumnLayout {
             sys: page.sys
             label: page.sys.tr("Clock style")
             options: [
-                { id: "analog", text: page.sys.tr("Nothing Analog") },
+                { id: "analog", text: page.sys.tr("Analog") },
                 { id: "digital", text: page.sys.tr("Digital Dot") }
             ]
             value: page.sys.cfg.widgetClockMode || "analog"
@@ -119,8 +119,8 @@ ColumnLayout {
         SetToggle {
             visible: page.sys.cfg.featWidgets && page.detailsOpen
             sys: page.sys
-            label: page.sys.tr("Nothing Music widget")
-            sub: page.sys.tr("A Nothing-style player with a spinning vinyl and playback controls right on the desktop.")
+            label: page.sys.tr("Music widget")
+            sub: page.sys.tr("A player with a spinning vinyl and playback controls right on the desktop.")
             on: page.sys.cfg.widgetMusic !== false
             onToggled: v => { page.sys.cfg.widgetMusic = v; page.sys.saveCfg(); }
         }
@@ -149,6 +149,12 @@ ColumnLayout {
         sys: page.sys
         text: page.detailsOpen ? page.sys.tr("Hide details") : page.sys.tr("Detailed settings")
         onClicked: page.detailsOpen = !page.detailsOpen
+    }
+
+    SetButton {
+        sys: page.sys
+        text: page.sys.tr("Wallpapers")
+        onClicked: page.sys.openWalls()
     }
 
     SetCard {

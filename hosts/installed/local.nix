@@ -1,3 +1,3 @@
 {
-  nixriotUser = "user";
+  nixriotUser = "CHANGEME";
 }

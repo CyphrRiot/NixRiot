@@ -1,5 +1,17 @@
 { config, lib, pkgs, panaceaSrc, ... }:
 let
+  # The scripts carry Arch shebangs (#!/bin/bash), which do not exist on NixOS.
+  # Patch every interpreter at build time so Hyprland and activation run them
+  # directly.
+  patchedPanacea = pkgs.runCommand "panacea-patched" {
+    nativeBuildInputs = [ pkgs.bash pkgs.python3 ];
+  } ''
+    mkdir -p $out
+    cp -r ${panaceaSrc}/. $out/
+    chmod -R u+w $out
+    patchShebangs $out
+  '';
+
   # Ship the config trees on every rebuild rather than only when absent, so a fix
   # under hypr/ or panacea/ reaches an installed machine instead of being copied
   # once at first login and never again. What is not ours to ship is excluded:
@@ -12,9 +24,18 @@ let
   refresh = name: extraExcludes: ''
     run mkdir -p "$HOME/.config"
     run ${pkgs.rsync}/bin/rsync -a --delete ${lib.concatStringsSep " " (map (e: "--exclude ${e}") extraExcludes)} \
-      ${panaceaSrc}/${name}/ "$HOME/.config/${name}/"
+      ${patchedPanacea}/${name}/ "$HOME/.config/${name}/"
     run chmod -R u+w "$HOME/.config/${name}"
   '';
+
+  # First launch needs a wallpaper before the pill or switch_theme.sh has
+  # written the state files. These are copied only when absent, so a chosen
+  # wallpaper still survives every rebuild.
+  expandHome = builtins.replaceStrings [ "~" ] [ config.home.homeDirectory ];
+  defaultWallpaper = pkgs.writeText "nixriot-wallpaper.conf"
+    (expandHome (builtins.readFile "${panaceaSrc}/hypr/wallpaper.conf"));
+  defaultHyprpaper = pkgs.writeText "nixriot-hyprpaper.conf"
+    (expandHome (builtins.readFile "${panaceaSrc}/hypr/hyprpaper.conf"));
 
   # Panacea ships its desktop entries with an @HOME@ placeholder that upstream's
   # install.sh substitutes. Generate them here rather than copying verbatim,
@@ -25,11 +46,34 @@ let
       [ config.home.homeDirectory ]
       (builtins.readFile "${panaceaSrc}/applications/${name}.desktop");
   };
+
+  # "open some/relative/file.gif" hands the pill a relative path, which becomes
+  # file://relative and fails to load. Resolve it against the caller's directory
+  # before the IPC call.
+  mediaOpen = pkgs.writeShellScript "panacea-media-open" ''
+    exec ${pkgs.quickshell}/bin/qs -c "${config.home.homeDirectory}/.config/panacea" \
+      ipc call pill media "$(realpath -- "$1")"
+  '';
+
+  mediaDesktop = {
+    text = ''
+      [Desktop Entry]
+      Type=Application
+      Version=1.0
+      Name=Panacea Viewer
+      Comment=Images and video in the dynamic island, with trim and crop
+      Exec=${mediaOpen} %f
+      Icon=${config.home.homeDirectory}/.config/panacea/assets/logo-128.png
+      Terminal=false
+      Categories=Graphics;
+      MimeType=image/png;image/jpeg;image/gif;image/webp;image/bmp;image/tiff;image/svg+xml;video/mp4;video/webm;video/x-matroska;video/quicktime;
+    '';
+  };
 in
 {
   xdg.dataFile = {
     "applications/panacea-files.desktop" = desktopFile "panacea-files";
-    "applications/panacea-media.desktop" = desktopFile "panacea-media";
+    "applications/panacea-media.desktop" = mediaDesktop;
     "applications/panacea-text.desktop" = desktopFile "panacea-text";
   };
 
@@ -39,6 +83,13 @@ in
     ${refresh "foot" []}
     ${refresh "fastfetch" []}
 
+    if [ ! -e "$HOME/.config/hypr/wallpaper.conf" ]; then
+      run cp ${defaultWallpaper} "$HOME/.config/hypr/wallpaper.conf"
+    fi
+    if [ ! -e "$HOME/.config/hypr/hyprpaper.conf" ]; then
+      run cp ${defaultHyprpaper} "$HOME/.config/hypr/hyprpaper.conf"
+    fi
+
     run chmod -R u+x "$HOME/.config/panacea/scripts" "$HOME/.config/hypr/scripts" 2>/dev/null || true
 
     if [ ! -e "$HOME/.nanorc" ] && [ -f ${panaceaSrc}/nano/nanorc ]; then
@@ -46,7 +97,7 @@ in
     fi
 
     run mkdir -p "$HOME/.local/bin"
-    run cp -r ${panaceaSrc}/bin/. "$HOME/.local/bin/"
+    run cp -r ${patchedPanacea}/bin/. "$HOME/.local/bin/"
     run chmod -R u+w "$HOME/.local/bin"
     run chmod -R u+x "$HOME/.local/bin"
 

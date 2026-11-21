@@ -20,6 +20,21 @@ in
     ];
 
     security.polkit.enable = true;
+    security.polkit.extraConfig = ''
+      polkit.addRule(function(action, subject) {
+        if (action.id == "org.freedesktop.policykit.exec" &&
+            action.lookup("program") == "/run/current-system/sw/bin/timedatectl" &&
+            subject.isInGroup("wheel")) {
+          return polkit.Result.YES;
+        }
+        if ((action.id == "org.freedesktop.timedate1.set-timezone" ||
+             action.id == "org.freedesktop.timedate1.set-time" ||
+             action.id == "org.freedesktop.timedate1.set-ntp") &&
+            subject.isInGroup("wheel")) {
+          return polkit.Result.YES;
+        }
+      });
+    '';
     security.rtkit.enable = true;
     security.pam.services.swaylock = { };
     services.gnome.gnome-keyring.enable = true;
@@ -84,6 +99,7 @@ in
       yazi
       xdg-utils
       glib
+      gsettings-desktop-schemas
       pciutils
       util-linux
       file
@@ -98,5 +114,14 @@ in
       gvfs
     ] ++ lib.optionals config.nixriot.ocr [ tesseract ]
       ++ lib.optionals config.nixriot.apps [ mpvpaper ];
+
+    systemd.user.services.bt-agent = {
+      description = "Bluetooth pairing agent";
+      wantedBy = [ "default.target" ];
+      serviceConfig = {
+        ExecStart = "${pkgs.bluez-tools}/bin/bt-agent -c NoInputNoOutput";
+        Restart = "always";
+      };
+    };
   };
 }

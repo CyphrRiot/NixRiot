@@ -4,9 +4,7 @@
     environment.systemPackages = with pkgs; [
       zathura
       firefox
-      thunar
-      tumbler
       file-roller
-    ] ++ lib.optionals config.nixriot.office [ abiword gnumeric ];
+    ] ++ lib.optionals config.nixriot.office [ libreoffice ];
   };
 }

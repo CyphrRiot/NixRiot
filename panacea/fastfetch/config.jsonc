@@ -8,14 +8,14 @@
     "source": "nixos_small",
     "padding": { "top": 3, "left": 3, "right": 4 },
     // panacea:accent
-    "color": { "1": "38;2;198;90;71", "2": "38;2;198;90;71" }
+    "color": { "1": "31", "2": "32" }
   },
 
   "display": {
     "separator": "  ",
     "color": {
       // panacea:accent
-      "keys": "38;2;198;90;71",
+      "keys": "36",
       "title": "white",
       "output": "white"
     }
@@ -30,22 +30,32 @@
     { "type": "separator", "string": "─" },
 
     // what makes this machine this machine
-    { "type": "custom", "key": "󰏔 Shell   ", "format": "Panacea Island" },
-    { "type": "wm",       "key": "󱂬 WM      " },
-    { "type": "os",       "key": "󰣇 OS      ", "format": "{name} {arch}" },
-    { "type": "kernel",   "key": "󰒋 Kernel  ", "format": "{release}" },
-    { "type": "uptime",   "key": "󱎫 Uptime  " },
-    { "type": "packages", "key": "󰏗 Packages", "format": "{all}" },
+    { "type": "custom", "key": "󰏔 Shell   ", "keyColor": "red",     "format": "Panacea Island" },
+    { "type": "wm",       "key": "󱂬 WM      ", "keyColor": "green" },
+    { "type": "os",       "key": "\uf313 OS      ", "keyColor": "yellow", "format": "{name} {arch}" },
+    { "type": "kernel",   "key": "󰒋 Kernel  ", "keyColor": "blue",   "format": "{release}" },
+    { "type": "uptime",   "key": "󱎫 Uptime  ", "keyColor": "magenta" },
+    { "type": "packages", "key": "󰏗 Packages", "keyColor": "cyan",   "format": "{all}" },
 
     "break",
 
-    { "type": "terminal", "key": "󰆍 Terminal", "format": "{pretty-name}" },
-    { "type": "shell",    "key": "󰈺 CLI     ", "format": "{pretty-name} {version}" },
-    { "type": "cpu",      "key": "󰻠 CPU     ", "format": "{name}" },
-    { "type": "gpu",      "key": "󰢮 GPU     ", "format": "{name}" },
-    { "type": "memory",   "key": "󰍛 Memory  " },
-    { "type": "disk",     "key": "󰋊 Disk    ", "folders": "/" },
-    { "type": "battery",  "key": "󰁹 Battery ", "format": "{capacity} ({status})" },
+    { "type": "terminal", "key": "󰆍 Terminal", "keyColor": "white", "format": "{pretty-name}" },
+    { "type": "shell",    "key": "󰈺 CLI     ", "keyColor": "red",    "format": "{pretty-name} {version}" },
+    {
+      "type": "command",
+      "key": "\u200b",
+      "text": "cpu=$(fastfetch -s cpu --format json 2>/dev/null | jq -r '.[0].result.cpu'); value=$(printf '%s' \"$cpu\" | fold -s -w 35 | sed '2,$s/^/          /'); printf '\\033[32m󰻠 CPU     \\033[0m%s\\n' \"$value\" | sed \"s/^/$(printf '\\b\\b')/\"",
+      "splitLines": true
+    },
+    {
+      "type": "command",
+      "key": "\u200b",
+      "text": "gpu=$(fastfetch -s gpu --format json 2>/dev/null | jq -r '.[0].result[0].name'); value=$(printf '%s' \"$gpu\" | fold -s -w 35 | sed '2,$s/^/          /'); printf '\\033[33m󰢮 GPU     \\033[0m%s\\n' \"$value\" | sed \"s/^/$(printf '\\b\\b')/\"",
+      "splitLines": true
+    },
+    { "type": "memory",   "key": "󰍛 Memory  ", "keyColor": "blue" },
+    { "type": "disk",     "key": "󰋊 Disk    ", "keyColor": "magenta", "folders": "/" },
+    { "type": "battery",  "key": "󰁹 Battery ", "keyColor": "cyan",   "format": "{capacity} ({status})" },
 
     "break",
     { "type": "separator", "string": "─" },

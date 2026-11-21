@@ -22,9 +22,5 @@ fi
 if [ -n "$NIRI_SOCKET" ] || [ "${XDG_CURRENT_DESKTOP,,}" = "niri" ]; then
     niri msg action close-window >/dev/null 2>&1
 else
-    out=$(hyprctl dispatch 'hl.dsp.window.close()' 2>&1)
-    case "$out" in
-        ok*) ;;
-        *) hyprctl dispatch killactive >/dev/null 2>&1 ;;
-    esac
+    hyprctl dispatch 'hl.dsp.window.close()'
 fi
