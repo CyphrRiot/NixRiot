@@ -11,6 +11,10 @@ nothing else, so the wording here is exactly what a person reads on the pill's
 
 ## Unreleased
 
+## 1.37
+
+- Fix Plymouth logo and Installer
+
 ## 1.36
 
 - Installing an optional app no longer flips the button before the rebuild finishes.

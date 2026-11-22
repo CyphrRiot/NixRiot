@@ -3,6 +3,19 @@ let
   local = import ./local.nix;
   features =
     if builtins.pathExists ./features.nix then import ./features.nix else { };
+  featureConfig =
+    lib.optionalAttrs (features ? office) { office = features.office; }
+    // lib.optionalAttrs (features ? games) { games = features.games; }
+    // lib.optionalAttrs (features ? transmission) { media.transmission = features.transmission; }
+    // lib.optionalAttrs
+         (features ? monero || features ? bitcoin || features ? glyphriot)
+         {
+           crypto = lib.filterAttrs (_: v: v != null) {
+             monero = features.monero or null;
+             bitcoin = features.bitcoin or null;
+             glyphriot = features.glyphriot or null;
+           };
+         };
 in
 {
   imports = [
@@ -26,7 +39,7 @@ in
     plymouth = lib.mkDefault true;
     autologin = lib.mkDefault true;
     media.transmission = lib.mkDefault true;
-  } // (local.nixriot or { }) // features;
+  } // (local.nixriot or { }) // featureConfig;
 
   home-manager.users.${local.nixriotUser} = import ../../home;
 
