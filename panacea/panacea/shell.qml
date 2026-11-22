@@ -1068,7 +1068,7 @@ PanelWindow {
             root.endBusy();
             if (code !== 0 && root.updError.length === 0)
                 root.updError = "failed";
-            if (code === 0) { root.updStatus = "current"; root.updStep = "done"; }
+            if (code === 0) { root.updStep = "done"; root.checkUpdate(); }
         }
     }
 

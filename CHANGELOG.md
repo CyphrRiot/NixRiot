@@ -11,6 +11,10 @@ nothing else, so the wording here is exactly what a person reads on the pill's
 
 ## Unreleased
 
+## 1.19
+
+- The pill refreshes the version after an update instead of staying on the old one.
+
 ## 1.18
 
 - Update messages say NixRiot, not Panacea.
