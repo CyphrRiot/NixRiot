@@ -3,7 +3,7 @@
 ![NixRiot](docs/img/banner.webp)
 
 ![Status](https://img.shields.io/badge/status-release-9a2eef?labelColor=1b2b34)
-![Version](https://img.shields.io/badge/version-1.37-9a2eef?labelColor=1b2b34)
+![Version](https://img.shields.io/badge/version-1.38-9a2eef?labelColor=1b2b34)
 ![Platform](https://img.shields.io/badge/platform-NixOS-9a2eef?logo=nixos&logoColor=white&labelColor=1b2b34)
 ![Shell](https://img.shields.io/badge/shell-Hyprland-9a2eef?logo=hyprland&logoColor=9a2eef&labelColor=1b2b34)
 ![UI](https://img.shields.io/badge/UI-Quickshell-9a2eef?labelColor=1b2b34)
@@ -398,6 +398,8 @@ also reachable from the pill's expanded island. `SUPER + Z` opens the control
 center (Wi-Fi, Bluetooth, audio, power profile, and **Stay awake**, which stops
 the screen blanking, the machine sleeping and lid-close suspend until you turn it
 off). `SUPER + /` lists every current binding.
+
+![The Installs page in Settings, listing the optional applications](docs/img/installs.webp)
 
 ---
 

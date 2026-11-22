@@ -36,7 +36,7 @@ in
     hostName = lib.mkDefault "nixriot";
     desktop.enable = lib.mkDefault true;
     apps = lib.mkDefault true;
-    plymouth = lib.mkDefault true;
+    plymouth = lib.mkForce false;
     autologin = lib.mkDefault true;
     media.transmission = lib.mkDefault true;
   } // (local.nixriot or { }) // featureConfig;

@@ -69,6 +69,10 @@ in
       NIXOS_OZONE_WL = "1";
       QML2_IMPORT_PATH = qmlImportPath;
       QML_IMPORT_PATH = qmlImportPath;
+      QT_PLUGIN_PATH = lib.makeSearchPath "lib/qt-6/plugins" [
+        pkgs.qt6.qtimageformats
+        pkgs.qt6.qtbase
+      ];
     };
 
     environment.systemPackages = with pkgs; [
@@ -112,6 +116,7 @@ in
 
       qt6.qtmultimedia
       qt6.qtdeclarative
+      qt6.qtimageformats
 
       udisks2
       udiskie
