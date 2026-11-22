@@ -3,7 +3,7 @@
 ![NixRiot](docs/img/banner.webp)
 
 ![Status](https://img.shields.io/badge/status-release-9a2eef?labelColor=1b2b34)
-![Version](https://img.shields.io/badge/version-1.38-9a2eef?labelColor=1b2b34)
+![Version](https://img.shields.io/badge/version-1.39-9a2eef?labelColor=1b2b34)
 ![Platform](https://img.shields.io/badge/platform-NixOS-9a2eef?logo=nixos&logoColor=white&labelColor=1b2b34)
 ![Shell](https://img.shields.io/badge/shell-Hyprland-9a2eef?logo=hyprland&logoColor=9a2eef&labelColor=1b2b34)
 ![UI](https://img.shields.io/badge/UI-Quickshell-9a2eef?labelColor=1b2b34)
@@ -52,16 +52,6 @@ make sense on Linux. One flake builds the installer image and the installed
 system, so both stay in step.
 
 The reasoning behind it is in the [article on X](https://x.com/CyphrRiot/status/2123604405975134647).
-
-## Screenshots
-
-The desktop, the launcher and the power menu:
-
-![The NixRiot desktop, with the pill collapsed at the top](docs/img/desktop.webp)
-
-![The launcher, searching the curated application list](docs/img/launcher.webp)
-
-![The power menu](docs/img/power.webp)
 
 Read [docs/Design.md](docs/Design.md) for the reasoning, architecture, and
 roadmap. This file is the manual.

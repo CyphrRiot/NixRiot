@@ -11,6 +11,10 @@ nothing else, so the wording here is exactly what a person reads on the pill's
 
 ## Unreleased
 
+## 1.39
+
+- The passphrase prompt appears without pressing a key.
+
 ## 1.38
 
 - Install optional applications from the Installs page in Settings.
