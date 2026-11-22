@@ -11,6 +11,10 @@ nothing else, so the wording here is exactly what a person reads on the pill's
 
 ## Unreleased
 
+## 1.14
+
+- The kernel is pinned to the version that works with the laptop's graphics; the newer one freezes at boot.
+
 ## 1.13
 
 - Updates install for the next boot instead of restarting the desktop while it is in use.
