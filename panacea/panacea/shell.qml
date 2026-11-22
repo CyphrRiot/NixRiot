@@ -1068,7 +1068,12 @@ PanelWindow {
             root.endBusy();
             if (code !== 0 && root.updError.length === 0)
                 root.updError = "failed";
-            if (code === 0) { root.updStep = "done"; root.reloadDesktop(); }
+            if (code === 0) {
+                root.updStatus = "current";
+                root.updCurrent = root.updLatest;
+                root.updStep = "done";
+                root.reloadDesktop();
+            }
         }
     }
 

@@ -102,8 +102,9 @@ let
 
         if [ -r /etc/nixriot/CHANGELOG.md ] && [ -n "$oldver" ] && [ "$oldver" != unknown ]; then
           awk -v stop="## $oldver" '
-            /^## / { if ($0 == stop) { exit } ; if (!seen) { seen = 1 } }
-            seen { print }
+            /^## / { if ($0 == stop) exit; next }
+            /^$/ { next }
+            { print }
           ' /etc/nixriot/CHANGELOG.md > "$notes" 2>/dev/null || true
         elif [ -n "$old" ] && [ "$old" != unknown ] && git -C "$tmp" rev-parse --verify --quiet "$old" >/dev/null 2>&1; then
           git -C "$tmp" log --pretty=format:'%s' "$old..HEAD" > "$notes" 2>/dev/null || true

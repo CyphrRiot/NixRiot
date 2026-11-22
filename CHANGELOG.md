@@ -11,6 +11,11 @@ nothing else, so the wording here is exactly what a person reads on the pill's
 
 ## Unreleased
 
+## 1.26
+
+- The Update button clears as soon as the update finishes.
+- What's New shows bullets without the changelog headings.
+
 ## 1.25
 
 - Updates apply live and restart the desktop; a new kernel loads on the next reboot.
