@@ -56,6 +56,17 @@ case "${1:-}" in
             echo off
         fi
         ;;
+    reapply)
+        [ -f "$STATE" ] || exit 0
+        temp="$(cat "$STATE" 2>/dev/null)"
+        [ -n "$temp" ] || exit 0
+        usable || exit 0
+        if ! pgrep -x hyprsunset >/dev/null 2>&1; then
+            setsid hyprsunset >/dev/null 2>&1 &
+            sleep 0.4
+        fi
+        hyprctl hyprsunset temperature "$(clamp "$temp")" >/dev/null 2>&1 || true
+        ;;
     *)
         echo "usage: nightlight.sh on [temperature] | off | status" >&2
         exit 1

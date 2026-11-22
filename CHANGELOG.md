@@ -11,6 +11,11 @@ nothing else, so the wording here is exactly what a person reads on the pill's
 
 ## Unreleased
 
+## 1.24
+
+- Installed systems use the NixRiot splash again; the installer stays text.
+- Night light stays applied after suspend instead of needing a manual toggle.
+
 ## 1.23
 
 - The live image no longer loads the AMD GPU driver, so it cannot hang before the installer.
