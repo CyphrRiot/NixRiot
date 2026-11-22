@@ -216,6 +216,8 @@ in
     hardware.cpu.intel.npu.enable = lib.mkDefault cfg.npu;
 
     networking.hostName = cfg.hostName;
+    system.nixos.distroName = "NixRiot";
+    system.nixos.label = lib.removeSuffix "\n" (builtins.readFile ../VERSION);
     # Null lets /etc/localtime be set at run time (the pill uses timedatectl).
     # A fixed value here would overwrite it on every rebuild and update.
     time.timeZone = null;

@@ -67,7 +67,6 @@ in
 
     environment.sessionVariables = {
       NIXOS_OZONE_WL = "1";
-      GTK_THEME = "Adwaita-dark";
       QML2_IMPORT_PATH = qmlImportPath;
       QML_IMPORT_PATH = qmlImportPath;
     };

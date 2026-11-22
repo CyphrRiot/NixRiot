@@ -17,7 +17,6 @@
     };
     gtk4.extraConfig = {
       gtk-application-prefer-dark-theme = 1;
-      gtk-theme-name = "Adwaita-dark";
     };
     gtk3.extraCss = builtins.readFile ./gtk/gtk-3.0.css;
     gtk4.extraCss = builtins.readFile ./gtk/gtk-4.0.css;

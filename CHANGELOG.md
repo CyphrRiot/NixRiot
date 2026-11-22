@@ -11,6 +11,11 @@ nothing else, so the wording here is exactly what a person reads on the pill's
 
 ## Unreleased
 
+## 1.30
+
+- The desktop shell restarts itself if an update or a bus restart kills it.
+- GTK4 and Firefox use the system dark preference again instead of an invalid GTK4 theme name.
+
 ## 1.29
 
 - The update card shows the installed and new versions.
