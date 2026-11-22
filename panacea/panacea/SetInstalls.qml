@@ -107,7 +107,11 @@ ColumnLayout {
 
                 SetButton {
                     sys: page.sys
-                    text: page.installed[modelData.key] ? page.sys.tr("Remove") : page.sys.tr("Install")
+                    text: page.busy && page.status.feature === modelData.key
+                          ? (page.status.action === "on"
+                             ? page.sys.tr("Installing…")
+                             : page.sys.tr("Removing…"))
+                          : page.installed[modelData.key] ? page.sys.tr("Remove") : page.sys.tr("Install")
                     primary: !page.installed[modelData.key]
                     enabled: !page.busy
                     onClicked: page.setFeature(modelData.key, !page.installed[modelData.key])

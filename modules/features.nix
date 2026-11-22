@@ -41,15 +41,15 @@ let
       echo '{"office":false,"games":false,"transmission":false,"monero":false,"bitcoin":false,"glyphriot":false}' > "$state"
     fi
 
-    status_write "{\"busy\":true,\"feature\":\"$feature\",\"action\":\"$action\",\"step\":\"write\"}"
-
+    desired="$state.desired"
     if [ "$action" = on ]; then value=true; else value=false; fi
-    jq --arg k "$feature" --argjson v "$value" '.[$k] = $v' "$state" > "$state.tmp"
-    mv "$state.tmp" "$state"
+    jq --arg k "$feature" --argjson v "$value" '.[$k] = $v' "$state" > "$desired"
+
+    status_write "{\"busy\":true,\"feature\":\"$feature\",\"action\":\"$action\",\"step\":\"write\"}"
 
     {
       echo '{'
-      jq -r 'to_entries[] | "  \(.key) = \(.value);"' "$state"
+      jq -r 'to_entries[] | "  \(.key) = \(.value);"' "$desired"
       echo '}'
     } > "$features"
     chown root:root "$features"
@@ -57,9 +57,18 @@ let
 
     status_write "{\"busy\":true,\"feature\":\"$feature\",\"action\":\"$action\",\"step\":\"build\"}"
     if ! nixos-rebuild switch --flake /etc/nixriot#installed; then
+      {
+        echo '{'
+        jq -r 'to_entries[] | "  \(.key) = \(.value);"' "$state"
+        echo '}'
+      } > "$features"
+      chown root:root "$features"
+      chmod 644 "$features"
+      rm -f "$desired"
       status_write "{\"busy\":false,\"feature\":\"$feature\",\"action\":\"$action\",\"step\":\"failed\"}"
       exit 1
     fi
+    mv "$desired" "$state"
     status_write "{\"busy\":false,\"feature\":\"$feature\",\"action\":\"$action\",\"step\":\"done\"}"
   '';
 in
