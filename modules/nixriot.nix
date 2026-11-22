@@ -158,15 +158,16 @@ in
     # speech-dispatcher and about 270 MB of mbrola voices.
     services.speechd.enable = false;
 
-    # lid-close suspend is logind's, not ours: closing the lid suspends unless
-    # an external display is attached, because more than one connected display
-    # counts as "docked" and HandleLidSwitchDocked is ignore. That is what keeps
-    # a laptop on HDMI usable with the lid shut. Stated explicitly so a future
-    # logind default cannot quietly change it. The lock runs first, from
-    # hypridle's before_sleep_cmd.
+    # Lid handling belongs to the session, not logind. logind starts before the
+    # graphical session and suspends the moment it sees a closed lid, which
+    # hangs a reboot started with the lid shut. This is not the same as
+    # "docked": logind has no concept of connected displays, so an external
+    # monitor never made it ignore the lid. The desktop now decides: see
+    # panacea/hypr/lua/lid.lua, which suspends when the lid is closed without an
+    # external display and leaves the machine awake when one is attached.
     services.logind.settings.Login = {
-      HandleLidSwitch = "suspend";
-      HandleLidSwitchExternalPower = "suspend";
+      HandleLidSwitch = "ignore";
+      HandleLidSwitchExternalPower = "ignore";
       HandleLidSwitchDocked = "ignore";
     };
 

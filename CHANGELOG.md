@@ -11,6 +11,10 @@ nothing else, so the wording here is exactly what a person reads on the pill's
 
 ## Unreleased
 
+## 1.17
+
+- Closing the lid suspends from the desktop, so a reboot with the lid shut no longer hangs.
+
 ## 1.16
 
 - The `rebuild` alias installs the next boot instead of restarting the desktop.

@@ -1,10 +1,12 @@
--- Internal panel handling when the lid is closed.
+-- Lid handling for the desktop.
 --
--- logind decides whether a closed lid suspends or stays awake because an
--- external display is attached. It does not know anything about outputs, so
--- the internal panel stays on and keeps drawing the desktop. This module owns
--- that half: disable the internal panel while the lid is closed and an
--- external monitor is enabled, and put it back when either condition ends.
+-- logind is set to ignore the lid switch. It starts before the graphical
+-- session and suspends as soon as it sees a closed lid, which hangs a reboot
+-- started with the lid shut. It also has no concept of connected displays, so
+-- an HDMI monitor never made it treat the machine as docked.
+--
+-- This module owns both halves: suspend when the lid is closed and no external
+-- display is attached, and disable only the internal panel when one is.
 
 local internal_prefixes = { "eDP", "LVDS", "DSI" }
 
@@ -59,7 +61,12 @@ local function restore(name)
 end
 
 local function apply()
-    local docked = lid_closed() and external_attached()
+    local closed = lid_closed()
+    local docked = closed and external_attached()
+    if closed and not docked then
+        hl.exec_cmd("systemctl suspend")
+        return
+    end
     for _, monitor in ipairs(hl.get_monitors()) do
         if is_internal(monitor.name) then
             if docked and monitor.enabled then
