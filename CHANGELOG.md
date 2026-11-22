@@ -11,6 +11,12 @@ nothing else, so the wording here is exactly what a person reads on the pill's
 
 ## Unreleased
 
+## 1.25
+
+- Updates apply live and restart the desktop; a new kernel loads on the next reboot.
+- Intel panels disable Panel Self Refresh too, so the LUKS prompt appears without pressing Enter.
+- The expanded pill has a Wi-Fi chip next to VPN; click it to choose a network.
+
 ## 1.24
 
 - Installed systems use the NixRiot splash again; the installer stays text.

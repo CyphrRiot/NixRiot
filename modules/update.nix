@@ -79,8 +79,8 @@ let
           exit 1
         fi
 
-        # Evaluate and build before touching the bootloader. A broken tree
-        # fails here, on the running system, not after the next boot.
+        # Evaluate and build before activating. A broken tree fails here, on
+        # the running system, not after the display manager changes.
         if ! ( cd "$tmp" && nixos-rebuild build --flake /etc/nixriot#installed ); then
           echo "The new tree does not build; restoring the previous tree." >&2
           rsync -a --delete "$previous/" /etc/nixriot/
@@ -88,17 +88,15 @@ let
           exit 1
         fi
 
-        # Install the generation for the next boot instead of switching the
-        # running system. A switch restarts the display manager and rewrites
-        # the live shell config underneath it, which is how an update can
-        # freeze the session. boot only sets the next generation.
-        if ! nixos-rebuild boot --flake /etc/nixriot#installed; then
-          echo "The boot build failed. The previous generation is still bootable:" >&2
-          echo "  sudo nixos-rebuild boot --rollback" >&2
+        # Apply live. The display manager is configured not to restart on a
+        # switch, so the session survives. Kernel and initrd changes load on
+        # the next normal reboot.
+        if ! nixos-rebuild switch --flake /etc/nixriot#installed; then
+          echo "The switch failed. The previous generation is still bootable:" >&2
+          echo "  sudo nixos-rebuild switch --rollback" >&2
           echo "  previous tree: $previous" >&2
           exit 1
         fi
-        echo "The new generation is set for the next boot. Reboot to finish the update."
 
         printf '%s\n' "$rev" > /etc/nixriot-revision
 

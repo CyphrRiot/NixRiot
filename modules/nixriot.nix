@@ -149,7 +149,7 @@ in
       memoryPercent = 50;
     };
 
-    boot.kernelParams = [ "amdgpu.dcdebugmask=0x10" ];
+    boot.kernelParams = [ "amdgpu.dcdebugmask=0x10" "i915.enable_psr=0" "xe.enable_psr=0" ];
 
     boot.kernel.sysctl = {
       "vm.dirty_background_bytes" = 67108864;

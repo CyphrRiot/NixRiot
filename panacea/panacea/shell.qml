@@ -1068,9 +1068,15 @@ PanelWindow {
             root.endBusy();
             if (code !== 0 && root.updError.length === 0)
                 root.updError = "failed";
-            if (code === 0) { root.updStep = "done"; root.checkUpdate(); }
+            if (code === 0) { root.updStep = "done"; root.reloadDesktop(); }
         }
     }
+
+    Process {
+        id: pReloadDesktop
+        command: ["sh", "-c", "hyprctl reload >/dev/null 2>&1; systemctl --user restart --no-block panacea-shell"]
+    }
+    function reloadDesktop() { pReloadDesktop.running = true; }
 
     property int updNotifId: -1
     Process {
@@ -6023,6 +6029,45 @@ PanelWindow {
                     if (mouse.button === Qt.RightButton || (!root.cfg.vpnPreferred && !root.cfg.vpnPreferredClient)) { root.page = "vpn"; root.holdOpen = true; }
                     else root.togglePreferredVpn();
                 }
+            }
+        }
+
+        Rectangle {
+            id: wifiTab
+            parent: (root.cfg.pillKeepVisible && root.expanded && !root.settingsMode) ? detachedPanel : capsule
+            anchors.top: vpnTab.top
+            anchors.right: vpnTab.left
+            anchors.rightMargin: 8
+            z: 65
+            readonly property string label: root.wifiSsid.length ? root.wifiSsid : root.tr("Wi-Fi")
+            width: Math.max(34, wifiChipLabel.implicitWidth + 40)
+            height: 34; radius: 17
+            visible: vpnTab.visible && root.cfg.featWifi
+            color: root.page === "wifi" ? Qt.rgba(1, 1, 1, 0.12)
+                 : (root.wifiSsid.length ? Qt.rgba(1, 1, 1, 0.10) : "transparent")
+            Behavior on color { ColorAnimation { duration: root.animFast } }
+            Text {
+                id: wifiChipGlyph
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.left: parent.left
+                anchors.leftMargin: 10
+                text: root.wifiOn ? (root.wifiQuality > 66 ? "󰤨"
+                                   : root.wifiQuality > 33 ? "󰤥" : "󰤟") : "󰤮"
+                color: root.wifiOn ? root.colFg : root.colMuted
+                font { family: root.fontFam; pixelSize: 12 }
+            }
+            Text {
+                id: wifiChipLabel
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.left: wifiChipGlyph.right
+                anchors.leftMargin: 6
+                text: parent.label
+                color: root.colFg
+                font { family: root.fontBody; pixelSize: 12; bold: true }
+            }
+            MouseArea {
+                anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                onClicked: root.togglePage("wifi")
             }
         }
 
