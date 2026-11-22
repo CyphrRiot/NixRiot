@@ -42,7 +42,8 @@ in
     ];
   };
 
-  boot.kernelParams = lib.mkForce [ "console=tty0" "console=ttyS0,115200n8" ];
+  boot.plymouth.enable = lib.mkForce false;
+  boot.kernelParams = lib.mkForce [ "console=tty0" "console=ttyS0,115200n8" "nomodeset" ];
   boot.consoleLogLevel = lib.mkForce 7;
 
   environment.etc."nixriot".source = lib.cleanSource ../.;

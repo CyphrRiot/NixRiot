@@ -149,6 +149,8 @@ in
       memoryPercent = 50;
     };
 
+    boot.kernelParams = [ "amdgpu.dcdebugmask=0x10" ];
+
     boot.kernel.sysctl = {
       "vm.dirty_background_bytes" = 67108864;
       "vm.dirty_bytes" = 268435456;
