@@ -11,6 +11,12 @@ nothing else, so the wording here is exactly what a person reads on the pill's
 
 ## Unreleased
 
+## 1.31
+
+- Crush comes from current nixpkgs without moving the system kernel pin.
+- The VPN location is bold text instead of a white bubble.
+- The Plymouth spinner uses the Panacea logo again instead of a blank image.
+
 ## 1.30
 
 - The desktop shell restarts itself if an update or a bus restart kills it.

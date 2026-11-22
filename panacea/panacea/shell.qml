@@ -5995,7 +5995,7 @@ PanelWindow {
             width: Math.max(34, vpnChipLabel.implicitWidth + (root.vpnBusy ? 20 : 40))
             height: 34; radius: 17
             visible: root.expanded && !root.settingsMode && (root.page === "main" || root.page === "chat" || root.page === "vpn")
-            color: root.vpnConnected ? root.colFg : (root.page === "vpn" ? Qt.rgba(1,1,1,0.12) : "transparent")
+            color: root.page === "vpn" ? Qt.rgba(1, 1, 1, 0.12) : "transparent"
             Behavior on color { ColorAnimation { duration: root.animFast } }
             Text {
                 id: vpnChipLabel
@@ -6004,7 +6004,7 @@ PanelWindow {
                 anchors.leftMargin: 6
                 visible: !root.vpnBusy
                 text: parent.label
-                color: root.vpnConnected ? root.colBg : root.colFg
+                color: root.colFg
                 font { family: root.fontBody; pixelSize: 12; bold: true }
             }
             Text {
@@ -6014,7 +6014,7 @@ PanelWindow {
                 anchors.leftMargin: 10
                 visible: !root.vpnBusy
                 text: "\uf0ac"
-                color: root.vpnConnected ? root.colBg : root.colFg
+                color: root.colFg
                 font { family: root.fontFam; pixelSize: 12 }
             }
             Text {

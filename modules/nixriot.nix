@@ -89,13 +89,10 @@ in
 
     plymouthLogo = lib.mkOption {
       type = lib.types.path;
-      default = pkgs.runCommand "nixriot-plymouth-blank-logo" { nativeBuildInputs = [ pkgs.imagemagick ]; } ''
-        magick -size 1x1 xc:none PNG:"$out"
-      '';
+      default = ../panacea/panacea/assets/logo-256.png;
       description = ''
-        PNG drawn as the Plymouth logo on the splash. Defaults to a blank 1x1
-        image so nothing overlays the artwork; point it at a NixRiot logo PNG
-        to show one (transparent background, roughly square).
+        PNG drawn as the Plymouth logo on the splash. Defaults to the Panacea
+        mark; point it at another square PNG to change it.
       '';
     };
 
@@ -216,7 +213,6 @@ in
     hardware.cpu.intel.npu.enable = lib.mkDefault cfg.npu;
 
     networking.hostName = cfg.hostName;
-    system.nixos.distroName = "NixRiot";
     system.nixos.label = lib.removeSuffix "\n" (builtins.readFile ../VERSION);
     # Null lets /etc/localtime be set at run time (the pill uses timedatectl).
     # A fixed value here would overwrite it on every rebuild and update.
