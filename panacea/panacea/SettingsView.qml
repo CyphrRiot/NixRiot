@@ -46,6 +46,9 @@ Item {
         { id: "lock",    title: view.sys.tr("Lock screen"),    g: 0xF033E, page: "SetLock.qml",
           sub: view.sys.tr("The lock screen: what it shows, and when it appears."),
           keys: "lock screen blur idle" },
+        { id: "installs", title: view.sys.tr("Installs"),      g: 0xF01DA, page: "SetInstalls.qml",
+          sub: view.sys.tr("Optional applications you can add or remove."),
+          keys: "install apps office games transmission monero bitcoin glyphriot libreoffice" },
         { id: "display", title: view.sys.tr("Display"),        g: 0xF0379, page: "SetDisplay.qml",
           sub: view.sys.tr("Resolution, refresh rate and scale of the connected screens."),
           keys: "display monitor resolution refresh scale layout placement detect island" },
@@ -68,6 +71,7 @@ Item {
         { id: "devices", title: view.sys.tr("Devices"), g: 0xF0379, pages: ["display", "input"] },
         { id: "vpn", title: "VPN", g: 0xF0582, pages: ["vpn"] },
         { id: "security", title: view.sys.tr("Security"), g: 0xF033E, pages: ["lock"] },
+        { id: "installs", title: view.sys.tr("Installs"), g: 0xF01DA, pages: ["installs"] },
         { id: "system", title: view.sys.tr("System"), g: 0xF0493, pages: ["system"] }
     ]
 

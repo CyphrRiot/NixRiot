@@ -9,6 +9,7 @@ in
     ./desktop/sddm.nix
     ./desktop/plymouth.nix
     ./update.nix
+    ./features.nix
     ./apps/shell.nix
     ./apps/editors.nix
     ./apps/media.nix

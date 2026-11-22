@@ -66,6 +66,7 @@ let
 
         rsync -a --delete --exclude .git \
           --exclude hosts/installed/local.nix \
+          --exclude hosts/installed/features.nix \
           --exclude hosts/installed/hardware-configuration.nix \
           "$tmp/" /etc/nixriot/
         chmod 755 /etc/nixriot

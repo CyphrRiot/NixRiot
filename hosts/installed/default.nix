@@ -1,6 +1,8 @@
 { lib, ... }:
 let
   local = import ./local.nix;
+  features =
+    if builtins.pathExists ./features.nix then import ./features.nix else { };
 in
 {
   imports = [
@@ -24,7 +26,7 @@ in
     plymouth = lib.mkDefault true;
     autologin = lib.mkDefault true;
     media.transmission = lib.mkDefault true;
-  } // (local.nixriot or { });
+  } // (local.nixriot or { }) // features;
 
   home-manager.users.${local.nixriotUser} = import ../../home;
 

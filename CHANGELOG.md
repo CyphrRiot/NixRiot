@@ -11,6 +11,10 @@ nothing else, so the wording here is exactly what a person reads on the pill's
 
 ## Unreleased
 
+## 1.35
+
+- Optional apps can be installed from Settings → Installs.
+
 ## 1.34
 
 - Fix Text Editor blur issue
