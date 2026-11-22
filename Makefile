@@ -1,6 +1,6 @@
 SHELL := bash
 
-.PHONY: check build iso switch update fmt bump release release-major do-release publish
+.PHONY: check build iso switch update fmt bump ship release release-major do-release publish
 
 VERSION_FILE = VERSION
 CHANGELOG = CHANGELOG.md
@@ -32,6 +32,14 @@ fmt:
 # publishes that same version.
 bump:
 	@$(MAKE) --no-print-directory do-release BUMP=minor PUBLISH=0
+
+# Bump and publish to installed machines without building an ISO or creating a
+# GitHub release. The version and tag are the whole change: machines compare
+# VERSION with main, so pushing both is the release.
+ship:
+	@$(MAKE) --no-print-directory do-release BUMP=minor PUBLISH=0
+	git push origin main
+	git push origin "v$$(cat VERSION)"
 
 release:
 	@$(MAKE) --no-print-directory do-release BUMP=minor

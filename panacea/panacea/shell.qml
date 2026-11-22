@@ -196,6 +196,7 @@ PanelWindow {
             property bool   featOsd: true
             property bool   featPowermenu: true
             property bool   featPolkit: true
+            property bool   keepAwake: false
 
             // ---------------------------------------------- Night light
             property bool   nightLight: false
@@ -461,7 +462,8 @@ PanelWindow {
         widgetMusic: true,
         widgetScratchpad: true,
         termAlpha: 0.90,
-        uiSounds: true
+        uiSounds: true,
+        keepAwake: false
     })
 
     // ------------------------------------------------------------------ sounds
@@ -2317,7 +2319,11 @@ PanelWindow {
         }
     }
 
-    property bool keepAwake: false
+    readonly property bool keepAwake: cfg.keepAwake
+    function toggleKeepAwake() {
+        cfg.keepAwake = !cfg.keepAwake;
+        saveCfg();
+    }
     Process {
         running: root.keepAwake
         command: ["systemd-inhibit", "--what=idle:sleep:handle-lid-switch",

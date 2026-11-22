@@ -11,6 +11,11 @@ nothing else, so the wording here is exactly what a person reads on the pill's
 
 ## Unreleased
 
+## 1.12
+
+- Stay Awake is remembered across logins instead of turning itself off.
+- Reset to defaults now turns Stay Awake off as well.
+
 ## 1.11
 
 - `SUPER + SHIFT + Return` opens a centred floating terminal.
