@@ -1077,7 +1077,7 @@ PanelWindow {
         id: pUpdNotify
         command: ["notify-send", "-p", "-a", "Panacea", "-i",
                   Quickshell.env("HOME") + "/.config/panacea/assets/logo-128.png",
-                  root.tr("A Panacea update is available"), root.updSubject]
+                  root.tr("A NixRiot update is available"), root.updSubject]
         stdout: StdioCollector {
             onStreamFinished: root.updNotifId = parseInt(String(text).trim()) || -1
         }

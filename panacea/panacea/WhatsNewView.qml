@@ -129,7 +129,7 @@ Item {
                 Text {
                     Layout.fillWidth: true
                     horizontalAlignment: Text.AlignHCenter
-                    text: view.sys.tr("Panacea has been updated")
+                    text: view.sys.tr("NixRiot has been updated")
                     color: view.sys.colFg
                     font { family: view.sys.fontDisplay; pixelSize: view.sys.fontSize + 8 }
                 }
