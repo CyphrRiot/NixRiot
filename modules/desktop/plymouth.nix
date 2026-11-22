@@ -74,6 +74,15 @@ in
       logo = cfg.plymouthLogo;
     };
 
+    boot.initrd.systemd.paths.systemd-ask-password-plymouth.wantedBy = [
+      "sysinit.target"
+      "cryptsetup.target"
+    ];
+    boot.initrd.systemd.services.systemd-ask-password-plymouth.wantedBy = [
+      "cryptsetup.target"
+    ];
+    boot.initrd.systemd.services.plymouth-start.before = [ "cryptsetup.target" ];
+
     boot.kernelParams = [ "quiet" ];
     boot.consoleLogLevel = lib.mkForce 3;
   };

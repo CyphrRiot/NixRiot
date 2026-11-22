@@ -11,6 +11,12 @@ nothing else, so the wording here is exactly what a person reads on the pill's
 
 ## Unreleased
 
+## 1.28
+
+- Intel panels also disable FBC and display C-states, and AMD disables DSC, so the LUKS prompt appears without a keypress.
+- The initrd starts Plymouth before the LUKS unlock and enables its passphrase agent, so the prompt is on the splash instead of the hidden text console.
+- The fish prompt uses OpenRiot's teal, cyan, and blue colours again.
+
 ## 1.27
 
 - The boot splash is back to the original full-screen image with Plymouth's stock passphrase dialog.

@@ -3,7 +3,7 @@
 ![NixRiot](docs/img/banner.webp)
 
 ![Status](https://img.shields.io/badge/status-release-9a2eef?labelColor=1b2b34)
-![Version](https://img.shields.io/badge/version-1.27-9a2eef?labelColor=1b2b34)
+![Version](https://img.shields.io/badge/version-1.28-9a2eef?labelColor=1b2b34)
 ![Platform](https://img.shields.io/badge/platform-NixOS-9a2eef?logo=nixos&logoColor=white&labelColor=1b2b34)
 ![Shell](https://img.shields.io/badge/shell-Hyprland-9a2eef?logo=hyprland&logoColor=9a2eef&labelColor=1b2b34)
 ![UI](https://img.shields.io/badge/UI-Quickshell-9a2eef?labelColor=1b2b34)
@@ -24,8 +24,8 @@ desktop: the pill, the launcher, its settings, the terminal. It runs on real
 hardware, with Bluetooth input, the lock screen, the password vault, the media
 capsule and the night light all in use.
 
-Still unverified: the media keys, the clamshell lid switch, and a full
-fifteen-minute idle run. The hardware notes below are what has been checked.
+The media keys, the clamshell lid, and the fifteen-minute idle lock have been
+checked on hardware. The hardware notes below record what was tested.
 
 ![The NixRiot desktop: the pill, its settings pages, and a terminal](docs/img/desktop-demo.gif)
 
@@ -642,6 +642,21 @@ attach the log.
   allows `wheel` to run `timedatectl`. On an older generation, set it by hand:
   `sudo ln -sfn /etc/zoneinfo/Region/City /etc/localtime`. A rebuild from a tree
   that still sets `time.timeZone = "UTC"` will undo the change.
+- **The screen is blank before the passphrase prompt.** Some laptop panels stay
+  in self-refresh until a key. Press Shift, not ESC (ESC quits Plymouth and
+  drops to the text console). If the prompt appears only then, report the model;
+  1.28 disables PSR, FBC, and display C-states on Intel, and PSR plus DSC on AMD.
+- **The installer stops after `LoaderDevicePartUUID` or `New USB device strings`.**
+  That is usually a bad USB write, not the hardware. Rewrite the whole device,
+  not a partition:
+
+  ```sh
+  sudo dd if=NixRiot.iso of=/dev/sdX bs=4M status=progress conv=fsync
+  sync
+  ```
+
+  Verify the ISO against `SHA256SUMS`, boot UEFI with Secure Boot off, and press
+  Enter if the console has not flushed.
 
 ---
 

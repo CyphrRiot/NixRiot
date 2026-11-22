@@ -107,20 +107,16 @@
         set -l last_status $status
         set -l host (hostname -s 2>/dev/null; or echo unknown)
 
-        # Accent follows the palette, grafted by conf.d/theme_colors.fish.
-        # Fall back to plain white when the palette value is unusable.
-        set -l accent
-        if set -q fish_color_quote
-            set accent $fish_color_quote[1]
-        end
-        string match -qr '^(#?[0-9a-fA-F]{6}|[a-z_]+)$' -- "$accent"; or set accent ffffff
         set -l icon 50c9c3
+        set -l host_color 96deda
+        set -l path_color 7dcfff
+        set -l prompt_color 50c9c3
 
         set_color $icon
         printf '\uf313  '
-        set_color $accent
+        set_color $host_color
         printf "%s " $host
-        set_color normal
+        set_color $path_color
         printf "%s" (string replace $HOME "~" (pwd))
         if command git rev-parse --git-dir >/dev/null 2>&1
             printf "%s" (__fish_git_prompt)
@@ -130,7 +126,7 @@
             printf " [%d]" $last_status
             set_color normal
         end
-        set_color $accent
+        set_color $prompt_color
         printf " ❯ "
         set_color normal
     end
