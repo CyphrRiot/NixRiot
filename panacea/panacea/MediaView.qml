@@ -19,6 +19,14 @@ FocusScope {
     readonly property bool isVideo: ["mp4", "mkv", "webm", "mov", "avi", "m4v", "wmv", "flv",
                                      "mpg", "mpeg", "ts"].indexOf(ext) >= 0
     readonly property bool isAnimated: ["gif", "webp", "apng"].indexOf(ext) >= 0
+    readonly property var mediaExts: [
+        "jpg", "jpeg", "png", "gif", "webp", "apng", "bmp", "tif", "tiff",
+        "svg", "avif", "heic", "heif",
+        "mp4", "mkv", "webm", "mov", "avi", "m4v", "wmv", "flv", "mpg",
+        "mpeg", "ts"
+    ]
+    property var playlist: []
+    property int playlistIndex: -1
 
     property real srcW: 0
     property real srcH: 0
@@ -33,7 +41,13 @@ FocusScope {
     property real trimOut: 0
 
     focus: true
-    Component.onCompleted: { forceActiveFocus(); probe(); }
+    Component.onCompleted: { forceActiveFocus(); probe(); loadPlaylist(); }
+    onPathChanged: {
+        probe();
+        var i = view.playlist.indexOf(view.path);
+        if (i >= 0) view.playlistIndex = i;
+        else view.loadPlaylist();
+    }
 
     readonly property string script: sys.scriptDir + "/media.sh"
 
@@ -54,6 +68,37 @@ FocusScope {
         pProbe.command = ["sh", "-c", view.script + " probe \"$1\"", "_", view.path];
         pProbe.running = false;
         pProbe.running = true;
+    }
+
+    Process {
+        id: pList
+        stdout: StdioCollector {
+            onStreamFinished: {
+                var out = String(text).trim();
+                var all = out.length ? out.split("\n") : [];
+                var keep = [];
+                for (var i = 0; i < all.length; i++)
+                    if (view.mediaExts.indexOf(String(all[i]).split(".").pop().toLowerCase()) >= 0)
+                        keep.push(all[i]);
+                view.playlist = keep;
+                view.playlistIndex = keep.indexOf(view.path);
+            }
+        }
+    }
+    function loadPlaylist() {
+        var dir = String(view.path).replace(/\/[^\/]*$/, "");
+        if (!dir.length) dir = "/";
+        pList.command = ["sh", "-c", "find \"$1\" -maxdepth 1 -type f -print | LC_ALL=C sort", "_", dir];
+        pList.running = false;
+        pList.running = true;
+    }
+    function step(d) {
+        if (view.playlist.length < 2) return;
+        var i = view.playlistIndex + d;
+        if (i < 0) i = view.playlist.length - 1;
+        if (i >= view.playlist.length) i = 0;
+        view.playlistIndex = i;
+        view.sys.mediaPath = view.playlist[i];
     }
 
     Process {
@@ -187,6 +232,12 @@ FocusScope {
             event.accepted = true;
         } else if (event.key === Qt.Key_Right && view.isVideo) {
             player.position = Math.min(player.duration, player.position + 5000);
+            event.accepted = true;
+        } else if (event.key === Qt.Key_Left) {
+            view.step(-1);
+            event.accepted = true;
+        } else if (event.key === Qt.Key_Right) {
+            view.step(1);
             event.accepted = true;
         } else if (event.key === Qt.Key_C) {
             view.sys.mediaCropToggle();
