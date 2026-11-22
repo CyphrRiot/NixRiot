@@ -169,7 +169,7 @@
     alias music='lollypop'
 
     # Rebuild after editing /etc/nixriot/hosts/installed/local.nix
-    alias rebuild='sudo nixos-rebuild switch --flake /etc/nixriot#installed'
+    alias rebuild='sudo nixos-rebuild boot --flake /etc/nixriot#installed'
 
     # Disk usage -- top 10 largest items by size
     function dum

@@ -11,6 +11,10 @@ nothing else, so the wording here is exactly what a person reads on the pill's
 
 ## Unreleased
 
+## 1.16
+
+- The `rebuild` alias installs the next boot instead of restarting the desktop.
+
 ## 1.15
 
 - The boot splash and LUKS prompt use NixRiot's own theme instead of Plymouth's stock dialog.

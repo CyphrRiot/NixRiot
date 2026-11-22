@@ -3,7 +3,7 @@
 ![NixRiot](docs/img/banner.webp)
 
 ![Status](https://img.shields.io/badge/status-release-9a2eef?labelColor=1b2b34)
-![Version](https://img.shields.io/badge/version-1.15-9a2eef?labelColor=1b2b34)
+![Version](https://img.shields.io/badge/version-1.16-9a2eef?labelColor=1b2b34)
 ![Platform](https://img.shields.io/badge/platform-NixOS-9a2eef?logo=nixos&logoColor=white&labelColor=1b2b34)
 ![Shell](https://img.shields.io/badge/shell-Hyprland-9a2eef?logo=hyprland&logoColor=9a2eef&labelColor=1b2b34)
 ![UI](https://img.shields.io/badge/UI-Quickshell-9a2eef?labelColor=1b2b34)
@@ -382,7 +382,7 @@ for NixOS.
 | `signal` | Signal TUI (`gurk`) |
 | `ls`, `ll`, `la` | `lsd`, `lsd -l`, `lsd -la` |
 | `music` | `lollypop` |
-| `rebuild` | `sudo nixos-rebuild switch --flake /etc/nixriot#installed` |
+| `rebuild` | `sudo nixos-rebuild boot --flake /etc/nixriot#installed` |
 | `more` | `more -e` |
 | `dum` | top 10 largest items in the current directory |
 | `!!` | expands to the previous command |
@@ -536,19 +536,21 @@ sudo nixriot-update apply
 ```
 
 That clones the project from GitHub, replaces `/etc/nixriot` with it, and
-rebuilds. A timer runs `nixriot-update check` every four hours; when it finds a
-newer version, the pill shows an **Update** button beside the VPN indicator. The
-System page shows the same state, with a Check button that asks GitHub directly.
+installs the new generation for the next boot. Reboot to finish; the running
+desktop is not touched. A timer runs `nixriot-update check` every four hours;
+when it finds a newer version, the pill shows an **Update** button beside the
+VPN indicator. The System page shows the same state, with a Check button that
+asks GitHub directly.
 
 ![The Update button in the pill, next to the VPN indicator](docs/img/update-pill.webp)
 
 ![Settings, System page, with the update ready to install](docs/img/update-settings.webp)
 
-Before switching, the updater copies the current tree to
+Before installing, the updater copies the current tree to
 `/var/lib/nixriot/previous` and builds the new one with `nixos-rebuild build`.
 If `local.nix` is missing its user or the build fails, it restores the previous
 tree and stops. The previous generation stays in the boot menu, so
-`sudo nixos-rebuild switch --rollback` is always available.
+`sudo nixos-rebuild boot --rollback` is always available.
 
 **Upgrading from 1.9 or older:** the updater in those releases could not find
 `nixos-rebuild` and left `/etc/nixriot` unreadable. Run this once, which also
@@ -558,6 +560,17 @@ installs the fixed updater:
 sudo env PATH=/run/current-system/sw/bin:$PATH nixriot-update apply
 ```
 
+**If a generation freezes or will not boot,** pick the previous generation in
+the boot menu, then build a known-good tree without activating it:
+
+```sh
+rm -rf /tmp/NixRiot
+git clone https://github.com/CyphrRiot/NixRiot /tmp/NixRiot
+cp /etc/nixriot/hosts/installed/local.nix /etc/nixriot/hosts/installed/hardware-configuration.nix /tmp/NixRiot/hosts/installed/
+sudo nixos-rebuild boot --flake /tmp/NixRiot#installed
+```
+
+Reboot into the newest entry.
 
 To rebuild without fetching anything, run the same `rebuild` alias:
 
