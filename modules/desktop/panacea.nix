@@ -18,6 +18,10 @@ in
       xdg-desktop-portal-hyprland
       xdg-desktop-portal-gtk
     ];
+    xdg.portal.config = {
+      common.default = [ "gtk" ];
+      hyprland.default = [ "hyprland" "gtk" ];
+    };
 
     security.polkit.enable = true;
     security.polkit.extraConfig = ''
@@ -63,6 +67,7 @@ in
 
     environment.sessionVariables = {
       NIXOS_OZONE_WL = "1";
+      GTK_THEME = "Adwaita-dark";
       QML2_IMPORT_PATH = qmlImportPath;
       QML_IMPORT_PATH = qmlImportPath;
     };

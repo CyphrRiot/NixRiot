@@ -1037,6 +1037,7 @@ PanelWindow {
             else if (k === "version") root.updCurrent = v;
         }
         if (!done) return;
+        if (root.updBusy || root.updStep === "done") return;
         root.updCheckedAt = Date.now();
         if (root.updStatus === "behind" && root.updLatest.length
                 && root.updLatest !== root.cfg.updNotifiedVer) {

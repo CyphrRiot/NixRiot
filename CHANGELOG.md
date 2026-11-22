@@ -11,6 +11,12 @@ nothing else, so the wording here is exactly what a person reads on the pill's
 
 ## Unreleased
 
+## 1.27
+
+- The boot splash is back to the original full-screen image with Plymouth's stock passphrase dialog.
+- The pill no longer announces an update right after installing one.
+- GTK4 and Firefox popups follow the dark theme.
+
 ## 1.26
 
 - The Update button clears as soon as the update finishes.
