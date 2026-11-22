@@ -67,7 +67,6 @@ hl.window_rule({
     name = "text-editor-opaque",
     match = { class = "^(org\\.gnome\\.TextEditor|gnome-text-editor)$" },
     opacity = 1.0,
-    blur = false,
 })
 
 hl.window_rule({

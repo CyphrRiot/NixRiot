@@ -11,6 +11,10 @@ nothing else, so the wording here is exactly what a person reads on the pill's
 
 ## Unreleased
 
+## 1.34
+
+- Fix Text Editor blur issue
+
 ## 1.33
 
 - Crush ships as the upstream binary instead of compiling on every machine.
