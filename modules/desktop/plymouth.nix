@@ -3,11 +3,12 @@ let
   cfg = config.nixriot;
 
   upstreamTheme = "${pkgs.plymouth}/share/plymouth/themes/script";
-  upstreamScript = builtins.readFile "${upstreamTheme}/script.script";
 
-  themeScript = upstreamScript + ''
-
-    # --- NixRiot: full-screen splash ---------------------------------------
+  # Standalone theme, like ArchRiot's. It draws its own splash and passphrase
+  # dialog instead of borrowing Plymouth's stock script, whose hidden dialog
+  # left the prompt invisible until Escape. The images still come from
+  # Plymouth's script theme.
+  themeScript = ''
     Window.SetBackgroundTopColor(0, 0, 0);
     Window.SetBackgroundBottomColor(0, 0, 0);
 
@@ -18,8 +19,6 @@ let
     nixriot.fit_width = -1;
     nixriot.fit_height = -1;
 
-    # The script runs before the display mode is necessarily known, so scaling
-    # once here can produce a 0x0 image and abort the rest of the script.
     fun nixriot_fit_splash ()
       {
         local w = Window.GetWidth();
@@ -35,89 +34,90 @@ let
         nixriot.fit_height = h;
       }
 
-    # --- NixRiot: the passphrase prompt ------------------------------------
-    # Drawn here rather than with the upstream dialogue, whose box, lock and
-    # entry art lands in the middle of the splash. This is one line of text
-    # and a row of dots.
-    nixriot.label = Sprite();
-    nixriot.label.SetPosition(0, 0, 10001);
-    nixriot.label.SetOpacity(0);
+    lock.image = Image("lock.png");
+    entry.image = Image("entry.png");
+    bullet.image = Image("bullet.png");
 
-    nixriot.dot_image = Image("bullet.png");
+    entry_scale = 1.5;
+    scaled_entry = entry.image.Scale(entry.image.GetWidth() * entry_scale, entry.image.GetHeight());
+    entry.sprite = Sprite(scaled_entry);
+    entry.x = Window.GetX() + Window.GetWidth() / 2 - (entry.image.GetWidth() * entry_scale) / 2;
+    entry.y = Window.GetY() + Window.GetHeight() * 0.72;
+    entry.sprite.SetPosition(entry.x, entry.y, 10001);
+    entry.sprite.SetOpacity(0);
+
+    lock_height = entry.image.GetHeight() * 0.8;
+    lock_scale = lock_height / lock.image.GetHeight();
+    lock_width = lock.image.GetWidth() * lock_scale;
+    scaled_lock = lock.image.Scale(lock_width, lock_height);
+    lock.sprite = Sprite(scaled_lock);
+    lock.x = entry.x - lock_width - 15;
+    lock.y = entry.y + entry.image.GetHeight() / 2 - lock_height / 2;
+    lock.sprite.SetPosition(lock.x, lock.y, 10001);
+    lock.sprite.SetOpacity(0);
+
+    bullet.sprites = [];
+
+    nixriot.label = Sprite();
+    nixriot.label.SetPosition(0, 0, 10003);
+    nixriot.label.SetOpacity(0);
 
     fun nixriot_place_label (text)
       {
         nixriot.label_image = Image.Text(text, 1, 1, 1);
         nixriot.label.SetImage(nixriot.label_image);
         nixriot.label.SetX(Window.GetX() + Window.GetWidth() / 2 - nixriot.label_image.GetWidth() / 2);
-        nixriot.label.SetY(Window.GetY() + Window.GetHeight() * 0.72);
+        nixriot.label.SetY(entry.y - 40);
         nixriot.label.SetOpacity(1);
       }
 
-    fun nixriot_place_dots (bullets)
+    fun nixriot_show_prompt (prompt, bullets)
       {
-        local gap = nixriot.dot_image.GetWidth() + 6;
-        local start = Window.GetX() + Window.GetWidth() / 2 - (bullets * gap) / 2;
-        for (index = 0; index < 8; index++)
+        lock.sprite.SetOpacity(1);
+        entry.sprite.SetOpacity(1);
+        nixriot_place_label(prompt);
+        for (index = 0; bullet.sprites[index]; index++)
+          bullet.sprites[index].SetOpacity(0);
+        for (index = 0; index < bullets; index++)
           {
-            if (!nixriot.dot[index])
+            if (!bullet.sprites[index])
               {
-                nixriot.dot[index].sprite = Sprite(nixriot.dot_image);
-                nixriot.dot[index].sprite.SetZ(10002);
+                scaled_bullet = bullet.image.Scale(7, 7);
+                bullet.sprites[index] = Sprite(scaled_bullet);
+                bullet.x = entry.x + 30 + index * (7 + 6);
+                bullet.y = entry.y + entry.image.GetHeight() / 2 - 3.5;
+                bullet.sprites[index].SetPosition(bullet.x, bullet.y, 10002);
               }
-            if (index < bullets)
-              {
-                nixriot.dot[index].sprite.SetX(start + index * gap);
-                nixriot.dot[index].sprite.SetY(Window.GetY() + Window.GetHeight() * 0.78);
-                nixriot.dot[index].sprite.SetOpacity(1);
-              }
-            else
-              {
-                nixriot.dot[index].sprite.SetOpacity(0);
-              }
+            bullet.sprites[index].SetOpacity(1);
           }
       }
 
     fun nixriot_hide_prompt ()
       {
+        lock.sprite.SetOpacity(0);
+        entry.sprite.SetOpacity(0);
         nixriot.label.SetOpacity(0);
-        if (!nixriot.dot)
-          return;
-        for (index = 0; nixriot.dot[index]; index++)
-          nixriot.dot[index].sprite.SetOpacity(0);
-      }
-
-    # Delegate to the upstream callbacks so Plymouth's own state and sprite
-    # bookkeeping stay intact, then draw the prompt text over the stock
-    # dialogue. Do not hide the dialogue: if the text drawing fails, the
-    # passphrase entry must still be visible.
-    fun nixriot_password_callback (prompt, bullets)
-      {
-        display_password_callback(prompt, bullets);
-        nixriot_place_label(prompt);
-      }
-
-    fun nixriot_prompt_callback (prompt)
-      {
-        display_password_callback(prompt, 0);
-        nixriot_place_label(prompt);
+        for (index = 0; bullet.sprites[index]; index++)
+          bullet.sprites[index].SetOpacity(0);
       }
 
     fun nixriot_normal_callback ()
       {
-        display_normal_callback();
         nixriot_hide_prompt();
+      }
+
+    fun nixriot_password_callback (prompt, bullets)
+      {
+        nixriot_show_prompt(prompt, bullets);
       }
 
     fun nixriot_refresh_callback ()
       {
-        refresh_callback();
         nixriot_fit_splash();
       }
 
     Plymouth.SetDisplayNormalFunction(nixriot_normal_callback);
     Plymouth.SetDisplayPasswordFunction(nixriot_password_callback);
-    Plymouth.SetDisplayPromptFunction(nixriot_prompt_callback);
     Plymouth.SetRefreshFunction(nixriot_refresh_callback);
   '';
 

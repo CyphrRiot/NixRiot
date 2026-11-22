@@ -11,6 +11,10 @@ nothing else, so the wording here is exactly what a person reads on the pill's
 
 ## Unreleased
 
+## 1.15
+
+- The boot splash and LUKS prompt use NixRiot's own theme instead of Plymouth's stock dialog.
+
 ## 1.14
 
 - The kernel is pinned to the version that works with the laptop's graphics; the newer one freezes at boot.
