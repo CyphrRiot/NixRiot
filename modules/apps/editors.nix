@@ -1,6 +1,9 @@
 { config, lib, pkgs, inputs, ... }:
 let
-  crush = inputs.nixpkgs-latest.legacyPackages.${pkgs.stdenv.hostPlatform.system}.crush;
+  crush = (import inputs.nixpkgs-latest {
+    system = pkgs.stdenv.hostPlatform.system;
+    config.allowUnfree = true;
+  }).crush;
 in
 {
   config = lib.mkIf (config.nixriot.enable && config.nixriot.apps) {

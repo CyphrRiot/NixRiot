@@ -11,6 +11,10 @@ nothing else, so the wording here is exactly what a person reads on the pill's
 
 ## Unreleased
 
+## 1.32
+
+- Fix Crush and NixRiot hostname issues
+
 ## 1.31
 
 - Crush comes from current nixpkgs without moving the system kernel pin.

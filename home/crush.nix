@@ -1,6 +1,9 @@
 { pkgs, lib, inputs, nixriotApps ? true, ... }:
 let
-  crush = inputs.nixpkgs-latest.legacyPackages.${pkgs.stdenv.hostPlatform.system}.crush;
+  crush = (import inputs.nixpkgs-latest {
+    system = pkgs.stdenv.hostPlatform.system;
+    config.allowUnfree = true;
+  }).crush;
 in
 {
   home.packages = lib.optionals nixriotApps [ crush ];
