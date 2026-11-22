@@ -11,6 +11,10 @@ nothing else, so the wording here is exactly what a person reads on the pill's
 
 ## Unreleased
 
+## 1.23
+
+- The live image no longer loads the AMD GPU driver, so it cannot hang before the installer.
+
 ## 1.22
 
 - The live image boots on AMD laptops whose GPU hangs at startup, and installed AMD systems disable Panel Self Refresh.
