@@ -33,14 +33,41 @@ def tunnel_active():
     except (OSError, ValueError, subprocess.SubprocessError): pass
     return False
 
+def mullvad_state():
+    if not shutil.which('mullvad'): return None
+    try:
+        proc = subprocess.run(['mullvad', 'status'], text=True, capture_output=True, timeout=10)
+    except (OSError, subprocess.SubprocessError):
+        return None
+    out = proc.stdout.casefold()
+    if 'disconnected' in out or 'blocked' in out: return 'disconnected'
+    if 'connecting' in out or 'disconnecting' in out: return 'busy'
+    if 'connected' in out: return 'connected'
+    return None
+
 def main():
     op=sys.argv[1] if len(sys.argv)>1 else 'list'
     if op in ('client-status', 'client-toggle'):
         client = pathlib.Path(sys.argv[2])
-        if client.stem.casefold() != 'happ':
-            raise ValueError('This VPN client has no direct-control adapter yet. Open its controls from VPN settings.')
-        import happ_control
-        return happ_control.public(happ_control.status()) if op == 'client-status' else happ_control.toggle()
+        stem = client.stem.casefold()
+        if stem == 'happ':
+            import happ_control
+            return happ_control.public(happ_control.status()) if op == 'client-status' else happ_control.toggle()
+        if 'mullvad' in stem:
+            state = mullvad_state()
+            if op == 'client-status':
+                if state is None: state = 'connected' if tunnel_active() else 'disconnected'
+                return {'clientState': state}
+            if state == 'busy':
+                return {'ok': False, 'error': 'Mullvad is changing state'}
+            action = 'down' if state == 'connected' else 'up'
+            try:
+                subprocess.run(['mullvad', 'disconnect' if action == 'down' else 'connect'],
+                               text=True, capture_output=True, timeout=30, check=True)
+            except subprocess.SubprocessError:
+                return {'ok': False, 'error': 'Mullvad did not change state'}
+            return {'ok': True, 'clientState': mullvad_state() or 'unknown', 'action': action}
+        raise ValueError('This VPN client has no direct-control adapter yet. Open its controls from VPN settings.')
     if op in ('up','down'):
         uid=sys.argv[2]
         if not any(p['id']==uid for p in profiles()): raise ValueError('VPN profile not found')

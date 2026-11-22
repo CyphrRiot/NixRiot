@@ -1354,8 +1354,8 @@ PanelWindow {
         stdout: StdioCollector { onStreamFinished: { try {
             var d = JSON.parse(text);
             if (vpnQuick.running) return;
-            if (d.clientState) { root.vpnClientState = d.clientState; root.vpnConnected = d.clientState === "connected"; }
-            else if (!root.cfg.vpnPreferredClient) { root.vpnActiveIds = (d.profiles || []).filter(p => p.active).map(p => p.id); root.vpnConnected = root.vpnActiveIds.length > 0 || !!d.tunnelActive; }
+            if (d.clientState && d.clientState !== "unknown") { root.vpnClientState = d.clientState; root.vpnConnected = d.clientState === "connected"; }
+            else { root.vpnActiveIds = (d.profiles || []).filter(p => p.active).map(p => p.id); root.vpnConnected = root.vpnActiveIds.length > 0 || !!d.tunnelActive; }
         } catch(e) {} } }
     }
     Process {

@@ -11,6 +11,10 @@ nothing else, so the wording here is exactly what a person reads on the pill's
 
 ## Unreleased
 
+## 1.21
+
+- The VPN indicator finds the tunnel when the preferred app has no status adapter, and the pill's VPN button controls Mullvad.
+
 ## 1.20
 
 - Panacea Viewer steps through the folder with the left and right arrows.
