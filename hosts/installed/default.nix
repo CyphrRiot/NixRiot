@@ -29,5 +29,6 @@ in
   home-manager.users.${local.nixriotUser} = import ../../home;
 
   boot.loader.systemd-boot.enable = true;
+  boot.loader.systemd-boot.configurationLimit = 5;
   boot.loader.efi.canTouchEfiVariables = true;
 }

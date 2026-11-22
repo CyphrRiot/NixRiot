@@ -11,6 +11,13 @@ nothing else, so the wording here is exactly what a person reads on the pill's
 
 ## Unreleased
 
+## 1.13
+
+- Updates install for the next boot instead of restarting the desktop while it is in use.
+- The boot menu keeps the five most recent generations instead of every one.
+- The LUKS passphrase prompt is visible on the splash again.
+- The terminal background is black again, without the softened tint.
+
 ## 1.12
 
 - Stay Awake is remembered across logins instead of turning itself off.

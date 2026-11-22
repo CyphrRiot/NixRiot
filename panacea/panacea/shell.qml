@@ -761,7 +761,7 @@ PanelWindow {
 
     //
     //
-    readonly property string termBg: "171717"
+    readonly property string termBg: "000000"
     Process {
         id: pTermTheme
         command: ["sh", "-c",

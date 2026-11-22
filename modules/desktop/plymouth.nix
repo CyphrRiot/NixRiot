@@ -88,19 +88,18 @@ let
       }
 
     # Delegate to the upstream callbacks so Plymouth's own state and sprite
-    # bookkeeping stay intact, then hide the dialogue and draw ours instead.
+    # bookkeeping stay intact, then draw the prompt text over the stock
+    # dialogue. Do not hide the dialogue: if the text drawing fails, the
+    # passphrase entry must still be visible.
     fun nixriot_password_callback (prompt, bullets)
       {
         display_password_callback(prompt, bullets);
-        dialog_opacity(0);
         nixriot_place_label(prompt);
-        nixriot_place_dots(bullets);
       }
 
     fun nixriot_prompt_callback (prompt)
       {
         display_password_callback(prompt, 0);
-        dialog_opacity(0);
         nixriot_place_label(prompt);
       }
 
