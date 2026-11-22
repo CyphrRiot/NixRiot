@@ -11,6 +11,12 @@ nothing else, so the wording here is exactly what a person reads on the pill's
 
 ## Unreleased
 
+## 1.29
+
+- The update card shows the installed and new versions.
+- Plymouth starts before the initrd cryptsetup target, so the passphrase prompt is on the splash.
+- The Wi-Fi chip sits left of the applet row instead of underneath it.
+
 ## 1.28
 
 - Intel panels also disable FBC and display C-states, and AMD disables DSC, so the LUKS prompt appears without a keypress.

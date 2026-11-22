@@ -215,7 +215,12 @@ ColumnLayout {
                     Layout.fillWidth: true
                     visible: text.length > 0
                     text: page.sys.updError.length ? page.sys.updErrorText
-                        : page.sys.updateAvailable ? page.sys.updSubject
+                        : page.sys.updateAvailable
+                          ? "NixRiot " + (page.sys.updCurrent.length
+                                          ? page.sys.updCurrent : page.sys.tr("version unknown"))
+                            + " → " + (page.sys.updLatest.length
+                                       ? page.sys.updLatest : page.sys.tr("version unknown"))
+                            + (page.sys.updSubject.length ? " · " + page.sys.updSubject : "")
                         : "NixRiot " + (page.sys.updCurrent.length
                                         ? page.sys.updCurrent : page.sys.tr("version unknown"))
                           + (page.sys.updStatus === "current" && page.sys.updCheckedAt

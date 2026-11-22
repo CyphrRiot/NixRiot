@@ -81,7 +81,12 @@ in
     boot.initrd.systemd.services.systemd-ask-password-plymouth.wantedBy = [
       "cryptsetup.target"
     ];
-    boot.initrd.systemd.services.plymouth-start.before = [ "cryptsetup.target" ];
+    boot.initrd.systemd.services.plymouth-start.wantedBy = [ "cryptsetup.target" ];
+    boot.initrd.systemd.services.plymouth-start.before = [
+      "cryptsetup.target"
+      "systemd-ask-password-plymouth.path"
+      "systemd-ask-password-plymouth.service"
+    ];
 
     boot.kernelParams = [ "quiet" ];
     boot.consoleLogLevel = lib.mkForce 3;

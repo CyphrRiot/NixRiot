@@ -6042,7 +6042,7 @@ PanelWindow {
             id: wifiTab
             parent: (root.cfg.pillKeepVisible && root.expanded && !root.settingsMode) ? detachedPanel : capsule
             anchors.top: vpnTab.top
-            anchors.right: vpnTab.left
+            anchors.right: (root.trayItems && root.trayItems.values.length > 0) ? pillTray.left : vpnTab.left
             anchors.rightMargin: 8
             z: 65
             readonly property string label: root.wifiSsid.length ? root.wifiSsid : root.tr("Wi-Fi")
