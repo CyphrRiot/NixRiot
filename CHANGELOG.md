@@ -11,6 +11,11 @@ nothing else, so the wording here is exactly what a person reads on the pill's
 
 ## Unreleased
 
+## 1.33
+
+- Crush ships as the upstream binary instead of compiling on every machine.
+- The text editor stays opaque and unblurred, so scrolling leaves no stray pixels.
+
 ## 1.32
 
 - Fix Crush and NixRiot hostname issues

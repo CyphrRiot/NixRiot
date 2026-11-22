@@ -56,11 +56,18 @@ hl.window_rule({
 })
 
 hl.window_rule({
-    name  = "portal-gtk",
+    name = "portal-gtk",
     match = { class = "xdg-desktop-portal-gtk" },
     float = true,
-    size  = "900 600",
+    size = "900 600",
     center = true,
+})
+
+hl.window_rule({
+    name = "text-editor-opaque",
+    match = { class = "^(org\\.gnome\\.TextEditor|gnome-text-editor)$" },
+    opacity = 1.0,
+    blur = false,
 })
 
 hl.window_rule({
