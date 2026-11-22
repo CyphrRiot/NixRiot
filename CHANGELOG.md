@@ -11,7 +11,7 @@ nothing else, so the wording here is exactly what a person reads on the pill's
 
 ## Unreleased
 
-## 1.39
+## 1.40
 
 - The passphrase prompt appears without pressing a key.
 

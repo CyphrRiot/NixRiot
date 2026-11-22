@@ -139,7 +139,13 @@ do-publish:
 	  echo "  result/iso/NixRiot.iso  ($$(du -h result/iso/NixRiot.iso | cut -f1))"; \
 	  echo "  SHA256SUMS"; \
 	  echo; \
-	  read -r -p "Push main and the tag, and create the release? [Y/n] " answer; \
+	  stale=$$(gh release list --limit 200 --json tagName -q '.[].tagName' | sort -V | head -n -1 || true); \
+	  if [ -n "$$stale" ]; then \
+	    echo "Old releases that will be deleted (the newest is kept):"; \
+	    echo "$$stale" | sed 's/^/  /'; \
+	    echo; \
+	  fi; \
+	  read -r -p "Push main and the tag, create the release, and delete the old ones? [Y/n] " answer; \
 	  case "$$answer" in n|N) echo "Nothing published. Re-run 'make publish' when ready."; exit 0 ;; *) ;; esac; \
 	  git push origin main; \
 	  git push origin "v$$ver"; \
@@ -157,4 +163,7 @@ do-publish:
 	      exit 1; \
 	    }; \
 	  done; \
-	  echo "Published v$$ver."
+	  echo "Published v$$ver."; \
+	  if [ -n "$$stale" ]; then \
+	    echo "$$stale" | while read -r old; do gh release delete "$$old" --yes; done; \
+	  fi
