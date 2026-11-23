@@ -45,17 +45,24 @@ ColumnLayout {
     Process {
         id: pApply
         property string args: ""
-        command: ["sh", "-c", pApply.args]
+        command: ["sh", "-c", pApply.args + " 2>&1"]
+        stdout: StdioCollector { id: applyOut }
         onExited: code => {
+            var msg = String(applyOut.text || "").trim().split("\n").pop();
             page.note = code === 0 ? page.sys.tr("Applied")
-                                   : page.sys.tr("Failed: an administrator password is required");
+                                   : (msg.length ? msg
+                                      : page.sys.tr("Failed: an administrator password is required"));
             noteTimer.restart();
             pStatus.running = true;
         }
     }
     Timer { id: noteTimer; interval: 4000; onTriggered: page.note = "" }
 
-    function run(cmd) { pApply.args = cmd; pApply.running = true; }
+    function run(cmd) {
+        pApply.args = cmd.replace(/^timedatectl/,
+            "/run/current-system/sw/bin/timedatectl");
+        pApply.running = true;
+    }
     function root(args, legacy) {
         return legacy;
     }

@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 2.1
+
+- Fixed timezone issue
+- Removed SUPER+SHIFT+M which is evil
+- Something about a Flamingo 🦩
+
 ## 2.0
 
 The release where the installer stops freezing where it used to, and where
