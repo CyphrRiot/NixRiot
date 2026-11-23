@@ -41,20 +41,20 @@ case "${1:-check}" in
             exit 0
         fi
 
-        subject=""
-        if [ "$installed" != "$available" ]; then
-            subject=$(curl -fsS --max-time 10 "$RAW/CHANGELOG.md" 2>/dev/null \
-                | awk -v h="## $available" '$0 == h { found = 1; next } found && /^- / { sub(/^- /, ""); print; exit }')
+        if [ "$(printf '%s\n%s\n' "$available" "$installed" | sort -V | head -n1)" = "$available" ]; then
+            emit current "$installed"
+            emit latest "$available"
+            emit status current
+            exit 0
         fi
+
+        subject=$(curl -fsS --max-time 10 "$RAW/CHANGELOG.md" 2>/dev/null \
+            | awk -v h="## $available" '$0 == h { found = 1; next } found && /^- / { sub(/^- /, ""); print; exit }')
 
         emit current "$installed"
         emit latest "$available"
         [ -n "$subject" ] && emit subject "$subject"
-        if [ "$installed" != "$available" ]; then
-            emit status behind
-        else
-            emit status current
-        fi
+        emit status behind
         exit 0
         ;;
 

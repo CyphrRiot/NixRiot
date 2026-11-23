@@ -74,7 +74,7 @@ PanelWindow {
             // Notch mode: the island sits flush against the screen edge and
             // spreads along it with concave corners. When off, the island
             // becomes a rectangular capsule with a gap from the edge.
-            property bool   notchMode: true
+            property bool   notchMode: false
             // radius of the concave corner where it meets the edge
             property int    notchFlare: 12
             // width of the collapsed island and height of the expanded panel
@@ -443,7 +443,7 @@ PanelWindow {
         pillKeepVisible: false, closePanaceaFirst: true,
         pillDrag: false, panelW: 540,
         monOverrides: "",
-        notchMode: true, notchFlare: 12, collapsedW: 260, expandedH: 620,
+        notchMode: false, notchFlare: 12, collapsedW: 260, expandedH: 620,
         islandGap: 12, islandRadius: 0,
         reduceMotion: false, animMove: 230, animFade: 200, animHover: 150, animBounce: 0,
         clock12: true, clockSeconds: false, clockWeekday: true,

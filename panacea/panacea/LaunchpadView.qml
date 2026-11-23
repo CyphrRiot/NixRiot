@@ -645,7 +645,7 @@ FocusScope {
         view.folderId = "";
         view.cancelDrag();
         menu.close();
-        if (shot.hasContent) shot.captureFrame();
+        if (shotLoader.item !== null && shotLoader.item.hasContent) shotLoader.item.captureFrame();
         revealTimer.restart();
         search.forceActiveFocus();
     }
@@ -704,19 +704,22 @@ FocusScope {
         NumberAnimation { duration: view.sys.noMotion ? 0 : 220; easing.type: Easing.OutCubic }
     }
 
-    ScreencopyView {
-        id: shot
+    Loader {
+        id: shotLoader
         anchors.fill: parent
-        captureSource: view.outputScreen
-        live: false
-        paintCursor: false
-        visible: false
-        layer.enabled: true
+        active: view.outputScreen !== null && view.outputScreen !== undefined
+        sourceComponent: ScreencopyView {
+            captureSource: view.outputScreen
+            live: false
+            paintCursor: false
+            visible: false
+            layer.enabled: true
+        }
     }
     MultiEffect {
         anchors.fill: parent
-        source: shot
-        visible: shot.hasContent
+        source: shotLoader.item
+        visible: shotLoader.item !== null && shotLoader.item.hasContent
         opacity: view.fade
         autoPaddingEnabled: false
         blurEnabled: true
@@ -728,7 +731,7 @@ FocusScope {
     Rectangle {
         anchors.fill: parent
         color: "#000000"
-        opacity: view.fade * (shot.hasContent ? 0.32 : 0.62)
+        opacity: view.fade * ((shotLoader.item !== null && shotLoader.item.hasContent) ? 0.32 : 0.62)
     }
 
     MouseArea {
