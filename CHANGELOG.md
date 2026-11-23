@@ -11,6 +11,10 @@ nothing else, so the wording here is exactly what a person reads on the pill's
 
 ## Unreleased
 
+## 1.45
+
+- The update window scrolls instead of cutting the notes off.
+
 ## 1.44
 
 - Change boot info loglevel to prevent all the USB spam
