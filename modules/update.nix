@@ -103,7 +103,8 @@ let
 
         if [ -r /etc/nixriot/CHANGELOG.md ] && [ -n "$oldver" ] && [ "$oldver" != unknown ]; then
           awk -v stop="## $oldver" '
-            /^## / { if ($0 == stop) exit; next }
+            /^## / { if ($0 == stop) exit; started = 1; next }
+            !started { next }
             /^$/ { next }
             { print }
           ' /etc/nixriot/CHANGELOG.md > "$notes" 2>/dev/null || true

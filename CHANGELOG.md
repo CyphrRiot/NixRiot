@@ -1,15 +1,10 @@
 # NixRiot releases
 
-Two-part versions: `1.0`, then `1.1`, then `2.0`. A minor bump is the normal
-release; a major bump is a deliberate decision. There is no patch level, so
-fixes ship as the next minor.
-
-Newest first. One `## <version>` heading per release, matching `VERSION`. The
-updater hands the installed system every section above its own version and
-nothing else, so the wording here is exactly what a person reads on the pill's
-"What's new" screen.
-
 ## Unreleased
+
+## 1.46
+
+- The update window lists the release notes instead of the changelog's own header.
 
 ## 1.45
 
@@ -91,6 +86,16 @@ nothing else, so the wording here is exactly what a person reads on the pill's
 Releases before 1.28 are in [docs/CHANGELOG-archive.md](docs/CHANGELOG-archive.md).
 
 ## How to write these
+
+Two-part versions: `1.0`, then `1.1`, then `2.0`. A minor bump is the normal
+release; a major bump is a deliberate decision. There is no patch level, so
+fixes ship as the next minor.
+
+Newest first. One `## <version>` heading per release, matching `VERSION`. The
+updater hands the installed system every section above its own version and
+nothing else, so the wording here is exactly what a person reads on the pill's
+"What's new" screen. Keep the prose in this section and the bullets in theirs:
+the extractor drops headings, and anything above the first heading is ignored.
 
 - Write bullets under `## Unreleased` as you work, not at release time.
 - One line per change, in plain language: what a person will notice, not the

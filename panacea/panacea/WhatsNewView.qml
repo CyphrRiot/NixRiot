@@ -1,7 +1,6 @@
 pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Layouts
-import QtQuick.Controls
 import Quickshell
 
 Item {
@@ -12,9 +11,12 @@ Item {
     readonly property string version: view.lines.length ? String(view.lines[0]).substring(0, 7) : ""
     readonly property var changes: view.lines.slice(1)
 
-    readonly property int maxListH: Math.max(120, view.height - 380)
+    readonly property int maxRows: Math.max(4, Math.min(14,
+        Math.floor((view.height - 380) / (view.sys.fontSize + 9))))
     readonly property int fontPx: view.changes.length > 9 ? view.sys.fontSize - 3
                                                           : view.sys.fontSize - 2
+    readonly property var shown: view.changes.slice(0, view.maxRows)
+    readonly property int hidden: Math.max(0, view.changes.length - view.maxRows)
 
     //
     //
@@ -144,68 +146,60 @@ Item {
 
             Rectangle {
                 Layout.fillWidth: true
-                implicitHeight: Math.min(changeCol.implicitHeight + 28, view.maxListH + 28)
+                implicitHeight: changeCol.implicitHeight + 28
                 radius: 18
                 color: Qt.rgba(view.sys.colFg.r, view.sys.colFg.g, view.sys.colFg.b, 0.045)
 
-                Flickable {
-                    id: changesFlick
-                    anchors.fill: parent
+                ColumnLayout {
+                    id: changeCol
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.top: parent.top
                     anchors.margins: 14
-                    clip: true
-                    boundsBehavior: Flickable.StopAtBounds
-                    contentHeight: changeCol.implicitHeight
-                    ScrollBar.vertical: ScrollBar {
-                        policy: ScrollBar.AsNeeded
-                        contentItem: Rectangle { radius: 2; color: Qt.rgba(1, 1, 1, 0.22) }
-                    }
+                    spacing: 7
 
-                    WheelHandler {
-                        onWheel: event => {
-                            var most = Math.max(0, changesFlick.contentHeight - changesFlick.height);
-                            changesFlick.contentY = Math.max(0,
-                                Math.min(most, changesFlick.contentY - event.angleDelta.y));
-                        }
-                    }
+                    Repeater {
+                        model: view.shown
 
-                    ColumnLayout {
-                        id: changeCol
-                        width: changesFlick.width
-                        spacing: 7
+                        RowLayout {
+                            id: rowlayo
+                            required property string modelData
+                            Layout.fillWidth: true
+                            spacing: 10
 
-                        Repeater {
-                            model: view.changes
-
-                            RowLayout {
-                                id: rowlayo
-                                required property string modelData
+                            Rectangle {
+                                Layout.alignment: Qt.AlignTop
+                                Layout.topMargin: 6
+                                Layout.preferredWidth: 5; Layout.preferredHeight: 5; radius: 3
+                                color: view.sys.colOn
+                            }
+                            Text {
                                 Layout.fillWidth: true
-                                spacing: 10
-
-                                Rectangle {
-                                    Layout.alignment: Qt.AlignTop
-                                    Layout.topMargin: 6
-                                    Layout.preferredWidth: 5; Layout.preferredHeight: 5; radius: 3
-                                    color: view.sys.colOn
-                                }
-                                Text {
-                                    Layout.fillWidth: true
-                                    text: view.changeText(rowlayo.modelData)
-                                    color: view.sys.colFg
-                                    wrapMode: Text.WordWrap
-                                    font { family: view.sys.fontBody; pixelSize: view.fontPx }
-                                }
+                                text: view.changeText(rowlayo.modelData)
+                                color: view.sys.colFg
+                                wrapMode: Text.WordWrap
+                                font { family: view.sys.fontBody; pixelSize: view.fontPx }
                             }
                         }
+                    }
 
-                        Text {
-                            Layout.fillWidth: true
-                            visible: view.changes.length === 0
-                            horizontalAlignment: Text.AlignHCenter
-                            text: view.sys.tr("The change list is unavailable")
-                            color: view.sys.colMuted
-                            font { family: view.sys.fontBody; pixelSize: view.fontPx }
-                        }
+                    Text {
+                        Layout.fillWidth: true
+                        Layout.topMargin: 2
+                        visible: view.hidden > 0
+                        text: view.sys.tr("and") + " " + view.hidden
+                              + (view.sys.cfg.lang === "en" ? " more" : "")
+                        color: view.sys.colMuted
+                        font { family: view.sys.fontBody; pixelSize: view.fontPx - 1 }
+                    }
+
+                    Text {
+                        Layout.fillWidth: true
+                        visible: view.changes.length === 0
+                        horizontalAlignment: Text.AlignHCenter
+                        text: view.sys.tr("The change list is unavailable")
+                        color: view.sys.colMuted
+                        font { family: view.sys.fontBody; pixelSize: view.fontPx }
                     }
                 }
             }
