@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 1.49
+
+- Updates no longer close Signal and Firefox.
+
 ## 1.48
 
 - The installer image runs the newest kernel instead of the desktop's pinned one.

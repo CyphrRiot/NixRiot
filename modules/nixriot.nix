@@ -147,6 +147,14 @@ in
       memoryPercent = 50;
     };
 
+    # The switch rewrites the user D-Bus configuration every generation, and the
+    # reload that follows drops the session bus under running apps, which is
+    # enough to abort Chromium and Electron programs. Defer it to the next login.
+    systemd.user.services.dbus-broker = {
+      reloadIfChanged = lib.mkForce false;
+      restartIfChanged = lib.mkForce false;
+    };
+
     boot.kernelParams = [ "quiet" "fbcon=nodefer" "amdgpu.dcdebugmask=0x410" "i915.enable_psr=0" "i915.enable_fbc=0" "i915.enable_dc=0" "xe.enable_psr=0" ];
 
     # The passphrase prompt is written to the console the initrd runs on. On
