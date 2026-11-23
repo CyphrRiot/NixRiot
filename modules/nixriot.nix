@@ -149,6 +149,12 @@ in
 
     boot.kernelParams = [ "fbcon=nodefer" "amdgpu.dcdebugmask=0x410" "i915.enable_psr=0" "i915.enable_fbc=0" "i915.enable_dc=0" "xe.enable_psr=0" ];
 
+    # The passphrase prompt is written to the console the initrd runs on. On
+    # some Intel panels the firmware framebuffer ignores the partial updates the
+    # console makes, so the prompt stays invisible until a key forces a redraw.
+    # Loading the display driver here puts the initrd console on i915 instead.
+    boot.initrd.kernelModules = [ "i915" ];
+
     boot.kernel.sysctl = {
       "vm.dirty_background_bytes" = 67108864;
       "vm.dirty_bytes" = 268435456;
