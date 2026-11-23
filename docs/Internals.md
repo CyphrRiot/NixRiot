@@ -250,6 +250,23 @@ Checked against nixpkgs. Do not re-add removed packages, and use these names.
   `gh release create`) is `make release` and `make publish`. The mechanics and
   the rules are in `AGENTS.md` under Releasing.
 
+## Root helper
+
+- `modules/desktop/panacea-root.nix` builds `panacea-root`, `locale.sh` and
+  `bootos.sh` into one package and puts it in `systemPackages`, so the helper is
+  root-owned, in the store, and reachable at
+  `/run/current-system/sw/bin/panacea-root`. Nothing privileged runs from
+  `$HOME` any more.
+- The same module generates the polkit action `org.panacea.root` with
+  `exec.path` set to the helper's store path, and `shell.qml` resolves the
+  `sw/bin` symlink with `readlink -f` before calling `pkexec`, so the program
+  path and the annotate always agree whichever way polkit compares them.
+- `panacea-root` derives `LIB` from its own path instead of the hardcoded
+  `/usr/local/lib/panacea`, so one file serves both this system and upstream.
+- Locale is deliberately not covered: `locale.sh` writes `/etc/locale.conf` and
+  calls `locale-gen`, and on NixOS the first is a store symlink and the second
+  does not exist.
+
 ## Testing in QEMU
 
 ```

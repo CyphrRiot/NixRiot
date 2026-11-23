@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 2.8
+
+- The default wallpaper is `02.webp`.
+- The battery charge threshold works now, and Panacea's system settings run a root-owned helper instead of a script in your home folder.
+
 ## 2.7
 
 - Fix HDMI + Laptop Lid issues

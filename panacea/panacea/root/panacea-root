@@ -4,7 +4,7 @@
 #
 #   panacea-root settime 'Y-m-d H:M:S'
 set -u
-LIB=/usr/local/lib/panacea
+LIB="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
 [ "$(id -u)" = 0 ] || { echo "must run as root" >&2; exit 1; }
 
 case "${1:-}" in

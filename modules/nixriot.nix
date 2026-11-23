@@ -8,6 +8,7 @@ in
     ./desktop/theme.nix
     ./desktop/sddm.nix
     ./desktop/plymouth.nix
+    ./desktop/panacea-root.nix
     ./update.nix
     ./features.nix
     ./apps/shell.nix

@@ -3,7 +3,7 @@
 ![NixRiot](docs/img/banner.webp)
 
 ![Status](https://img.shields.io/badge/status-release-9a2eef?labelColor=1b2b34)
-![Version](https://img.shields.io/badge/version-2.7-9a2eef?labelColor=1b2b34)
+![Version](https://img.shields.io/badge/version-2.8-9a2eef?labelColor=1b2b34)
 ![Platform](https://img.shields.io/badge/platform-NixOS-9a2eef?logo=nixos&logoColor=white&labelColor=1b2b34)
 ![Shell](https://img.shields.io/badge/shell-Hyprland-9a2eef?logo=hyprland&logoColor=9a2eef&labelColor=1b2b34)
 ![UI](https://img.shields.io/badge/UI-Quickshell-9a2eef?labelColor=1b2b34)
@@ -426,7 +426,7 @@ Crush.
 ## Wallpapers
 
 The NixRiot set (39 WebP images, `01.webp` through `39.webp`) ships in
-`panacea/hypr/wallpaper/`, default `04.webp`. Change the wallpaper from
+`panacea/hypr/wallpaper/`, default `02.webp`. Change the wallpaper from
 Settings > Appearance > Wallpapers, or with `SUPER + SHIFT + T` or
 `SUPER + SHIFT + D`. The manifest is
 `panacea/hypr/wallpaper/WALLPAPERS.md`.

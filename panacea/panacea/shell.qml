@@ -894,15 +894,20 @@ PanelWindow {
         pOpenWith.running = true;
     }
 
-    readonly property string rootHelper: "/usr/local/lib/panacea/panacea-root"
-    property bool rootHelperOk: false
+    readonly property string rootHelperCandidates:
+        "/run/current-system/sw/bin/panacea-root /usr/local/lib/panacea/panacea-root"
+    property string rootHelper: ""
     Process {
         running: true
-        command: ["test", "-x", root.rootHelper]
-        onExited: code => root.rootHelperOk = (code === 0)
+        command: ["sh", "-c",
+            "for p in " + root.rootHelperCandidates + "; do r=$(readlink -f \"$p\" 2>/dev/null); "
+            + "[ -x \"$r\" ] && { printf '%s' \"$r\"; break; }; done"]
+        stdout: StdioCollector {
+            onStreamFinished: root.rootHelper = text.trim()
+        }
     }
     function rootCmd(args, legacy) {
-        return root.rootHelperOk ? ["pkexec", root.rootHelper].concat(args) : legacy;
+        return root.rootHelper !== "" ? ["pkexec", root.rootHelper].concat(args) : legacy;
     }
 
     function bootIntoSystem(id) {
@@ -2314,8 +2319,8 @@ PanelWindow {
     }
     function setBatteryThreshold(start, end) {
         var name = root.batteryDetails.name || "";
-        if (!name || batteryThresholdProcess.running) return;
-        batteryThresholdProcess.command = ["pkexec", "/usr/local/lib/panacea/panacea-root", "charge-threshold", name, String(start), String(end)];
+        if (!name || batteryThresholdProcess.running || root.rootHelper === "") return;
+        batteryThresholdProcess.command = ["pkexec", root.rootHelper, "charge-threshold", name, String(start), String(end)];
         batteryThresholdProcess.running = true;
     }
     readonly property real batteryRemainingSeconds: battDev && battDev.ready

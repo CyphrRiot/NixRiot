@@ -23,7 +23,7 @@ BSD-3-Clause and borrowed. That collection is no longer shipped.
 | `38.webp` | User-provided (`~/Downloads/34.jpg`) | NixRiot project, license to confirm |
 | `39.webp` | User-provided (`~/Downloads/35.jpg`) | NixRiot project, license to confirm |
 
-The default is `04.webp`, referenced by `hypr/wallpaper.conf` and
+The default is `02.webp`, referenced by `hypr/wallpaper.conf` and
 `hypr/hyprpaper.conf`.
 
 To add an image, place it here and add a row above with its author, source,
