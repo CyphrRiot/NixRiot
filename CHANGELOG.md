@@ -2,101 +2,16 @@
 
 ## Unreleased
 
-## 1.49
+## 2.0
 
-- Updates no longer close Signal and Firefox.
+The release where the installer stops freezing where it used to, and where
+updating stops closing what you have open.
 
-## 1.48
-
-- The installer image runs the newest kernel instead of the desktop's pinned one.
-- The installer image no longer carries ZFS support it never used.
-
-## 1.47
-
-- Updates install cleanly instead of reporting a failure after they have already switched.
-
-## 1.46
-
-- The update window lists the release notes instead of the changelog's own header.
-
-## 1.45
-
-- The update window scrolls instead of cutting the notes off.
-
-## 1.44
-
-- Change boot info loglevel to prevent all the USB spam
-
-## 1.43
-
-- The passphrase prompt appears on screens where it stayed invisible until a key was pressed.
-
-## 1.42
-
-- The installer boots on AMD laptops where it froze before the USB was written.
-
-## 1.41
-
-- Cleaner island updates
-
-## 1.40
-
-- The passphrase prompt appears without pressing a key.
-
-## 1.38
-
-- Install optional applications from the Installs page in Settings.
-- WebP images open in the viewer instead of showing black.
-
-## 1.37
-
-- Fix Plymouth logo and Installer
-
-## 1.36
-
-- Installing an optional app no longer flips the button before the rebuild finishes.
-
-## 1.35
-
-- Optional apps can be installed from Settings → Installs.
-
-## 1.34
-
-- Fix Text Editor blur issue
-
-## 1.33
-
-- Crush ships as the upstream binary instead of compiling on every machine.
-- The text editor stays opaque and unblurred, so scrolling leaves no stray pixels.
-
-## 1.32
-
-- Fix Crush and NixRiot hostname issues
-
-## 1.31
-
-- Crush comes from current nixpkgs without moving the system kernel pin.
-- The VPN location is bold text instead of a white bubble.
-- The Plymouth spinner uses the Panacea logo again instead of a blank image.
-
-## 1.30
-
-- The desktop shell restarts itself if an update or a bus restart kills it.
-- GTK4 and Firefox use the system dark preference again instead of an invalid GTK4 theme name.
-
-## 1.29
-
-- The update card shows the installed and new versions.
-- Plymouth starts before the initrd cryptsetup target, so the passphrase prompt is on the splash.
-- The Wi-Fi chip sits left of the applet row instead of underneath it.
-
-## 1.28
-
-- Intel panels also disable FBC and display C-states, and AMD disables DSC, so the LUKS prompt appears without a keypress.
-- The initrd starts Plymouth before the LUKS unlock and enables its passphrase agent, so the prompt is on the splash instead of the hidden text console.
-- The fish prompt uses OpenRiot's teal, cyan, and blue colours again.
-
-Releases before 1.28 are in [docs/CHANGELOG-archive.md](docs/CHANGELOG-archive.md).
+- Updating no longer restarts the desktop shell, which was closing Signal and Firefox.
+- The installer no longer sends console output to a serial port, which froze the screen on some laptops.
+- The island is a capsule with a gap by default instead of a notch; turn Notch mode on in Settings → Bar and island for the old shape.
+- Six new wallpapers; the default is now `04.webp`.
+- `SUPER + SHIFT + M` no longer quits the desktop.
 
 ## How to write these
 
@@ -117,3 +32,7 @@ the extractor drops headings, and anything above the first heading is ignored.
 - Add a `### Fixed` heading only when a release mixes fixes with changes.
 - `make release` will not run while `## Unreleased` is empty, and it renames that
   heading to the new version for you. Never edit `VERSION` by hand.
+- Releases before 2.0 live in [docs/CHANGELOG-archive.md](docs/CHANGELOG-archive.md),
+  so a machine that skips a long way reads the milestone notes rather than
+  twenty old sections. The updater stops at this heading, so keep release
+  sections above it.

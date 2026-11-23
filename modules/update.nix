@@ -107,6 +107,7 @@ let
 
         if [ -r /etc/nixriot/CHANGELOG.md ] && [ -n "$oldver" ] && [ "$oldver" != unknown ]; then
           awk -v stop="## $oldver" '
+            /^## How to write these/ { exit }
             /^## / { if ($0 == stop) exit; started = 1; next }
             !started { next }
             /^$/ { next }

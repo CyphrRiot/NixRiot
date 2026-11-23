@@ -190,7 +190,6 @@ QtObject {
         "Enterprise": "Kurumsal",
         "Error: ": "Hata: ",
         "Every app as a full-screen grid, with folders. Drop an app on another to make a folder.": "Tüm uygulamalar tam ekran ızgarada, klasörlerle. Bir uygulamayı diğerinin üzerine bırakınca klasör olur.",
-        "Exit Hyprland": "Hyprland'dan çık",
         "Expanded height": "Genişletilmiş ada yüksekliği",
         "Expanded width": "Genişletilmiş ada genişliği",
         "External clients open their own VPN controls. NetworkManager profiles can be toggled directly in the island.": "Harici istemciler kendi VPN kontrollerini açar. NetworkManager profilleri adadan değiştirilebilir.",

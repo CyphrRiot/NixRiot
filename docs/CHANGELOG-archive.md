@@ -1,8 +1,102 @@
 # NixRiot release archive
 
-Releases 1.0 through 1.27. The current release notes live in
-[`CHANGELOG.md`](../CHANGELOG.md), which keeps the recent sections and the
-`## Unreleased` list. Newest first.
+Every release before 2.0, newest first. The current release notes live in
+[`CHANGELOG.md`](../CHANGELOG.md), which keeps `## Unreleased` and the 2.x
+sections.
+
+## 1.49
+
+- Updates leave the session bus alone instead of reloading it.
+
+## 1.48
+
+- The installer image runs the newest kernel instead of the desktop's pinned one.
+- The installer image no longer carries ZFS support it never used.
+
+## 1.47
+
+- Updates install cleanly instead of reporting a failure after they have already switched.
+
+## 1.46
+
+- The update window lists the release notes instead of the changelog's own header.
+
+## 1.45
+
+- The update window scrolls instead of cutting the notes off.
+
+## 1.44
+
+- Change boot info loglevel to prevent all the USB spam
+
+## 1.43
+
+- The passphrase prompt appears on screens where it stayed invisible until a key was pressed.
+
+## 1.42
+
+- The installer boots on AMD laptops where it froze before the USB was written.
+
+## 1.41
+
+- Cleaner island updates
+
+## 1.40
+
+- The passphrase prompt appears without pressing a key.
+
+## 1.38
+
+- Install optional applications from the Installs page in Settings.
+- WebP images open in the viewer instead of showing black.
+
+## 1.37
+
+- Fix Plymouth logo and Installer
+
+## 1.36
+
+- Installing an optional app no longer flips the button before the rebuild finishes.
+
+## 1.35
+
+- Optional apps can be installed from Settings → Installs.
+
+## 1.34
+
+- Fix Text Editor blur issue
+
+## 1.33
+
+- Crush ships as the upstream binary instead of compiling on every machine.
+- The text editor stays opaque and unblurred, so scrolling leaves no stray pixels.
+
+## 1.32
+
+- Fix Crush and NixRiot hostname issues
+
+## 1.31
+
+- Crush comes from current nixpkgs without moving the system kernel pin.
+- The VPN location is bold text instead of a white bubble.
+- The Plymouth spinner uses the Panacea logo again instead of a blank image.
+
+## 1.30
+
+- The desktop shell restarts itself if an update or a bus restart kills it.
+- GTK4 and Firefox use the system dark preference again instead of an invalid GTK4 theme name.
+
+## 1.29
+
+- The update card shows the installed and new versions.
+- Plymouth starts before the initrd cryptsetup target, so the passphrase prompt is on the splash.
+- The Wi-Fi chip sits left of the applet row instead of underneath it.
+
+## 1.28
+
+- Intel panels also disable FBC and display C-states, and AMD disables DSC, so the LUKS prompt appears without a keypress.
+- The initrd starts Plymouth before the LUKS unlock and enables its passphrase agent, so the prompt is on the splash instead of the hidden text console.
+- The fish prompt uses OpenRiot's teal, cyan, and blue colours again.
 
 ## 1.27
 

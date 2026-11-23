@@ -246,7 +246,6 @@ PanelWindow {
             property string bind_closeWindow: "SUPER + Q"
             property string bind_browser: "SUPER + B"
             property string bind_fullscreen: "SUPER + SHIFT + F"
-            property string bind_exitHypr: "SUPER + SHIFT + M"
             property string bind_floatToggle: "SUPER + W"
             property string bind_pillVault: "SUPER + SHIFT + P"
             // Voice to text (voxtype): hold right Alt, speak, release, and the
@@ -348,7 +347,6 @@ PanelWindow {
         closeWindow:    "SUPER + Q",
         browser:        "SUPER + B",
         fullscreen:     "SUPER + SHIFT + F",
-        exitHypr:       "SUPER + SHIFT + M",
         floatToggle:    "SUPER + W",
         pillVault:      "SUPER + SHIFT + P",
         voxDictate:     "Alt_R",
@@ -1080,7 +1078,12 @@ PanelWindow {
 
     Process {
         id: pReloadDesktop
-        command: ["sh", "-c", "hyprctl reload >/dev/null 2>&1; systemctl --user restart --no-block panacea-shell"]
+        // Reload in place instead of restarting the unit: a restart drops the
+        // D-Bus names the shell owns (notifications, the tray host), and
+        // Chromium and Electron apps abort when those vanish under them.
+        // Touching the entry point makes Quickshell reload its configuration,
+        // which keeps the names alive.
+        command: ["sh", "-c", "hyprctl reload >/dev/null 2>&1; touch \"$HOME/.config/panacea/shell.qml\""]
     }
     function reloadDesktop() { pReloadDesktop.running = true; }
 

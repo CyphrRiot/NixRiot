@@ -57,7 +57,6 @@
     "bind_mediaPrevious": "XF86AudioPrev",
     "bind_lidOn": "switch:on:Lid Switch",
     "bind_lidOff": "switch:off:Lid Switch",
-    "bind_exitHypr": "SUPER + SHIFT + M",
     "bind_fileManager": "SUPER + F",
     "bind_fileManagerAlt": "SUPER + E",
     "bind_fileManagerTui": "SUPER + SHIFT + E",

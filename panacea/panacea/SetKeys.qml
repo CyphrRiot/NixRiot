@@ -412,7 +412,6 @@ ColumnLayout {
             Head { text: page.sys.tr("System") }
             BindRow { bindId: "lockScreen"; label: page.sys.tr("Lock screen") }
             BindRow { bindId: "screenOff";  label: page.sys.tr("Turn screen off") }
-            BindRow { bindId: "exitHypr";   label: page.sys.tr("Exit Hyprland") }
             BindRow { bindId: "themeSwitch"; label: page.sys.tr("Switch theme") }
             BindRow { bindId: "themeSwitchAlt"; label: page.sys.tr("Wallpapers (alternate)") }
 

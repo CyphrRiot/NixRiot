@@ -43,7 +43,12 @@ in
   };
 
   boot.plymouth.enable = lib.mkForce false;
-  boot.kernelParams = lib.mkForce [ "console=tty0" "console=ttyS0,115200n8" ];
+  # tty0 only. The last console= on the line becomes /dev/console, so adding
+  # ttyS0 here sends userspace console output to a serial port that most
+  # machines do not have, and the screen stops at the last kernel message.
+  # The boot menu keeps its own "Serial console" entry for the machines that
+  # do have one.
+  boot.kernelParams = lib.mkForce [ "console=tty0" ];
   boot.consoleLogLevel = lib.mkForce 7;
 
   # The live image does not need the desktop's kernel pin. Unknown hardware is

@@ -3,7 +3,7 @@
 ![NixRiot](docs/img/banner.webp)
 
 ![Status](https://img.shields.io/badge/status-release-9a2eef?labelColor=1b2b34)
-![Version](https://img.shields.io/badge/version-1.49-9a2eef?labelColor=1b2b34)
+![Version](https://img.shields.io/badge/version-2.0-9a2eef?labelColor=1b2b34)
 ![Platform](https://img.shields.io/badge/platform-NixOS-9a2eef?logo=nixos&logoColor=white&labelColor=1b2b34)
 ![Shell](https://img.shields.io/badge/shell-Hyprland-9a2eef?logo=hyprland&logoColor=9a2eef&labelColor=1b2b34)
 ![UI](https://img.shields.io/badge/UI-Quickshell-9a2eef?labelColor=1b2b34)
@@ -19,32 +19,31 @@
 
 ## Status of NixRiot
 
-**Released.** It installs over the network with LUKS and boots to the NixRiot
-desktop: the pill, the launcher, its settings, the terminal. It runs on real
-hardware, with Bluetooth input, the lock screen, the password vault, the media
-capsule and the night light all in use.
+**Released.** One image, one flake, a desktop that installs itself over the
+network with LUKS and boots straight into the pill. It runs on real hardware:
+Bluetooth input, the lock screen, the password vault, the media capsule and the
+night light are all in use here.
 
-The media keys, the clamshell lid, and the fifteen-minute idle lock have been
-checked on hardware. The hardware notes below record what was tested.
+The media keys, the lid, and the fifteen-minute idle lock are checked on
+hardware. The hardware notes below say what was tested, and on what.
 
 ![The NixRiot desktop: the pill, its settings pages, and a terminal](docs/img/desktop-demo.gif)
 
 ## Philosophy of NixRiot
 
-NixRiot is a small, fast, reproducible desktop, assembled from things we learned
-the hard way.
+A small, fast, reproducible desktop, assembled from things we learned the hard
+way.
 
 ArchRiot was the first pass: Arch, an installer, and hand-maintained dotfiles. It
-taught us what the desktop should feel like. Omarchy then covered much of that
-ground, so we stopped rather than duplicate it. What we could not fix on Arch was
-trust: the AUR means running code from strangers, and that is not a defensible
-default for a desktop you have to keep patched. OpenBSD came next and remains the
-Unix we trust most, but modern hardware there is a permanent fight: network
-cards, GPUs, Bluetooth, and the rest of what a desktop needs.
+taught us what the desktop should feel like, and Omarchy then covered most of
+that ground, so we stopped rather than duplicate it. What Arch could not fix was
+trust: the AUR is code from strangers, and that is not a defensible default for a
+machine you keep patched. OpenBSD came next and is still the Unix we trust most,
+but modern hardware there is a permanent fight.
 
-NixRiot takes all of that and puts it on a foundation that can be trusted and
-reproduced. One flake. Packages from a pinned nixpkgs. An installer that builds
-the same system it was built from.
+NixRiot takes that and puts it on a foundation you can trust and reproduce: one
+flake, packages from a pinned nixpkgs, and an installer that builds the same
+system it was built from.
 
 A reproducible NixOS desktop with the [Panacea](https://github.com/EnsixD/Panacea)
 shell and the parts of [OpenRiot](https://OpenRiot.org) that
@@ -103,7 +102,7 @@ NixRiot ships no wallet files and no secrets. You own those.
 - **Firefox**, zathura, and LibreOffice when `nixriot.office` is on. To use it,
   set `nixriot.office = true;` in `/etc/nixriot/hosts/installed/local.nix` and
   run `rebuild`.
-- **Media**: mpv, Lollypop, optional Transmission.
+- **Media**: mpv, Lollypop, Transmission (removable from Installs).
 - **Signal** Desktop, with `gurk` for the terminal, which is the only Signal
   OpenRiot could have: OpenBSD has no desktop client.
 - **Crypto** (opt-in): Monero GUI, Bitcoin Core, WireGuard.
@@ -111,7 +110,7 @@ NixRiot ships no wallet files and no secrets. You own those.
   default, with the GUI in the app launcher and the `mullvad` command line.
 - **Security**: firewall, SSH hardening, sysctl hardening, MAC randomization,
   `restic` and `rclone` for backups.
-- The **NixRiot wallpaper set** (33 WebP images, `00.webp` through `32.webp`).
+- The **NixRiot wallpaper set** (39 WebP images, `01.webp` through `39.webp`).
 - A **night light** for the screen, off until you switch it on (`SUPER + N`).
 - Full-disk encryption (LUKS2) on the root volume, chosen during install.
 
@@ -302,7 +301,6 @@ another application land in the same view.
 | `SUPER + SHIFT + F` | Fullscreen |
 | `SUPER + L` | Lock |
 | `SUPER + SHIFT + T` or `SUPER + SHIFT + D` | Wallpapers |
-| `SUPER + SHIFT + M` | Exit Hyprland |
 | `SUPER + SHIFT + S` or `Print` | Screenshot (region) |
 | `SUPER + P` | Screen recording |
 | `SUPER + SHIFT + F12` | Screen off |
@@ -407,8 +405,8 @@ about 1 GB.
 
 ## Wallpapers
 
-The NixRiot set (33 WebP images, `00.webp` through `32.webp`) ships in
-`panacea/hypr/wallpaper/`, default `22.webp`. Change the wallpaper from
+The NixRiot set (39 WebP images, `01.webp` through `39.webp`) ships in
+`panacea/hypr/wallpaper/`, default `04.webp`. Change the wallpaper from
 Settings > Appearance > Wallpapers, or with `SUPER + SHIFT + T` or
 `SUPER + SHIFT + D`. The manifest is
 `panacea/hypr/wallpaper/WALLPAPERS.md`.
@@ -420,10 +418,10 @@ wallpapers are not shipped.
 
 ## Night light
 
-Off by default. `SUPER + N` switches it, or **Settings → Display → Night light**
-in the pill, where the temperature sits between 2500K and 6500K and an optional
-schedule turns it on in the evening and off in the morning. 4000K is the default
-when it comes on, the same temperature OpenRiot used.
+Off by default. `SUPER + N` switches it, or **Settings → Devices → Display → Night
+light** in the pill, where the temperature sits between 2500K and 6500K and an
+optional schedule turns it on in the evening and off in the morning. 4000K is the
+default when it comes on, the same temperature OpenRiot used.
 
 The filter is applied by `hyprsunset`, so it is part of what the compositor
 draws: screenshots and recordings carry it. The pill shows a moon when it is on.
@@ -540,8 +538,9 @@ sudo nixriot-update apply
 ```
 
 That clones the project from GitHub, replaces `/etc/nixriot` with it, and
-applies the update live. The desktop restarts itself, so new configuration
-loads without a reboot. A new kernel or initrd loads on the next normal reboot.
+applies the update live. The desktop reloads in place, so new configuration
+lands without a reboot and without closing what you have open. A new kernel or
+initrd loads on the next normal reboot.
 A timer runs `nixriot-update check` every four hours; when it finds a newer
 version, the pill shows an **Update** button beside the VPN indicator. The
 System page shows the same state, with a Check button that asks GitHub directly.
@@ -614,6 +613,10 @@ The image lands at `result/iso/NixRiot.iso`. It is a hybrid image, so `dd` it to
 a USB stick as in Download. Building needs about 40 GB of free space and network
 access for the first `nix flake lock`.
 
+The live image is not built from the desktop's kernel pin: an installer meets
+unknown hardware, so it runs the newest kernel in the flake while installed
+systems keep the pinned one.
+
 `make release` and `make bump` need the dev shell: run `nix develop` first, then
 `make release`.
 
@@ -650,21 +653,21 @@ attach the log.
   allows `wheel` to run `timedatectl`. On an older generation, set it by hand:
   `sudo ln -sfn /etc/zoneinfo/Region/City /etc/localtime`. A rebuild from a tree
   that still sets `time.timeZone = "UTC"` will undo the change.
-- **The screen is blank before the passphrase prompt.** Some laptop panels stay
-  in self-refresh until a key. Press Shift, not ESC (ESC quits Plymouth and
-  drops to the text console). If the prompt appears only then, report the model;
-  1.28 disables PSR, FBC, and display C-states on Intel, and PSR plus DSC on AMD.
+- **The passphrase prompt did not appear until a key was pressed.** Fixed: the
+  boot log used to bury the prompt under kernel messages. On 1.44 or newer it
+  appears on its own. If it does not, report the laptop model.
 - **The installer stops after `LoaderDevicePartUUID` or `New USB device strings`.**
-  That is usually a bad USB write, not the hardware. Rewrite the whole device,
-  not a partition:
+  The `LoaderDevicePartUUID` lines are harmless noise from the GPT generator,
+  which GRUB does not set; the stall itself is usually a bad USB write. Rewrite
+  the whole device, not a partition:
 
   ```sh
   sudo dd if=NixRiot.iso of=/dev/sdX bs=4M status=progress conv=fsync
   sync
   ```
 
-  Verify the ISO against `SHA256SUMS`, boot UEFI with Secure Boot off, and press
-  Enter if the console has not flushed.
+  Verify the ISO against `SHA256SUMS`, boot UEFI with Secure Boot off, and try a
+  second stick before blaming the machine.
 
 ---
 
