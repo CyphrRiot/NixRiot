@@ -92,6 +92,15 @@ in
       '';
     };
 
+    claude = lib.mkOption {
+      type = lib.types.bool;
+      default = false;
+      description = ''
+        Install Claude Code, the command-line agent from Anthropic. Off by
+        default; the package is unfree.
+      '';
+    };
+
     npu = lib.mkEnableOption "Intel NPU support (driver, firmware, Level Zero)";
 
     plymouth = lib.mkEnableOption "the NixRiot boot splash (Plymouth)";
@@ -259,6 +268,9 @@ in
     };
 
     security.sudo.wheelNeedsPassword = lib.mkIf cfg.desktop.enable true;
+
+    programs.ssh.startAgent = true;
+    services.gnome.gcr-ssh-agent.enable = lib.mkForce false;
 
     nix.settings.experimental-features = [ "nix-command" "flakes" ];
 

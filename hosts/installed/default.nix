@@ -5,6 +5,7 @@ let
     if builtins.pathExists ./features.nix then import ./features.nix else { };
   featureConfig =
     lib.optionalAttrs (features ? office) { office = features.office; }
+    // lib.optionalAttrs (features ? claude) { claude = features.claude; }
     // lib.optionalAttrs (features ? games) { games = features.games; }
     // lib.optionalAttrs (features ? transmission) { media.transmission = features.transmission; }
     // lib.optionalAttrs

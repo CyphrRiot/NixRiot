@@ -9,6 +9,6 @@ in
       gnome-text-editor
       crush
       git
-    ];
+    ] ++ lib.optionals config.nixriot.claude [ claude-code ];
   };
 }

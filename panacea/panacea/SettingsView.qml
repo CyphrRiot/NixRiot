@@ -48,7 +48,7 @@ Item {
           keys: "lock screen blur idle" },
         { id: "installs", title: view.sys.tr("Installs"),      g: 0xF01DA, page: "SetInstalls.qml",
           sub: view.sys.tr("Optional applications you can add or remove."),
-          keys: "install apps office games transmission monero bitcoin glyphriot libreoffice" },
+          keys: "install apps office games transmission monero bitcoin glyphriot libreoffice claude" },
         { id: "display", title: view.sys.tr("Display"),        g: 0xF0379, page: "SetDisplay.qml",
           sub: view.sys.tr("Resolution, refresh rate and scale of the connected screens."),
           keys: "display monitor resolution refresh scale layout placement detect island" },

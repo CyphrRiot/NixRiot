@@ -32,13 +32,13 @@ let
     action="''${request##*-}"
 
     case "$feature" in
-      office|games|transmission|monero|bitcoin|glyphriot) ;;
+      office|games|transmission|monero|bitcoin|glyphriot|claude) ;;
       *) echo "unknown feature: $feature" >&2; exit 1 ;;
     esac
     case "$action" in on|off) ;; *) usage ;; esac
 
     if [ ! -f "$state" ]; then
-      echo '{"office":false,"games":false,"transmission":false,"monero":false,"bitcoin":false,"glyphriot":false}' > "$state"
+      echo '{"office":false,"games":false,"transmission":false,"monero":false,"bitcoin":false,"glyphriot":false,"claude":false}' > "$state"
     fi
 
     desired="$state.desired"

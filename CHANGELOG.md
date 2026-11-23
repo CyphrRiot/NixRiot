@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 2.6
+
+- Claude Code can be installed from Settings → Installs, like LibreOffice.
+
 ## 2.5
 
 - Reorder windows so the 🦩 doesn't lose them

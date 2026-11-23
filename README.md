@@ -3,7 +3,7 @@
 ![NixRiot](docs/img/banner.webp)
 
 ![Status](https://img.shields.io/badge/status-release-9a2eef?labelColor=1b2b34)
-![Version](https://img.shields.io/badge/version-2.5-9a2eef?labelColor=1b2b34)
+![Version](https://img.shields.io/badge/version-2.6-9a2eef?labelColor=1b2b34)
 ![Platform](https://img.shields.io/badge/platform-NixOS-9a2eef?logo=nixos&logoColor=white&labelColor=1b2b34)
 ![Shell](https://img.shields.io/badge/shell-Hyprland-9a2eef?logo=hyprland&logoColor=9a2eef&labelColor=1b2b34)
 ![UI](https://img.shields.io/badge/UI-Quickshell-9a2eef?labelColor=1b2b34)
@@ -394,14 +394,14 @@ off). `SUPER + /` lists every current binding.
 ### Installs
 
 Optional applications live in **Settings → Installs**: LibreOffice, the games
-collection, Transmission, Monero GUI, Bitcoin Core and GlyphRiot. Install and
-Remove run a rebuild in the background; the button shows what it is doing.
-Your selection is kept in `/etc/nixriot/hosts/installed/features.nix`, which an
-update preserves, and the same switches exist in `local.nix`
+collection, Transmission, Monero GUI, Bitcoin Core, GlyphRiot and Claude Code.
+Install and Remove run a rebuild in the background; the button shows what it is
+doing. Your selection is kept in `/etc/nixriot/hosts/installed/features.nix`,
+which an update preserves, and the same switches exist in `local.nix`
 (`nixriot.office`, `nixriot.games`, `nixriot.crypto.monero`,
-`nixriot.crypto.bitcoin`, `nixriot.crypto.glyphriot`) if you prefer to edit
-there. Transmission and the games collection are off by default; LibreOffice is
-about 1 GB.
+`nixriot.crypto.bitcoin`, `nixriot.crypto.glyphriot`, `nixriot.claude`) if you
+prefer to edit there. Transmission and the games collection are off by default;
+LibreOffice is about 1 GB.
 
 ### Your own packages
 
