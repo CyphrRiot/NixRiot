@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 1.48
+
+- The installer image runs the newest kernel instead of the desktop's pinned one.
+- The installer image no longer carries ZFS support it never used.
+
 ## 1.47
 
 - Updates install cleanly instead of reporting a failure after they have already switched.

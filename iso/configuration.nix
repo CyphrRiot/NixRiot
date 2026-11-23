@@ -46,6 +46,29 @@ in
   boot.kernelParams = lib.mkForce [ "console=tty0" "console=ttyS0,115200n8" ];
   boot.consoleLogLevel = lib.mkForce 7;
 
+  # The live image does not need the desktop's kernel pin. Unknown hardware is
+  # the norm for an installer, so it runs the newest kernel we have.
+  boot.kernelPackages = lib.mkForce pkgs.linuxPackages_latest;
+
+  # The installer image carries every filesystem it might have to handle, and
+  # zfs is one of them. nixpkgs marks zfs broken on kernels newer than 6.18, so
+  # the out-of-tree module has to go for the image to build at all.
+  boot.supportedFilesystems = lib.mkForce [
+    "btrfs"
+    "cifs"
+    "ext2"
+    "ext3"
+    "ext4"
+    "f2fs"
+    "iso9660"
+    "ntfs"
+    "overlay"
+    "squashfs"
+    "tmpfs"
+    "vfat"
+    "xfs"
+  ];
+
   environment.etc."nixriot".source = lib.cleanSource ../.;
 
   # Netinstall with a head start: the flake inputs are carried so the flake
