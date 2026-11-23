@@ -30,6 +30,7 @@ B("overview",     mainMod .. " + Tab",           hl.dsp.exec_cmd(QS .. "overview
 B("pillControls", mainMod .. " + Z",             hl.dsp.exec_cmd(QS .. "controls"))
 B("pillSettings", mainMod .. " + I",             hl.dsp.exec_cmd(QS .. "settings"))
 B("pillShortcuts",mainMod .. " + slash",         hl.dsp.exec_cmd(QS .. "shortcuts"))
+B("runCommand",   mainMod .. " + period",        hl.dsp.exec_cmd(QS .. "run"))
 B("pillWifi",     mainMod .. " + SHIFT + W",     hl.dsp.exec_cmd(QS .. "wifi"))
 B("pillBt",       mainMod .. " + SHIFT + B",     hl.dsp.exec_cmd(QS .. "bluetooth"))
 B("pillClip",     mainMod .. " + SHIFT + V",     hl.dsp.exec_cmd(QS .. "clipboard"))

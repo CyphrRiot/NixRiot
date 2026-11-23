@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 2.2
+
+- `SUPER + .` opens a prompt that runs a shell command.
+
 ## 2.1
 
 - Fixed timezone issue

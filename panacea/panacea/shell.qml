@@ -347,6 +347,7 @@ PanelWindow {
         closeWindow:    "SUPER + Q",
         browser:        "SUPER + B",
         fullscreen:     "SUPER + SHIFT + F",
+        runCommand:     "SUPER + period",
         floatToggle:    "SUPER + W",
         pillVault:      "SUPER + SHIFT + P",
         voxDictate:     "Alt_R",
@@ -1591,6 +1592,17 @@ PanelWindow {
 
     property bool keysWindowOpen: false
     function toggleKeysWindow() { root.keysWindowOpen = !root.keysWindowOpen; }
+
+    // ------------------------------------------------------- Run a command
+    property bool runOpen: false
+    function openRun() {
+        if (root.expanded) root.collapse();
+        if (root.launchpadOpen) root.closeLaunchpad();
+        if (root.overviewOpen) root.closeOverview();
+        root.runOpen = true;
+    }
+    function closeRun() { root.runOpen = false; }
+    function toggleRun() { if (root.runOpen) closeRun(); else openRun(); }
 
     property bool wallsOpen: false
     function openWalls() {
@@ -3986,6 +3998,7 @@ PanelWindow {
             root.recError = root.tr("voxtype is not installed");
         }
         function launcher(): void { root.toggleLauncher(); }
+        function run(): void { root.toggleRun(); }
         function overview(): void { root.toggleOverview(); }
         function launchpad(): void { root.toggleLaunchpad(); }
         function controls(): void { root.togglePage("main"); }
@@ -4025,9 +4038,10 @@ PanelWindow {
         function weatherClose(): void { root.weatherDetailsOpen = false; }
         function smartClose(): string {
             if (!root.cfg.closePanaceaFirst) return "disabled";
-            var anyOpen = root.expanded || root.launchpadOpen || root.overviewOpen || root.wallsOpen || root.keysWindowOpen || root.whatsNewOpen || root.weatherDetailsOpen;
+            var anyOpen = root.expanded || root.launchpadOpen || root.overviewOpen || root.wallsOpen || root.keysWindowOpen || root.whatsNewOpen || root.weatherDetailsOpen || root.runOpen;
             if (anyOpen) {
-                if (root.weatherDetailsOpen) root.weatherDetailsOpen = false;
+                if (root.runOpen) root.closeRun();
+                else if (root.weatherDetailsOpen) root.weatherDetailsOpen = false;
                 else if (root.launchpadOpen) root.closeLaunchpad();
                 else if (root.overviewOpen) root.closeOverview();
                 else if (root.wallsOpen) root.closeWalls();
@@ -6542,6 +6556,30 @@ PanelWindow {
         sourceComponent: WhatsNewView {
             sys: root
             lines: root.whatsNew
+        }
+    }
+}
+
+Region { id: runNoInput }
+
+PanelWindow {
+    visible: root.runOpen
+    anchors { top: true; bottom: true; left: true; right: true }
+    screen: root.screen
+    color: "transparent"
+    exclusionMode: ExclusionMode.Ignore
+    WlrLayershell.layer: WlrLayer.Overlay
+    WlrLayershell.namespace: "panacea-run"
+    WlrLayershell.keyboardFocus: root.runOpen ? WlrKeyboardFocus.Exclusive
+                                             : WlrKeyboardFocus.None
+    mask: root.runOpen ? null : runNoInput
+
+    Loader {
+        anchors.fill: parent
+        active: true
+        sourceComponent: RunView {
+            sys: root
+            open: root.runOpen
         }
     }
 }
