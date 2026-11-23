@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 2.3
+
+- `SUPER + SHIFT + H` puts the island away, and brings it back. 🦩
+
 ## 2.2
 
 - `SUPER + .` opens a prompt that runs a shell command.

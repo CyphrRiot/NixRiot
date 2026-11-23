@@ -57,6 +57,9 @@ PanelWindow {
             property bool   pillOverlay: true
             // The island stays visible while expanded (the panel opens as a separate floating card)
             property bool   pillKeepVisible: false
+            // Away: the island is off the screen and the edge strip is inert, so
+            // nothing brings it back except a panel opening or this toggle.
+            property bool   pillAway: false
             // Close the Panacea overlay on Super+Q (rather than killing the background window)
             property bool   closePanaceaFirst: true
 
@@ -348,6 +351,7 @@ PanelWindow {
         browser:        "SUPER + B",
         fullscreen:     "SUPER + SHIFT + F",
         runCommand:     "SUPER + period",
+        pillAway:       "SUPER + SHIFT + H",
         floatToggle:    "SUPER + W",
         pillVault:      "SUPER + SHIFT + P",
         voxDictate:     "Alt_R",
@@ -439,7 +443,7 @@ PanelWindow {
         colFg: "#ffffff", colOn: "#ffffff", mutedAlpha: 0.45, themeId: "nothing",
         spacingUnit: 8, smallRadius: 10,
         pillH: 38, pillPos: "top", pillScreen: "auto", pillAutoHide: false, pillOverlay: true,
-        pillKeepVisible: false, closePanaceaFirst: true,
+        pillKeepVisible: false, pillAway: false, closePanaceaFirst: true,
         pillDrag: false, panelW: 540,
         monOverrides: "",
         notchMode: false, notchFlare: 12, collapsedW: 260, expandedH: 620,
@@ -1603,6 +1607,12 @@ PanelWindow {
     }
     function closeRun() { root.runOpen = false; }
     function toggleRun() { if (root.runOpen) closeRun(); else openRun(); }
+
+    // ------------------------------------------------------- Island away
+    function togglePillAway() {
+        root.cfg.pillAway = !root.cfg.pillAway;
+        root.saveCfg();
+    }
 
     property bool wallsOpen: false
     function openWalls() {
@@ -3999,6 +4009,7 @@ PanelWindow {
         }
         function launcher(): void { root.toggleLauncher(); }
         function run(): void { root.toggleRun(); }
+        function away(): void { root.togglePillAway(); }
         function overview(): void { root.toggleOverview(); }
         function launchpad(): void { root.toggleLaunchpad(); }
         function controls(): void { root.togglePage("main"); }
@@ -4140,10 +4151,12 @@ PanelWindow {
         pCloseWin.running = true;
     }
 
-    readonly property bool pillHidden: root.cfg.pillAutoHide
-                                       && !root.expanded && !root.holdOpen
-                                       && !root.osdActive && !root.pillDragging
-                                       && !revealHover.hovered && !capsuleHover.hovered
+    readonly property bool pillHidden:
+        root.cfg.pillAway ? (!root.expanded && !root.osdActive && !root.pillDragging)
+                          : (root.cfg.pillAutoHide
+                             && !root.expanded && !root.holdOpen
+                             && !root.osdActive && !root.pillDragging
+                             && !revealHover.hovered && !capsuleHover.hovered)
 
     onPillHiddenChanged: {
         if (root.pillHidden) return;
@@ -4153,7 +4166,7 @@ PanelWindow {
 
     Item {
         id: revealStrip
-        visible: root.cfg.pillAutoHide
+        visible: root.cfg.pillAutoHide && !root.cfg.pillAway
         anchors.top:    root.pillAtBottom ? undefined : parent.top
         anchors.bottom: root.pillAtBottom ? parent.bottom : undefined
         anchors.left:   root.pillAtRight  ? undefined : parent.left
@@ -4167,7 +4180,7 @@ PanelWindow {
         id: capsuleRegion
         item: capsule
         Region {
-            item: root.cfg.pillAutoHide ? revealStrip : null
+            item: (root.cfg.pillAutoHide && !root.cfg.pillAway) ? revealStrip : null
             intersection: Intersection.Combine
         }
         Region {

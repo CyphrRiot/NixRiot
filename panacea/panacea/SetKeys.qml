@@ -413,6 +413,7 @@ ColumnLayout {
             BindRow { bindId: "lockScreen"; label: page.sys.tr("Lock screen") }
             BindRow { bindId: "screenOff";  label: page.sys.tr("Turn screen off") }
             BindRow { bindId: "runCommand"; label: page.sys.tr("Run a command") }
+            BindRow { bindId: "pillAway";   label: page.sys.tr("Put the island away") }
             BindRow { bindId: "themeSwitch"; label: page.sys.tr("Switch theme") }
             BindRow { bindId: "themeSwitchAlt"; label: page.sys.tr("Wallpapers (alternate)") }
 

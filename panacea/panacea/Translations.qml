@@ -435,7 +435,7 @@ QtObject {
         "Properties": "Özellikler",
         "Queued: ": "Sırada: ",
         "Quick settings": "Wi-Fi, Bluetooth ve güç",
-        "Raw input": "Doğrudan giriş",
+        "Put the island away": "Adayı gizle",
         "Re-read the list of connected monitors.": "Bağlı monitör listesini yeniden oku.",
         "Reading…": "Okunuyor…",
         "Ready to record": "Kayda hazır",

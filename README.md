@@ -3,7 +3,7 @@
 ![NixRiot](docs/img/banner.webp)
 
 ![Status](https://img.shields.io/badge/status-release-9a2eef?labelColor=1b2b34)
-![Version](https://img.shields.io/badge/version-2.2-9a2eef?labelColor=1b2b34)
+![Version](https://img.shields.io/badge/version-2.3-9a2eef?labelColor=1b2b34)
 ![Platform](https://img.shields.io/badge/platform-NixOS-9a2eef?logo=nixos&logoColor=white&labelColor=1b2b34)
 ![Shell](https://img.shields.io/badge/shell-Hyprland-9a2eef?logo=hyprland&logoColor=9a2eef&labelColor=1b2b34)
 ![UI](https://img.shields.io/badge/UI-Quickshell-9a2eef?labelColor=1b2b34)
@@ -277,6 +277,7 @@ the settings panel (`SUPER + I`) writes overrides to
 | `SUPER + SHIFT + V` | Clipboard history |
 | `SUPER + Escape` | Power menu |
 | `SUPER + .` | Run a command |
+| `SUPER + SHIFT + H` | Put the island away, or bring it back |
 | `SUPER + SHIFT + P` | Password vault |
 
 ### Apps and windows
