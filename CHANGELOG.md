@@ -11,6 +11,10 @@ nothing else, so the wording here is exactly what a person reads on the pill's
 
 ## Unreleased
 
+## 1.44
+
+- Change boot info loglevel to prevent all the USB spam
+
 ## 1.43
 
 - The passphrase prompt appears on screens where it stayed invisible until a key was pressed.

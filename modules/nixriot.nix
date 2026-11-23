@@ -136,7 +136,7 @@ in
       ln -sfn ${pkgs.bashInteractive}/bin/bash /bin/bash
     '';
 
-    boot.consoleLogLevel = 7;
+    boot.consoleLogLevel = 4;
     boot.zfs.forceImportRoot = false;
 
     # Compressed RAM swap keeps cold pages out of the way without a disk
@@ -147,7 +147,7 @@ in
       memoryPercent = 50;
     };
 
-    boot.kernelParams = [ "fbcon=nodefer" "amdgpu.dcdebugmask=0x410" "i915.enable_psr=0" "i915.enable_fbc=0" "i915.enable_dc=0" "xe.enable_psr=0" ];
+    boot.kernelParams = [ "quiet" "fbcon=nodefer" "amdgpu.dcdebugmask=0x410" "i915.enable_psr=0" "i915.enable_fbc=0" "i915.enable_dc=0" "xe.enable_psr=0" ];
 
     # The passphrase prompt is written to the console the initrd runs on. On
     # some Intel panels the firmware framebuffer ignores the partial updates the
