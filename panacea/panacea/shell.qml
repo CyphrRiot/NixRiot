@@ -538,12 +538,18 @@ PanelWindow {
     }
 
     // Reapply what was remembered: at shell start, and after every compositor
-    // config reload, which resets the live settings.
+    // config reload, which resets the live settings. Only outputs the
+    // compositor still reports are replayed: a panel the lid logic turned off
+    // has to stay off instead of being switched back on here.
     function monReplay() {
         var all = root.monMap(), parts = [];
-        for (var n in all) parts.push(root.monCmd(n, all[n]));
+        for (var n in all) {
+            parts.push("case \" $live \" in *\" " + n + " \"*) "
+                     + root.monCmd(n, all[n]) + " ;; esac");
+        }
         if (!parts.length) return;
-        pMon.args = parts.join("; ");
+        pMon.args = "live=$(hyprctl monitors -j | jq -r '.[].name' | tr '\\n' ' ') ; "
+                  + parts.join(" ; ");
         pMon.running = false;
         pMon.running = true;
     }

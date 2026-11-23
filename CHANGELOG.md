@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 2.7
+
+- Fix HDMI + Laptop Lid issues
+
 ## 2.6
 
 - Claude Code can be installed from Settings → Installs, like LibreOffice.

@@ -15,6 +15,18 @@
 local ok, saved = pcall(require, "lua.monitors_data")
 if not ok or type(saved) ~= "table" then saved = {} end
 
+-- Everything else that gets attached: the panel's preferred resolution.
+--
+-- This matches every output and the last matching rule wins, so it has to come
+-- before the saved entries. Applied after them it reset their refresh rate to
+-- preferred, and the screen was modeset twice on every config load.
+hl.monitor({
+    output   = "",
+    mode     = "preferred",
+    position = "auto",
+    scale    = 1.0,
+})
+
 for _, m in ipairs(saved) do
     hl.monitor({
         output    = m.output,
@@ -26,10 +38,9 @@ for _, m in ipairs(saved) do
     })
 end
 
--- Everything else that gets attached: the panel's preferred resolution.
-hl.monitor({
-    output   = "",
-    mode     = "preferred",
-    position = "auto",
-    scale    = 1.0,
-})
+-- The lid has the last word: a saved entry for the internal panel would switch
+-- it back on while the lid is shut with an external display attached.
+pcall(function()
+    local lid = require("lua.lid")
+    if lid and lid.apply then lid.apply() end
+end)
