@@ -3,7 +3,7 @@
 ![NixRiot](docs/img/banner.webp)
 
 ![Status](https://img.shields.io/badge/status-release-9a2eef?labelColor=1b2b34)
-![Version](https://img.shields.io/badge/version-2.3-9a2eef?labelColor=1b2b34)
+![Version](https://img.shields.io/badge/version-2.4-9a2eef?labelColor=1b2b34)
 ![Platform](https://img.shields.io/badge/platform-NixOS-9a2eef?logo=nixos&logoColor=white&labelColor=1b2b34)
 ![Shell](https://img.shields.io/badge/shell-Hyprland-9a2eef?logo=hyprland&logoColor=9a2eef&labelColor=1b2b34)
 ![UI](https://img.shields.io/badge/UI-Quickshell-9a2eef?labelColor=1b2b34)
@@ -403,6 +403,23 @@ update preserves, and the same switches exist in `local.nix`
 there. Transmission and the games collection are off by default; LibreOffice is
 about 1 GB.
 
+### Your own packages
+
+Anything else comes from nixpkgs by name, in the same file, and an update keeps
+it. Claude Code, for example:
+
+```nix
+{
+  nixriotUser = "riot";
+  nixriot.packages = [ "claude-code" ];
+}
+```
+
+Then run `rebuild`. Names are nixpkgs attribute names, so `"kdePackages.kate"`
+works, and a name that does not exist fails the build and tells you which one.
+Claude Code is unfree; NixRiot allows unfree packages, the same as it does for
+Crush.
+
 ---
 
 ## Wallpapers
@@ -556,6 +573,17 @@ Before switching, the updater copies the current tree to
 If `local.nix` is missing its user or the build fails, it restores the previous
 tree and stops. The previous generation stays in the boot menu, so
 `sudo nixos-rebuild switch --rollback` is always available.
+
+Releases are signed, and the updater installs only a tag whose signature checks
+out against `allowed_signers` in the tree it is running. A failed check copies
+nothing, so the machine keeps the generation it has. Upgrading from an older
+release needs no special step: the updater that runs is the one already on the
+machine, and the key arrives with the tree that brings signing. `NIXRIOT_VERIFY=0`
+skips the check, for putting unreleased work on a machine:
+
+```sh
+sudo env NIXRIOT_VERIFY=0 nixriot-update apply
+```
 
 **Upgrading from 1.9 or older:** the updater in those releases could not find
 `nixos-rebuild` and left `/etc/nixriot` unreadable. Run this once, which also

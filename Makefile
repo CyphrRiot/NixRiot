@@ -8,6 +8,7 @@ EDITOR ?= hx
 # The tag marks the version; the release marks the artifact. So bump tags and
 # stops, and PUBLISH=0 only skips the ISO build and the GitHub release.
 PUBLISH ?= 1
+SIGNKEY ?= $(HOME)/.ssh/nixriot.pub
 
 check:
 	nix flake check
@@ -110,7 +111,7 @@ do-release:
 	    esac; \
 	    git commit -q -m "$$msg"; \
 	  fi; \
-	  git tag -a "v$$new" -m "NixRiot v$$new"; \
+	  git -c gpg.format=ssh -c user.signingkey=$(SIGNKEY) tag -s "v$$new" -m "NixRiot v$$new"; \
 	  echo "Tagged v$$new."; \
 	  if [ "$(PUBLISH)" = 1 ]; then \
 	    $(MAKE) --no-print-directory do-publish; \

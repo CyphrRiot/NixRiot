@@ -84,7 +84,10 @@ Item {
         var rows = ((isLive ? view.sys.liveList : view.sys.wallList) || []).slice();
         if (!isLive) rows.sort(function(a, b) {
             function priority(w) { return /^nothing/i.test(w.wName) ? 0 : 1; }
-            return priority(a) - priority(b);
+            var d = priority(a) - priority(b);
+            if (d !== 0) return d;
+            var na = String(a.wName), nb = String(b.wName);
+            return na < nb ? -1 : (na > nb ? 1 : 0);
         });
         var act = -1;
         for (var i = 0; i < rows.length; i++) if (rows[i].wActive) act = i;

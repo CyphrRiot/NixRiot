@@ -12,12 +12,13 @@ make_thumb() {
     local src="$1"
     [ -f "$src" ] || return 1
 
-    local name
+    local name stamp
     name=$(basename "$src")
-    name="${name%.*}.jpg"
-    local dst="$CACHE/$name"
+    name="${name%.*}"
+    stamp=$(stat -c %Y "$src" 2>/dev/null) || return 1
+    local dst="$CACHE/$name-$stamp.jpg"
 
-    if [ ! -f "$dst" ] || [ "$src" -nt "$dst" ]; then
+    if [ ! -f "$dst" ]; then
         ffmpeg -loglevel error -y -i "$src" \
                -vf "scale=$WIDTH:-1" -q:v 5 "$dst" </dev/null || return 1
     fi
@@ -32,12 +33,13 @@ make_lockbg() {
     [ -f "$src" ] || return 1
     mkdir -p "$LOCKBG"
 
-    local name
+    local name stamp
     name=$(basename "$src")
-    name="${name%.*}.jpg"
-    local dst="$LOCKBG/$name"
+    name="${name%.*}"
+    stamp=$(stat -c %Y "$src" 2>/dev/null) || return 1
+    local dst="$LOCKBG/$name-$stamp.jpg"
 
-    if [ ! -f "$dst" ] || [ "$src" -nt "$dst" ]; then
+    if [ ! -f "$dst" ]; then
         ffmpeg -loglevel error -y -i "$src" \
                -vf "scale='min($LOCK_WIDTH,iw)':-2" -q:v 2 "$dst" </dev/null || return 1
     fi
@@ -54,16 +56,25 @@ case "$1" in
     path)
         src="$2"
         [ -f "$src" ] || exit 1
-        name=$(basename "$src"); name="${name%.*}.jpg"
-        dst="$CACHE/$name"
-        [ -f "$dst" ] && [ ! "$src" -nt "$dst" ] && printf '%s\n' "$dst"
+        name=$(basename "$src"); name="${name%.*}"
+        stamp=$(stat -c %Y "$src" 2>/dev/null) || exit 1
+        dst="$CACHE/$name-$stamp.jpg"
+        [ -f "$dst" ] && printf '%s\n' "$dst"
         ;;
     all)
+        keep=$(mktemp)
         find "$WALLS" -maxdepth 2 -type f \
              \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' \) \
         | while read -r f; do
-            make_thumb "$f" >/dev/null
+            make_thumb "$f" >> "$keep"
         done
+        # Drop thumbnails whose source is gone or has been replaced: the file
+        # name carries the source's mtime, so a stale entry is one that the
+        # pass above did not just produce.
+        find "$CACHE" -maxdepth 1 -type f -name '*.jpg' | while read -r t; do
+            grep -qxF "$t" "$keep" || rm -f "$t"
+        done
+        rm -f "$keep"
         ;;
     *)
         echo "usage: thumbs.sh thumb <path> | lockbg <path> | all" >&2

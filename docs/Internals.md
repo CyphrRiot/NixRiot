@@ -189,10 +189,13 @@ Checked against nixpkgs. Do not re-add removed packages, and use these names.
   version and the release marks the artifact, so `make release` afterwards
   publishes that same version instead of bumping past it. A hand-run
   `nixriot-update apply` fetches main at HEAD whatever the version, which is how
-  unreleased work gets onto a machine during testing.
+  unreleased work gets onto a machine during testing; it needs
+  `NIXRIOT_VERIFY=0`, because HEAD carries no signature.
 - `nixriot-update.service` is a privileged oneshot, startable by `wheel` through
   a polkit rule. `apply`:
   - clones upstream into a temp dir,
+  - verifies the release tag `v<version>` against `allowed_signers`, taken from
+    the tree that is running, and checks that tag out; `main` is only a pointer,
   - `rsync -a --delete` into `/etc/nixriot`, **excluding
     `hosts/installed/local.nix` and `hosts/installed/hardware-configuration.nix`**,
   - writes the new revision to `/etc/nixriot-revision`,
@@ -200,6 +203,12 @@ Checked against nixpkgs. Do not re-add removed packages, and use these names.
   - writes `/var/lib/nixriot/release-notes.txt` from the changelog sections
     above the installed version, falling back to `git log` subjects only if the
     changelog is unreadable or the old version is unknown.
+- A failed check exits before anything is copied, so the machine keeps the tree
+  it is running. `sudo env NIXRIOT_VERIFY=0 nixriot-update apply` skips the
+  signature, for putting unreleased work on a machine during testing. Upgrades
+  from releases older than signing need no special step: the updater that runs is
+  the one already on the machine, and the key arrives with the tree that
+  introduces verification.
 - `/etc/nixriot-revision` is a real file, written by the installer and the
   updater. It is not derived from the flake: the machine's tree is evaluated as
   a path input, which has no `self.rev`. On the ISO,
@@ -233,6 +242,10 @@ Checked against nixpkgs. Do not re-add removed packages, and use these names.
   into `~/.config/panacea/.whatsnew`, with the version as the first line. If the
   changelog is missing or the installed version is unknown, the notes fall back
   to commit subjects from the clone.
+- Release tags are signed, with `git tag -s` and `gpg.format=ssh`, so the key is
+  an SSH one and no GPG or agent is involved. `make` uses `SIGNKEY`, which
+  defaults to `~/.ssh/nixriot.pub`. `allowed_signers` in the tree holds the
+  matching public key, and its principal is a label: git authorises by key only.
 - Publishing (bump, guards, editor prompt, tag, ISO build, `SHA256SUMS`,
   `gh release create`) is `make release` and `make publish`. The mechanics and
   the rules are in `AGENTS.md` under Releasing.

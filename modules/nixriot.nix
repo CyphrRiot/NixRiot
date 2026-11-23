@@ -73,6 +73,16 @@ in
       '';
     };
 
+    packages = lib.mkOption {
+      type = lib.types.listOf lib.types.str;
+      default = [ ];
+      description = ''
+        Extra packages from nixpkgs, by attribute name, for example
+        `[ "claude-code" ]` or `[ "kdePackages.kate" ]`. Set this in
+        hosts/installed/local.nix, which updates preserve.
+      '';
+    };
+
     office = lib.mkOption {
       type = lib.types.bool;
       default = false;
@@ -267,13 +277,20 @@ in
       lib.mkIf (cfg.fingerprint.enable && cfg.fingerprint.tod.enable)
         cfg.fingerprint.tod.driver;
 
-    environment.systemPackages = with pkgs; [
+    environment.systemPackages = (with pkgs; [
       git
       curl
       rsync
       unzip
       zip
       xz
+    ]) ++ (map (name: lib.getAttrFromPath (lib.splitString "." name) pkgs) cfg.packages);
+
+    assertions = [
+      {
+        assertion = lib.all (name: lib.hasAttrByPath (lib.splitString "." name) pkgs) cfg.packages;
+        message = ''nixriot.packages names something that is not in nixpkgs: ${lib.concatStringsSep ", " (builtins.filter (name: !lib.hasAttrByPath (lib.splitString "." name) pkgs) cfg.packages)}'';
+      }
     ];
   };
 }

@@ -12,6 +12,7 @@ let
       pkgs.git
       pkgs.jq
       pkgs.nix
+      pkgs.openssh
       pkgs.coreutils
       pkgs.gawk
       pkgs.rsync
@@ -59,7 +60,6 @@ let
         # for raw.githubusercontent.com. git has no such shorthand, so the clone
         # gets the HTTPS URL built from it.
         git clone --quiet "https://github.com/$repo" "$tmp"
-        rev="$(git -C "$tmp" rev-parse HEAD)"
 
         # Keep the working tree the running system was built from. A failed
         # update restores this instead of leaving /etc/nixriot half replaced.
@@ -67,6 +67,23 @@ let
         rm -rf "$previous"
         mkdir -p "$previous"
         cp -a /etc/nixriot/. "$previous/"
+
+        ver=$(tr -d ' \n' < "$tmp/VERSION")
+        if [ "''${NIXRIOT_VERIFY:-1}" != 0 ]; then
+          if [ ! -s "$previous/allowed_signers" ]; then
+            echo "The running tree has no allowed_signers, so v$ver cannot be verified." >&2
+            echo "To install it anyway: sudo env NIXRIOT_VERIFY=0 nixriot-update apply" >&2
+            exit 1
+          fi
+          if ! git -C "$tmp" -c gpg.ssh.allowedSignersFile="$previous/allowed_signers" verify-tag "v$ver"; then
+            echo "v$ver is not signed by a trusted key. Nothing was installed." >&2
+            exit 1
+          fi
+        else
+          echo "NIXRIOT_VERIFY=0: installing v$ver without checking its signature." >&2
+        fi
+        git -C "$tmp" checkout -q "$(git -C "$tmp" rev-parse "v$ver^{commit}")"
+        rev="$(git -C "$tmp" rev-parse HEAD)"
 
         rsync -a --delete --exclude .git \
           --exclude hosts/installed/local.nix \

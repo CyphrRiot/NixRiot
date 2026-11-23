@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 2.4
+
+- Updates are signed, and an update is refused if the signature does not check out.
+- You can add your own packages by name in the machine file, and updates keep them.
+- The wallpaper picker lists the set in order, and stops showing old thumbnails after the set changes.
+
 ## 2.3
 
 - `SUPER + SHIFT + H` puts the island away, and brings it back. 🦩
