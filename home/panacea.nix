@@ -106,11 +106,11 @@ in
       run ln -sfn "$HOME/.config/panacea" "$HOME/.config/quickshell/panacea"
     fi
 
-    if [ -x "$HOME/.config/panacea/scripts/genbinds.sh" ] && [ -f "$HOME/.config/panacea/settings.json" ]; then
-      run "$HOME/.config/panacea/scripts/genbinds.sh" >/dev/null 2>&1 || true
-    fi
     if [ -x "$HOME/.config/panacea/scripts/genmonitors.sh" ] && [ -f "$HOME/.config/panacea/settings.json" ]; then
       run "$HOME/.config/panacea/scripts/genmonitors.sh" >/dev/null 2>&1 || true
+    fi
+    if [ -x "$HOME/.config/panacea/scripts/genbinds.sh" ] && [ -f "$HOME/.config/panacea/settings.json" ]; then
+      run "$HOME/.config/panacea/scripts/genbinds.sh" >/dev/null 2>&1 || true
     fi
     if [ -x "$HOME/.config/panacea/scripts/geninput.sh" ] && [ -f "$HOME/.config/panacea/settings.json" ]; then
       run "$HOME/.config/panacea/scripts/geninput.sh" >/dev/null 2>&1 || true

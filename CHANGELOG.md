@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 2.5
+
+- Reorder windows so the 🦩 doesn't lose them
+
 ## 2.4
 
 - Updates are signed, and an update is refused if the signature does not check out.
