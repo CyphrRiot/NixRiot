@@ -46,6 +46,10 @@ let
         ;;
 
       apply)
+        # A switch that was interrupted leaves its transient unit behind, and a
+        # retry then fails to start one under the same name.
+        systemctl stop nixos-rebuild-switch-to-configuration.service >/dev/null 2>&1 || true
+
         old=$(installed_rev)
         oldver=$(tr -d ' \n' < /etc/nixriot/VERSION 2>/dev/null) || oldver=unknown
 
@@ -151,6 +155,9 @@ in
 
     systemd.services.nixriot-update-check = {
       description = "Check for a NixRiot update";
+      # The unit changes whenever this script does, which would otherwise have
+      # the switch restart the running updater.
+      restartIfChanged = false;
       serviceConfig = {
         Type = "oneshot";
         ExecStart = "${nixriot-update}/bin/nixriot-update check";
@@ -169,6 +176,11 @@ in
 
     systemd.services.nixriot-update = {
       description = "Apply a NixRiot update";
+      # This service runs the switch, and the switch replaces this unit because
+      # the script path in ExecStart changes with every update script change.
+      # Without this the switch stops the updater that is running it, the unit
+      # is marked failed, and the pill says the installer failed.
+      restartIfChanged = false;
       serviceConfig = {
         Type = "oneshot";
         ExecStart = "${nixriot-update}/bin/nixriot-update apply";

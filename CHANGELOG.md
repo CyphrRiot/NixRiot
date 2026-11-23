@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 1.47
+
+- Updates install cleanly instead of reporting a failure after they have already switched.
+
 ## 1.46
 
 - The update window lists the release notes instead of the changelog's own header.
