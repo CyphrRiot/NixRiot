@@ -43,8 +43,7 @@ in
   };
 
   boot.plymouth.enable = lib.mkForce false;
-  boot.blacklistedKernelModules = [ "amdgpu" "radeon" ];
-  boot.kernelParams = lib.mkForce [ "console=tty0" "console=ttyS0,115200n8" "nomodeset" ];
+  boot.kernelParams = lib.mkForce [ "console=tty0" "console=ttyS0,115200n8" ];
   boot.consoleLogLevel = lib.mkForce 7;
 
   environment.etc."nixriot".source = lib.cleanSource ../.;

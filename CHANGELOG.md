@@ -11,6 +11,10 @@ nothing else, so the wording here is exactly what a person reads on the pill's
 
 ## Unreleased
 
+## 1.42
+
+- The installer boots on AMD laptops where it froze before the USB was written.
+
 ## 1.41
 
 - Cleaner island updates
