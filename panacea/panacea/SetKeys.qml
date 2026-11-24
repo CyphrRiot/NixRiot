@@ -408,6 +408,7 @@ ColumnLayout {
             BindRow { bindId: "pillNotif";     label: page.sys.tr("Notifications") }
             BindRow { bindId: "fileManager";   label: page.sys.tr("File manager") }
             BindRow { bindId: "pillVault";     label: page.sys.tr("Password manager") }
+            BindRow { bindId: "backup";        label: page.sys.tr("Backup and restore") }
 
             Head { text: page.sys.tr("System") }
             BindRow { bindId: "lockScreen"; label: page.sys.tr("Lock screen") }

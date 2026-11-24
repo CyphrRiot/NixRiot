@@ -128,6 +128,14 @@ Last updated: 2026-11-19.
     pill shown only when the file exists, and a page listing each holding that
     opens when that glyph is clicked. The file stays the user's: never shipped,
     never in the ISO, and back in `.gitignore` with a comment explaining why.
+21. **`hl.get_monitors()` returns userdata, not tables.** The monitor objects
+    cannot be walked with `pairs()`, so every key has to be probed by name. The
+    refresh rate is `refresh_rate` (snake_case), not `refreshRate`; the same
+    value also sits at `mode.refresh_rate`. `lua/monitors.lua` compares the live
+    mode against the saved one so it does not re-apply a mode that is already
+    set, and a wrong field name makes that comparison silently fail: every load
+    then looks like a change and forces a modeset, which is the black frame at
+    the end of every update.
 
 ## Verified package facts
 

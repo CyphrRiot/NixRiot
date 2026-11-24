@@ -74,20 +74,104 @@ mount_drive() {
 
 free_bytes() { df -B1 --output=avail "$DRIVE" 2>/dev/null | tail -1 | tr -d ' '; }
 
-parse_progress() {
-    awk -v out="${1:-/dev/null}" '
-        /^[[:space:]]*[0-9,]+[[:space:]]+[0-9]+%/ {
-            b = $1; p = $2
-            gsub(",", "", b); gsub("%", "", p)
-            t = (p + 0) > 0 ? int(b * 100 / p) : 0
-            printf "PROGRESS %s %s %s\n", p, b, t
-            print p, b, t > out
-            close(out)
-            fflush()
-            next
+# One read-only scan of the source before the copy. Emits STEP Planning and
+# PLAN, writes $SYS/manifest.txt, and refuses to start if the transfer will not
+# fit. Sets PLAN_FILES, PLAN_BYTES, PLAN_DELETES and PLAN_FREE. Returns rsync's
+# status so the caller can abort on a real failure.
+plan_scan() {
+    local raw hdr ver rc
+    raw="$(mktemp)"
+    hdr="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+    ver="$(tr -d ' \n' < /etc/nixriot/VERSION 2>/dev/null || echo unknown)"
+    mkdir -p "$SYS"
+
+    step "Planning"
+    rsync -n -aH --delete --numeric-ids --no-specials \
+          --exclude=/lost+found \
+          --out-format='%n|%l' \
+          "$SRC/" "$DEST/" 2>/dev/null > "$raw"
+    rc=$?
+    [ "$rc" -eq 24 ] && rc=0
+
+    # rsync 3.5.0 prints "deleting name" for --delete with a plain out-format;
+    # only --itemize-changes prints the "*deleting" form. Count both.
+    read -r PLAN_FILES PLAN_BYTES PLAN_DELETES < <(awk -v man="$SYS/manifest.txt" \
+        -v hdr="$hdr" -v host="$(hostname)" -v ver="$ver" '
+        BEGIN {
+            printf "# %s %s %s\n", hdr, host, ver > man
+            files = 0; bytes = 0; del = 0
         }
-        /^[[:space:]]*$/ { next }
-        { printf "FILE %s\n", $0; fflush() }
+        /^\*?deleting[[:space:]]/ { del++; next }
+        {
+            n = $0
+            sub(/\|[^|]*$/, "", n)          # path is everything before the last |
+            if (n ~ /\/$/) next             # directories carry no payload
+            sz = $0
+            sub(/^.*\|/, "", sz)
+            if (sz !~ /^[0-9]+$/) sz = 0
+            files++; bytes += sz
+            printf "%s|%s\n", n, sz > man
+        }
+        END { printf "%d %d %d\n", files, bytes, del }
+    ' "$raw")
+    rm -f "$raw"
+
+    PLAN_FREE="$(free_bytes)"
+    printf 'PLAN files=%s bytes=%s deletes=%s free=%s\n' \
+           "${PLAN_FILES:-0}" "${PLAN_BYTES:-0}" \
+           "${PLAN_DELETES:-0}" "${PLAN_FREE:-0}"
+
+    if [ "${PLAN_BYTES:-0}" -gt "$(( ${PLAN_FREE:-0} - 512 * 1024 * 1024 ))" ]; then
+        die no-space "${PLAN_BYTES:-0} ${PLAN_FREE:-0}"
+    fi
+    return "$rc"
+}
+
+parse_progress() {
+    awk -v out="${1:-/dev/null}" -v planned="${2:-0}" '
+        # rsync --human-readable writes the byte count as 52.43M / 32.77K /
+        # 1.23G / 0, so the old "digits and commas only" match never fired and
+        # every progress line was mistaken for a FILE. Turn a human size into
+        # bytes instead.
+        function tobytes(s,   n, u) {
+            u = ""
+            if (match(s, /[A-Za-z]+$/)) {
+                u = substr(s, RSTART, RLENGTH)
+                s = substr(s, 1, RSTART - 1)
+            }
+            gsub(",", "", s)
+            n = s + 0
+            u = toupper(u)
+            if      (u == "K") n *= 1024
+            else if (u == "M") n *= 1024 * 1024
+            else if (u == "G") n *= 1024 * 1024 * 1024
+            else if (u == "T") n *= 1024 * 1024 * 1024 * 1024
+            return n
+        }
+        {
+            # A progress line is a size field, a percentage field, a rate and a
+            # time; the percentage is whichever field ends in %.
+            p = ""
+            if (NF >= 4 && $1 ~ /^[0-9]/)
+                for (i = 1; i <= NF; i++)
+                    if ($i ~ /%$/) { p = $i; gsub("%", "", p); break }
+            if (p != "") {
+                b = int(tobytes($1))
+                pn = int(p)
+                # Prefer the planned transfer size so the numbers agree with
+                # PLAN; fall back to the value back-computed from the rsync
+                # percentage when there was no plan.
+                t = planned > 0 ? planned : (pn > 0 ? int(b * 100 / pn) : 0)
+                printf "PROGRESS %d %d %d\n", pn, b, t
+                print pn, b, t > out
+                close(out)
+                fflush()
+                next
+            }
+            if ($0 ~ /^[[:space:]]*$/) next
+            printf "FILE %s\n", $0
+            fflush()
+        }
     '
 }
 
@@ -129,6 +213,10 @@ case "${1:-}" in
         crypto_ok || die not-encrypted "$(drive_device)"
         [ -d "$DEST" ] || mkdir -p "$DEST" || die no-dest "$DEST"
 
+        plan_scan
+        prc=$?
+        [ "$prc" -eq 0 ] || [ "$prc" -eq 24 ] || die rsync-failed "planning pass"
+
         printf 'PROGRESS 0 0 0\n'
 
         err="$(mktemp)"
@@ -139,12 +227,12 @@ case "${1:-}" in
         rsync -aH --delete --numeric-ids --human-readable --no-specials \
               --info=progress2 --info=name --no-inc-recursive \
               --exclude=/lost+found \
-              "$SRC/" "$DEST/" 2>"$err" | tr '\r' '\n' | parse_progress "$last"
+              "$SRC/" "$DEST/" 2>"$err" | tr '\r' '\n' | parse_progress "$last" "${PLAN_BYTES:-0}"
         rc=${PIPESTATUS[0]}
         if [ "$rc" -ne 0 ] && [ "$rc" -ne 24 ]; then
             die rsync-failed "$(head -1 "$err" | tr -d '\n')"
         fi
-        mirrored="$(tail -1 "$last" 2>/dev/null | cut -d' ' -f3)"
+        mirrored="$(tail -1 "$last" 2>/dev/null | cut -d' ' -f2)"
 
         step "Writing the system files"
         mkdir -p "$SYS"

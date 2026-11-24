@@ -296,6 +296,7 @@ PanelWindow {
             property string bind_moveWorkspace10: "SUPER + SHIFT + 0"
             property string bind_themeSwitch: "SUPER + SHIFT + T"
             property string bind_themeSwitchAlt: "SUPER + SHIFT + D"
+            property string bind_backup: "SUPER + ALT + B"
             property string bind_lockScreen: "SUPER + L"
             property string bind_closeMouse: "mouse:277"
             property string bind_focusLeft: "SUPER + left"
@@ -397,6 +398,7 @@ PanelWindow {
         moveWorkspace10: "SUPER + SHIFT + 0",
         themeSwitch: "SUPER + SHIFT + T",
         themeSwitchAlt: "SUPER + SHIFT + D",
+        backup: "SUPER + ALT + B",
         closeMouse: "mouse:277",
         focusLeft: "SUPER + left",
         focusRight: "SUPER + right",
@@ -544,12 +546,17 @@ PanelWindow {
     function monReplay() {
         var all = root.monMap(), parts = [];
         for (var n in all) {
-            parts.push("case \" $live \" in *\" " + n + " \"*) "
-                     + root.monCmd(n, all[n]) + " ;; esac");
+            var o = all[n];
+            var differs = "hyprctl monitors -j | jq -e --arg n '" + n + "'"
+                        + " --argjson w " + Number(o.w)
+                        + " --argjson h " + Number(o.h)
+                        + " --argjson r " + Number(o.rr)
+                        + " 'any(.[]; .name == $n and ((.width != $w) or (.height != $h)"
+                        + " or (((.refreshRate - $r) | fabs) > 0.6)))' >/dev/null";
+            parts.push("if " + differs + "; then " + root.monCmd(n, o) + "; fi");
         }
         if (!parts.length) return;
-        pMon.args = "live=$(hyprctl monitors -j | jq -r '.[].name' | tr '\\n' ' ') ; "
-                  + parts.join(" ; ");
+        pMon.args = parts.join(" ; ");
         pMon.running = false;
         pMon.running = true;
     }
@@ -1117,29 +1124,83 @@ PanelWindow {
     property var whatsNew: []
     readonly property bool whatsNewOpen: whatsNew.length > 0
 
+    // The updater's Home Manager activation reloads the shell mid-update, which
+    // kills the Process running update.sh before it can write a "what's new"
+    // marker. The shell therefore decides for itself: the system service leaves
+    // the notes in /var/lib/nixriot/release-notes.txt, and a marker records the
+    // version whose notes have already been shown.
+    property string installedVersion: ""
+    property string seenVersion: ""
+    property bool versionReady: false
+    property bool seenReady: false
+    property bool notesReady: false
+
     FileView {
-        id: whatsNewFile
-        path: Quickshell.env("HOME") + "/.config/panacea/.whatsnew"
+        id: versionFile
+        path: "/etc/nixriot/VERSION"
         watchChanges: true
         printErrors: false
         onFileChanged: reload()
         onLoaded: {
-            var t = String(whatsNewFile.text()).trim();
-            root.whatsNew = t.length ? t.split("\n").filter(x => x.trim().length) : [];
+            root.installedVersion = String(versionFile.text()).trim();
+            root.versionReady = true;
+            root.updateWhatsNew();
         }
-        onLoadFailed: root.whatsNew = []
+        onLoadFailed: {
+            root.installedVersion = "";
+            root.versionReady = false;
+            root.whatsNew = [];
+        }
     }
 
-    Timer {
-        interval: 3000
-        running: root.whatsNew.length === 0
-        repeat: true
-        triggeredOnStart: true
-        property int tries: 0
-        onTriggered: {
-            whatsNewFile.reload();
-            if (++tries > 10) running = false;
+    FileView {
+        id: seenFile
+        path: Quickshell.env("HOME") + "/.config/panacea/.whatsnew-seen"
+        watchChanges: true
+        printErrors: false
+        onFileChanged: reload()
+        onLoaded: {
+            root.seenVersion = String(seenFile.text()).trim();
+            root.seenReady = true;
+            root.updateWhatsNew();
         }
+        onLoadFailed: {
+            // No marker yet: nothing has been shown.
+            root.seenVersion = "";
+            root.seenReady = true;
+            root.updateWhatsNew();
+        }
+    }
+
+    FileView {
+        id: notesFile
+        path: "/var/lib/nixriot/release-notes.txt"
+        watchChanges: true
+        printErrors: false
+        onFileChanged: reload()
+        onLoaded: {
+            root.notesReady = true;
+            root.updateWhatsNew();
+        }
+        onLoadFailed: {
+            root.notesReady = false;
+            root.whatsNew = [];
+        }
+    }
+
+    function updateWhatsNew() {
+        if (!root.versionReady || !root.seenReady || !root.notesReady
+                || !root.installedVersion.length
+                || root.installedVersion === root.seenVersion) {
+            root.whatsNew = [];
+            return;
+        }
+        var t = String(notesFile.text()).trim();
+        // WhatsNewView reads lines[0] as the version and the rest as changes,
+        // so the version line is prepended to the raw notes.
+        root.whatsNew = t.length
+            ? [root.installedVersion].concat(t.split("\n").filter(x => x.trim().length))
+            : [];
     }
 
     property string missingDeps: ""
@@ -1194,8 +1255,8 @@ PanelWindow {
     Process {
         id: pWhatsNewClear
         command: ["sh", "-c",
-                  "rm -f \"$1/.whatsnew\" \"$1/.missingdeps\" \"$1/.obsoletedeps\" \"$1/.keptedits\"", "_",
-                  Quickshell.env("HOME") + "/.config/panacea"]
+                  "printf '%s\\n' \"$2\" > \"$1/.whatsnew-seen\"; rm -f \"$1/.missingdeps\" \"$1/.obsoletedeps\" \"$1/.keptedits\"", "_",
+                  Quickshell.env("HOME") + "/.config/panacea", root.installedVersion]
     }
 
     Timer { interval: 45000; running: true; onTriggered: root.checkUpdate() }
@@ -1288,10 +1349,7 @@ PanelWindow {
 
     readonly property int pillH: cfg.pillH
 
-    readonly property string pillPos: {
-        var p = String(cfg.pillPos || "top");
-        return (p === "bottom" || p === "left" || p === "right") ? p : "top";
-    }
+    readonly property string pillPos: String(cfg.pillPos || "top") === "bottom" ? "bottom" : "top"
     readonly property bool pillAtTop:    pillPos === "top"
     readonly property bool pillAtBottom: pillPos === "bottom"
     readonly property bool pillAtLeft:   pillPos === "left"
@@ -1304,14 +1362,10 @@ PanelWindow {
     property string dragEdge: ""
 
     function edgeAt(cx, cy) {
-        var w = root.width, h = root.height;
-        var dTop = cy, dBottom = h - cy, dLeft = cx, dRight = w - cx;
-        var m = Math.min(dTop, dBottom, dLeft, dRight);
-        if (m > Math.min(w, h) * 0.25) return "";
-        if (m === dTop)    return "top";
-        if (m === dBottom) return "bottom";
-        if (m === dLeft)   return "left";
-        return "right";
+        var h = root.height;
+        var dTop = cy, dBottom = h - cy;
+        if (Math.min(dTop, dBottom) > h * 0.25) return "";
+        return dTop <= dBottom ? "top" : "bottom";
     }
 
     function dropPill() {
@@ -3033,8 +3087,14 @@ PanelWindow {
                      : kind === "restore" ? root.tr("Restoring")
                                           : root.tr("Mounting");
         root.beginBusy(busyName, String.fromCodePoint(0xF006F), 0);
-        var args = kind === "restore" ? " restore " + (go ? "--go " : "") : " " + kind + " ";
-        pBackupJob.command = ["sh", "-c", root.backupScript + args + "\"$1\"", "_", root.backupDrive];
+        // Run in a named systemd user scope so the whole tree (script + rsync)
+        // can be stopped by killing the scope. Setting Process.running to false
+        // only signals the direct child and orphans rsync.
+        var a = ["systemd-run", "--user", "--scope", "--collect", "--quiet",
+                 "--unit=panacea-backup", root.backupScript, kind];
+        if (kind === "restore" && go) a.push("--go");
+        a.push(root.backupDrive);
+        pBackupJob.command = a;
         pBackupJob.running = false;
         pBackupJob.running = true;
     }
@@ -3080,7 +3140,14 @@ PanelWindow {
         pBackupDriveWrite.running = true;
     }
 
-    function backupCancel() { pBackupJob.running = false; }
+    // Cancel by killing the scope, which takes down the script and its rsync
+    // child together; stopping the Process alone would leave rsync running.
+    function backupCancel() {
+        if (!root.backupBusy) return;
+        pBackupKill.running = false;
+        pBackupKill.running = true;
+        pBackupJob.running = false;
+    }
 
     Process {
         id: pBackupDriveRead
@@ -3139,6 +3206,12 @@ PanelWindow {
             if (root.backupBusy) root.backupFinish("cancelled");
             root.backupRefresh();
         }
+    }
+
+    Process {
+        id: pBackupKill
+        command: ["systemctl", "--user", "kill", "--signal=SIGTERM",
+                  "panacea-backup.scope"]
     }
 
     Timer {
@@ -4236,6 +4309,7 @@ PanelWindow {
         function audio(): void { root.togglePage("audio"); }
         function calendar(): void { root.togglePage("cal"); }
         function theme(): void { root.toggleWalls(); }
+        function backup(): void { root.openSettingsAt("backup"); }
         // The keybind comes through here, so the state the shell reports cannot
         // drift from what is actually on screen.
         function nightlight(): void { root.toggleNightLight(); }
@@ -5717,6 +5791,7 @@ PanelWindow {
                     Layout.preferredWidth: backupRow.implicitWidth
                     Layout.preferredHeight: backupRow.implicitHeight
                     visible: root.backupBusy
+                    z: 10
 
                     RowLayout {
                         id: backupRow
@@ -5740,6 +5815,7 @@ PanelWindow {
                     MouseArea {
                         anchors.fill: parent
                         hoverEnabled: true
+                        preventStealing: true
                         cursorShape: Qt.PointingHandCursor
                         onClicked: root.openSettingsAt("backup")
                     }
@@ -6340,6 +6416,41 @@ PanelWindow {
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
                     onClicked: parent.act()
+                }
+            }
+
+            Item {
+                anchors.verticalCenter: parent.verticalCenter
+                width: backupHdrRow.implicitWidth
+                height: backupHdrRow.implicitHeight
+                visible: root.backupBusy
+                z: 10
+
+                RowLayout {
+                    id: backupHdrRow
+                    spacing: 4
+
+                    Text {
+                        Layout.alignment: Qt.AlignVCenter
+                        text: String.fromCodePoint(0xF006F)
+                        color: root.colOn
+                        font { family: root.fontFam; pixelSize: root.iconSize - 4 }
+                    }
+
+                    Text {
+                        Layout.alignment: Qt.AlignVCenter
+                        text: root.backupPct + "%"
+                        color: root.colFg
+                        font { family: root.fontFam; pixelSize: root.fontSize - 5 }
+                    }
+                }
+
+                MouseArea {
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    preventStealing: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.openSettingsAt("backup")
                 }
             }
 

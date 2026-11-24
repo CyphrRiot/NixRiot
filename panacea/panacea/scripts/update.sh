@@ -73,13 +73,10 @@ case "${1:-check}" in
         fi
         emit step done
 
-        notes=/var/lib/nixriot/release-notes.txt
-        whatsnew="$HOME/.config/panacea/.whatsnew"
-        mkdir -p "$HOME/.config/panacea"
-        if [ -r "$notes" ]; then
-            cat /etc/nixriot/VERSION > "$whatsnew" 2>/dev/null || echo unknown > "$whatsnew"
-            cat "$notes" >> "$whatsnew"
-        fi
+        # The shell reads /var/lib/nixriot/release-notes.txt itself and tracks
+        # what it has shown in ~/.config/panacea/.whatsnew-seen. Writing a
+        # marker here would not survive: the update's Home Manager activation
+        # reloads the shell and kills this Process before it reaches this point.
         exit 0
         ;;
 

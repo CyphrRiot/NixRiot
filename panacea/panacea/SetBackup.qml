@@ -109,6 +109,7 @@ ColumnLayout {
                 sys: page.sys
                 visible: page.sys.backupBusy
                 text: page.sys.tr("Cancel")
+                primary: true
                 onClicked: page.sys.backupCancel()
             }
         }

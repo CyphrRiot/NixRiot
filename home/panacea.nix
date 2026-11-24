@@ -78,7 +78,7 @@ in
   };
 
   home.activation.panaceaConfig = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    ${refresh "panacea" [ "settings.json" "clipboard_pins.json" ".whatsnew" ".run_history" ]}
+    ${refresh "panacea" [ "settings.json" "clipboard_pins.json" ".whatsnew-seen" ".run_history" ]}
     ${refresh "hypr" [ "custom" "wallpaper.conf" "hyprpaper.conf" ]}
     ${refresh "foot" []}
     ${refresh "fastfetch" []}

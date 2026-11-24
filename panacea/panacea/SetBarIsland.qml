@@ -19,8 +19,6 @@ ColumnLayout {
             label: page.sys.tr("Position")
             options: [
                 { id: "top",    text: page.sys.tr("Top") },
-                { id: "left",   text: page.sys.tr("Left") },
-                { id: "right",  text: page.sys.tr("Right") },
                 { id: "bottom", text: page.sys.tr("Bottom") }
             ]
             value: page.sys.cfg.pillPos || "top"

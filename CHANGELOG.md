@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## 2.11
+
+- The screen no longer blanks at the end of an update: the compositor and the shell stop re-applying a display mode that is already set.
+- The "what's new" window after an update appears again, and it no longer depends on the updater finishing cleanly.
+- A backup says how much it will copy and how much it will delete before it starts, and refuses to run when the drive is too full.
+- `SUPER + ALT + B` opens Backup, and the island chip opens it too while a backup runs.
+- The island only sits on the top or bottom edge; the left and right positions were broken and are gone.
+
 ## 2.10
 
 - The island shows a backup while it runs, with the percentage, and clicking it opens the page.
