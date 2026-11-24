@@ -1,11 +1,10 @@
 # NixRiot Design
 
-Design notes for NixRiot. The user-facing manual is `../README.md`; the durable
-internals (decisions, installer contract, update mechanics, verified package
-facts) are in `Internals.md`. This file is the reasoning, architecture, and
-planning.
+Why NixRiot exists, and what it kept from the desktops before it. The manual is
+`../README.md`; the durable internals (decisions, installer contract, update
+mechanics, verified package facts, known risks) are in `Internals.md`.
 
-Status: living document. Last updated 2026-11-20.
+Status: living document. Last updated 2026-11-23.
 
 ## Why this exists
 
@@ -21,8 +20,8 @@ we trust.
 - **OpenBSD** came next and remains the Unix we trust most, but hardware support
   is narrow and a modern GPU desktop on it is a permanent fight. OpenRiot also
   has a documented Hyprland migration proposal (`docs/Hyprland.md` in the
-  OpenRiot tree) which is blocked on packaging the Hyprland stack in ports and
-  rewriting several thousand lines of X11 integration.
+  OpenRiot tree), blocked on packaging the Hyprland stack in ports and rewriting
+  several thousand lines of X11 integration.
 - **NixOS** already ships Hyprland, Quickshell, Wayland and the whole graphics
   stack, packaged and tested. Panacea already targets Hyprland.
 
@@ -30,32 +29,11 @@ So NixRiot keeps OpenRiot's taste, drops the OpenBSD-specific plumbing, and lets
 Nix own installation and updates. The point is reproducibility: the desktop, the
 installer and the update path are all the same pinned inputs.
 
-## What it is
-
-Three deliverables:
-
-1. **A live image** built from nixpkgs' ISO image module on top of
-   `installation-cd-base`. It is a minimal installer, not a desktop: tty1
-   autologins as `nixos` and runs `nixriot-install`, the serial console gives a
-   shell, and the image carries the flake inputs plus a curated pre-seed of the
-   heaviest packages. Everything else comes from `cache.nixos.org` during the
-   install, so **network is required**.
-2. **A NixOS module** (`modules/nixriot.nix`) that declares the system: desktop,
-   services, users, security, crypto, media, and the Panacea stack, behind
-   `nixriot.*` options.
-3. **A Home Manager module** that installs the Panacea trees, fish, Helix,
-   Crush, XDG and GTK configuration, and the launcher overrides.
-
-There is one flake on the machine. The installer writes the two files that are
-specific to it (`hosts/installed/local.nix` and `hosts/installed/hardware-configuration.nix`)
-and updates preserve exactly those. A separate per-machine flake was tried and
-reverted: it broke installs and bought nothing.
-
 ## Relationship to the parents
 
 | Project | Role in NixRiot |
 |---|---|
-| **NixOS 26.11** | Base system, package set, kernel, bootloader, installer tooling |
+| **NixOS** (unstable, pinned in `flake.lock`) | Base system, package set, kernel, bootloader, installer tooling |
 | **Panacea** | Desktop shell: Hyprland, Quickshell pill, wallpapers, keybindings, palette |
 | **OpenRiot** | Feature list, visual language, fish/Helix/Crush defaults, crypto and media tooling, XDG layout |
 
@@ -66,94 +44,6 @@ not a build-time dependency.
 NixRiot does not fork OpenRiot. It reuses the platform-neutral parts (fish,
 Helix, fastfetch, wallpapers, cursors, icons) and reimplements the rest
 declaratively.
-
-## Architecture
-
-```
-NixRiot/
-  flake.nix                  # nixosConfigurations.{nixriot,installed,live}, packages.{iso,installer}
-  Makefile
-  _config.yml, _layouts/, assets/   # Jekyll GitHub Pages site
-  docs/Design.md, docs/Internals.md, docs/Panacea-Port.md
-  modules/
-    nixriot.nix              # options and top-level wiring
-    update.nix               # nixriot-update, check timer, apply service, polkit rule
-    desktop/
-      panacea.nix            # Hyprland, Quickshell, portals, PAM, VPN
-      theme.nix              # fonts, cursors, icons
-      sddm.nix               # login theme (unused while autologin is on)
-      plymouth.nix           # boot splash, built from the NixRiot artwork
-    apps/
-      shell.nix              # fish, zoxide, ripgrep, btop
-      editors.nix            # Helix, gnome-text-editor, Crush
-      media.nix              # mpv, Lollypop, transmission
-      office.nix             # zathura, Firefox, LibreOffice (optional)
-      games.nix              # optional curated game set
-    crypto/                  # monero, bitcoin, wireguard, glyphriot
-    security/                # hardening, backup
-  home/
-    panacea.nix              # Home Manager port of Panacea's install.sh
-    fish.nix helix.nix crush.nix xdg.nix gtk.nix launcher.nix
-  installer/default.nix      # the TUI installer
-  iso/configuration.nix      # the live image
-  panacea/                   # carried Panacea tree, themes, wallpapers
-  hosts/
-    example/                 # reference host config, the only hand-written hardware file
-    installed/               # the machine's own files, written by the installer
-```
-
-### Installer flow
-
-1. Build with `nix build .#iso`. `result/iso/NixRiot.iso` is the image, and the
-   symlink makes it always the newest build.
-2. Boot it. tty1 autologins as `nixos` and runs `nixriot-install`; the guard in
-   `iso/configuration.nix` keeps it from running on any other getty.
-3. The installer asks for a username and a hostname, then an account password,
-   then checks that `cache.nixos.org` answers. With no network it waits,
-   offering `nmtui`, and will not touch a disk.
-4. It takes a disk, requires `ERASE`, and asks for the LUKS passphrase twice
-   (once to set, once to confirm; the same key file then unlocks the volume).
-5. It partitions a 512M ESP labeled `BOOT` and the rest as LUKS2 `nixos`,
-   formats, mounts, copies `/etc/nixriot` to `/mnt/etc/nixriot`, generates the
-   hardware configuration into `hosts/installed/`, writes `local.nix` with the
-   user and hostname, and runs
-   `nixos-install --root /mnt --flake /mnt/etc/nixriot#installed`.
-6. It applies the account password with `chpasswd`, unmounts, and reboots into
-   the installed system.
-
-The whole run is teed to `/tmp/nixriot-install.log` in the guest, which is what
-to read when an install looks stuck.
-
-### Update flow
-
-`/etc/nixriot` is a copy of the project; `hosts/installed/local.nix` is the
-machine's. `nixriot-update` clones `https://github.com/<owner>/<repo>` into a
-temporary directory, `rsync -a --delete` that into `/etc/nixriot` while
-excluding those two files, records the new revision in `/etc/nixriot-revision`,
-and runs `nixos-rebuild switch --flake /etc/nixriot#installed`. Because the
-rsync replaces the whole tree, anything edited in place under `/etc/nixriot`
-(including `flake.lock`) is discarded by the next update. Details, including why
-the revision is a real file rather than something derived from the flake, are in
-`Internals.md`.
-
-### Theming
-
-`panacea/hypr/palette.conf` is the single palette: terracotta accent `#c65a47`,
-background `#1b2b34`, foreground `#e5d1c5`. `hypr/scripts/palette.sh` spreads it
-over fastfetch, foot (including the full 16-colour ANSI set), fish, btop and
-neovim, plus Zed and Obsidian when their configs exist, and `switch_theme.sh`
-puts the wallpaper behind the login screen. Firefox is deliberately not themed.
-
-Because these files are rewritten at run time, Panacea's config trees are copied
-into `~/.config` as writable files rather than Home Manager store symlinks.
-`palette.sh`'s output is logged to `~/.cache/panacea/palette.log` so a failure is
-visible instead of leaving stock colours in place.
-
-### Testing
-
-QEMU is the test harness. The recipe, the traps (`-display gtk` repaint under
-Wayland, never putting a qcow2 in `/tmp`), and the serial-console trick for
-reading the guest's install log are all in `Internals.md`.
 
 ## Feature parity
 
@@ -185,19 +75,22 @@ asset is carried.
 | WireGuard | **Port** | `networking.wireguard` |
 | Mullvad | **Port** | daemon plus the GUI |
 | Transmission | **Port** | nixpkgs `transmission_4-gtk` |
-| Proton Drive sync | **Port** | `rclone` |
+| Proton Drive sync | **Port** | `rclone`, configured by hand |
 | Signal (gurk) | **Port** | nixpkgs `gurk-rs`, with a launcher entry |
 | LibreOffice, Firefox | **Port** | nixpkgs |
-| Backup and restore | **Port** | `restic` |
-| Disk manager | **Port** | `gnome-disk-utility` or `gparted` |
-| MAC randomization | **Port** | NetworkManager setting |
+| Backup and restore | **Port** | `backup.sh` mirrors the home folder with `rsync`; `restic` and `rclone` are also installed |
 | SSH hardening | **Port** | NixOS options |
 | XDG user directories | **Port** | Home Manager |
 | Crypto config (`crypto.toml`) | **Replaced** | `nixriot.crypto.*` options in `local.nix` |
-| Control center | **Replaced** | Panacea settings |
+| Control center | **Replaced** | Panacea settings and quick settings |
 | Games bundle | **Optional** | Curated subset, opt-in module |
 | Night light | **Port** | `hyprsunset`, off by default, 4000K and `SUPER+N` as OpenRiot used |
-| Idle lock | **Port** | `hypridle`, ten minutes, OpenRiot's `xautolock -time 10` |
+| Idle lock | **Port** | `hypridle`: display off at 10 minutes, lock at 15, suspend at 20 |
+
+NixRiot also has things OpenRiot did not: a password vault unlocked through PAM,
+signed release updates with the update pill, package installs from Settings, a
+what's-new window after a release, and an installer that builds the target
+system from the same flake.
 
 ### Dropped, and why
 
@@ -214,68 +107,6 @@ asset is carried.
 | Zed | Available (`zed-editor`) but not installed; Helix and Crush are the defaults |
 | SDDM theme | Autologin means there is no greeter to theme |
 | QtWebEngine | 419 MB of Chromium for one lazy chat page in the pill |
-
-## Open work
-
-Ordered by priority. The live list is in `Internals.md` and `AGENTS.md`.
-
-1. **Install on real hardware.** Nothing has been installed on a physical
-   machine yet, which is what leaves the idle lock, the lid behaviour and the
-   night light unverified.
-2. **gvfs MTP** for phones, untested.
-3. **A binary cache** for the flake's own outputs, so installs stop building our
-   derivations (the trimmed `linux-firmware`, cursors, fonts, splash).
-4. **Offline installs**, if they are wanted at all. Today the image is a
-   netinstall by design, because GitHub caps release assets at 2 GiB.
-5. **Fingerprint, done the Omarchy way.** Detect the reader from sysfs, invite
-   enrolment once by notification, and enable PAM with a clamshell gate ahead of
-   `pam_fprintd`. All of it is opt-in and off today. The design, and why the gate
-   is not optional, are in `Internals.md` (decision 18).
-6. **A fat ISO, if the substitution wait is worth 4 GB.** Pre-seeding the whole
-   closure turns the installer's network phase into a local copy. A full pre-seed
-   is about 4 GB, and GitHub caps each release asset at 2 GiB, so the image would
-   ship split (`split -b 1900M`, rejoined with `cat` and checked against
-   `SHA256SUMS`) and want an 8 GB stick. It does nothing for the local builds,
-   which need the cache in item 3 either way.
-7. **Crypto holdings in the pill.** OpenRiot showed prices from a user-owned
-   `crypto.toml`; the port lost it. The shape is decided: a script, a poll, a
-   glyph in the collapsed pill and a page of holdings. See decision 20 in
-   `Internals.md`.
-
-## Milestones
-
-| Phase | Deliverable | Exit criteria | State |
-|---|---|---|---|
-| 0 | Flake skeleton | `nix flake check` passes, system builds | done |
-| 1 | Panacea Home Manager module | Hyprland session starts, pill runs, keybindings work | verified in QEMU |
-| 2 | Theme, assets, splash | Fonts, cursors, icons, wallpapers, Plymouth | verified in QEMU |
-| 3 | OpenRiot app modules | fish, Helix, Crush, media, crypto, security | verified in QEMU |
-| 4 | ISO and installer | ISO boots, installs, first boot reaches the desktop | verified in QEMU, not on hardware |
-| 5 | Parity audit | Every parity row verified or explicitly cut | pending |
-| 6 | Release | Tagged flake, checksums, install notes | pending |
-
-## Risks
-
-- **The ISO carries the repo.** Any repo change needs an ISO rebuild before an
-  installed system can see it.
-- **Panacea tracks upstream closely.** Its QML needs `QtMultimedia` on the QML
-  import path or the shell will not load, and its scripts assume Arch paths in
-  places.
-- **Distribution size.** The image is 1.97 GiB against GitHub's 2 GiB per-asset
-  limit. The pre-seed list is what keeps it there, and it is a size decision,
-  not a speed one.
-- **UEFI only.** systemd-boot, Secure Boot off, no BIOS.
-- **The installer builds our own derivations**, because they are in no binary
-  cache. That is the slow part of an install.
-- **`hardware.firmware` is `mkForce`d** to a trimmed list; anything that adds
-  firmware must be appended there.
-- **Upstream Panacea is a pin, not a following.** `panacea/UPSTREAM` is the
-  revision that has been read; fixes upstream of it are only taken when someone
-  reviews them and ports them by hand.
-- **The idle lock, the clamshell lid and the night light are unverified.**
-  They were added after the last ISO and need a session, and the lid needs a
-  real lid switch.
-- **Cosmetic `buildEnv` collisions** exist for `gvfs` and `bitcoind`.
 
 ## Non-goals
 

@@ -19,34 +19,13 @@
 
 ![The NixRiot desktop: the pill, its settings pages, and a terminal](docs/img/desktop-demo.gif)
 
-## Philosophy of NixRiot
-
-A small, fast, reproducible desktop, assembled from things we learned the hard
-way.
-
-ArchRiot was the first pass: Arch, an installer, and hand-maintained dotfiles. It
-taught us what the desktop should feel like, and Omarchy then covered most of
-that ground, so we stopped rather than duplicate it. What Arch could not fix was
-trust: the AUR is code from strangers, and that is not a defensible default for a
-machine you keep patched. OpenBSD came next and is still the Unix we trust most,
-but modern hardware there is a permanent fight.
-
-NixRiot takes that and puts it on a foundation you can trust and reproduce: one
-flake, packages from a pinned nixpkgs, and an installer that builds the same
-system it was built from.
-
-A reproducible NixOS desktop with the [Panacea](https://github.com/EnsixD/Panacea)
-shell and the parts of [OpenRiot](https://OpenRiot.org) that
-make sense on Linux. One flake builds the installer image and the installed
-system, so both stay in step.
-
-The reasoning behind it is in the [article on X](https://x.com/CyphrRiot/status/2123604405975134647).
-
-Read [docs/Design.md](docs/Design.md) for the reasoning, architecture, and
-roadmap. This file is the manual.
-
 ## Navigate this guide
 
+This file is the manual. The reasoning is in
+[docs/Design.md](docs/Design.md); the long version of the story is in the
+[article on X](https://x.com/CyphrRiot/status/2123604405975134647).
+
+- [Philosophy of NixRiot](#philosophy-of-nixriot)
 - [The usual free software warning](#the-usual-free-software-warning)
 - [What you get](#what-you-get)
 - [Download](#download)
@@ -60,16 +39,50 @@ roadmap. This file is the manual.
 - [Control center](#control-center)
 - [Wallpapers](#wallpapers)
 - [Night light](#night-light)
+- [Password vault](#password-vault)
 - [Weather](#weather)
 - [Blockchain](#blockchain)
 - [VPN](#vpn)
 - [Browser and moving from OpenRiot](#browser-and-moving-from-openriot)
 - [Games](#games)
 - [Updating](#updating)
+- [Backup and restore](#backup-and-restore)
 - [Advanced: build your own image](#advanced-build-your-own-image)
 - [Troubleshooting](#troubleshooting)
 - [Donations](#donations)
 - [Licence and credits](#licence-and-credits)
+
+---
+
+## Philosophy of NixRiot
+
+We have built this desktop four times.
+
+[ArchRiot](https://ArchRiot.org) came first: [Arch](https://archlinux.org), an
+installer, and dotfiles maintained by hand. It got the feel right.
+[Omarchy](https://omarchy.org) then did most of that better than we were going to,
+so we stopped instead of shipping a second copy of the same idea. What Arch never
+fixed was trust. Installing from the [AUR](https://aur.archlinux.org) means
+running code written by strangers, which is a poor foundation for a machine that
+stays online and patched.
+
+[OpenBSD](https://www.openbsd.org) came next. It is still the Unix we trust most,
+and [OpenRiot](https://github.com/CyphrRiot/OpenRiot) is what grew out of it:
+fish, Helix, a tiling desktop, and a preference for small, sharp tools. The
+trouble is hardware. Modern laptops and GPUs become a permanent argument on
+OpenBSD, and a desktop that fights the machine is not one you can hand to someone
+else.
+
+[NixOS](https://nixos.org) supplied the missing piece.
+[Hyprland](https://hyprland.org) and [Quickshell](https://quickshell.org) are
+packaged and tested, [Panacea](https://github.com/EnsixD/Panacea) already targets
+them, and one pinned flake builds both the installer image and the system it
+installs. The ISO and the machine come from the same inputs, so the image you
+download is the system you end up running.
+
+NixRiot is that combination: Panacea's shell, OpenRiot's defaults where they
+still make sense on Linux, and Nix owning installation and updates. It now runs
+on about two thousand machines, much of it hardware we have never touched.
 
 ---
 
@@ -89,9 +102,10 @@ NixRiot ships no wallet files and no secrets. You own those.
 - **fish** with a prompt of its own (hostname, directory, git branch, exit
   status), plus the OpenRiot aliases and functions.
 - **Helix** (the default editor), Crush, and a plain text editor.
-- **Firefox**, zathura, and LibreOffice when `nixriot.office` is on. To use it,
-  set `nixriot.office = true;` in `/etc/nixriot/hosts/installed/local.nix` and
-  run `rebuild`.
+- **Firefox**, zathura, and LibreOffice when `nixriot.office` is on. LibreOffice
+  opens with the dark theme on its first launch. To use it, set
+  `nixriot.office = true;` in `/etc/nixriot/hosts/installed/local.nix` and run
+  `rebuild`.
 - **Media**: mpv, Lollypop, Transmission (removable from Installs).
 - **Signal** Desktop, with `gurk` for the terminal, which is the only Signal
   OpenRiot could have: OpenBSD has no desktop client.
@@ -102,6 +116,7 @@ NixRiot ships no wallet files and no secrets. You own those.
   `restic` and `rclone` for backups.
 - The **NixRiot wallpaper set** (39 WebP images, `01.webp` through `39.webp`).
 - A **night light** for the screen, off until you switch it on (`SUPER + N`).
+- A **password vault** (`SUPER + SHIFT + P`), encrypted with your login password.
 - Full-disk encryption (LUKS2) on the root volume, chosen during install.
 
 ---
@@ -111,11 +126,14 @@ NixRiot ships no wallet files and no secrets. You own those.
 Grab the latest image and write it to a USB stick. No build tools required.
 
 - **Download page:** [github.com/CyphrRiot/NixRiot/releases/latest](https://github.com/CyphrRiot/NixRiot/releases/latest)
-- **Image:** `NixRiot.iso` (about 2 GB)
+- **Image:** `NixRiot.iso` (about 1.97 GiB, just under GitHub's 2 GiB asset limit)
 
 ```sh
 sudo dd if=NixRiot.iso of=/dev/sdX bs=4M status=progress oflag=sync
 ```
+
+Each release also publishes `SHA256SUMS`; check the image against it before
+writing it to a stick (`sha256sum -c SHA256SUMS`).
 
 It is a network installer: it carries the installer, the project and the biggest
 parts of the desktop, and downloads the rest while it installs. It needs an
@@ -279,6 +297,7 @@ another application land in the same view.
 | Keys | Action |
 |---|---|
 | `SUPER + Return` | Terminal (foot) |
+| `SUPER + SHIFT + Return` | Floating terminal |
 | `SUPER + T` | btop, process viewer |
 | `SUPER + B` | Firefox |
 | `SUPER + F` | Panacea Files |
@@ -298,6 +317,9 @@ another application land in the same view.
 | `SUPER + SHIFT + R` | Backup and restore |
 | `SUPER + SHIFT + S` or `Print` | Screenshot (region) |
 | `SUPER + P` | Screen recording |
+| `SUPER + ALT + Right` | Float the active window on the right half |
+| `SUPER + [` / `SUPER + ]` | Narrower / wider |
+| `SUPER + SHIFT + [` / `SUPER + SHIFT + ]` | Shorter / taller |
 | `SUPER + SHIFT + F12` | Screen off |
 | `SUPER + N` | Night light on or off |
 | `SUPER + M` or `XF86Mail` | Proton Mail |
@@ -323,14 +345,22 @@ another application land in the same view.
 
 | Keys | Action |
 |---|---|
-| `XF86Audio*` | Volume, mute, play/pause, tracks |
-| `XF86MonBrightness*` | Brightness |
+| `XF86AudioRaiseVolume` / `XF86AudioLowerVolume` | Volume up / down |
+| `XF86AudioMute` | Mute |
+| `XF86AudioMicMute` | Mute the microphone |
+| `XF86AudioPlay` / `XF86AudioPause` | Play / pause |
+| `XF86AudioNext` / `XF86AudioPrev` | Next / previous track |
+| `SUPER + XF86AudioRaiseVolume` / `SUPER + XF86AudioLowerVolume` | Next / previous track |
+| `XF86MonBrightnessUp` / `XF86MonBrightnessDown` | Brightness |
 | Right Alt (hold) | Voice to text |
 
 Closing the lid locks the screen and suspends, unless a second display is
 attached: a closed lid with an external monitor is a machine still in use, so it
-stays awake. The lock comes from hypridle's `before_sleep_cmd`. Fifteen minutes
-with no input locks the screen too.
+stays awake and the internal panel is switched off. The lock comes from
+hypridle's `before_sleep_cmd`. With no input, the display turns off after ten
+minutes, the screen locks after fifteen, and the machine suspends after twenty.
+Turn on **Stay awake** in the control center to stop all three, and lid-close
+suspend, until you turn it off again.
 
 ---
 
@@ -382,12 +412,18 @@ center (Wi-Fi, Bluetooth, audio, power profile, and **Stay awake**, which stops
 the screen blanking, the machine sleeping and lid-close suspend until you turn it
 off). `SUPER + /` lists every current binding.
 
+**Settings → Island → Bar and island** chooses whether the island sits at the top
+or the bottom of the screen, and turns on notch mode and auto-hide. The bottom
+placement opens its panels above the capsule instead of below it.
+
 ![The Installs page in Settings, listing the optional applications](docs/img/installs.webp)
 
 ### Installs
 
 Optional applications live in **Settings → Installs**: LibreOffice, the games
 collection, Transmission, Monero GUI, Bitcoin Core, GlyphRiot and Claude Code.
+The search box matches package names from the pinned nixpkgs, so a package that
+is not in that list, or anything else from nixpkgs, can be installed by name.
 Install and Remove run a rebuild in the background; the button shows what it is
 doing. Your selection is kept in `/etc/nixriot/hosts/installed/features.nix`,
 which an update preserves, and the same switches exist in `local.nix`
@@ -437,6 +473,21 @@ default when it comes on, the same temperature OpenRiot used.
 
 The filter is applied by `hyprsunset`, so it is part of what the compositor
 draws: screenshots and recordings carry it. The pill shows a moon when it is on.
+
+---
+
+## Password vault
+
+`SUPER + SHIFT + P` opens the vault. It holds labelled logins and passwords,
+encrypted with AES-256 (PBKDF2, 240000 iterations) at
+`~/.local/share/panacea/vault.enc`, whose directory is mode 700. The password
+that unlocks it is your system password, checked through PAM, so there is no
+second password to remember or lose. The vault locks itself after fifteen
+minutes without use.
+
+The same store is reachable from a terminal through
+`~/.config/panacea/scripts/vault.sh load`, `save` and `wipe`; `load` and `save`
+read the password on stdin.
 
 ---
 
@@ -556,6 +607,10 @@ initrd loads on the next normal reboot.
 A timer runs `nixriot-update check` every four hours; when it finds a newer
 version, the pill shows an **Update** button beside the VPN indicator. The
 System page shows the same state, with a Check button that asks GitHub directly.
+
+Display, input and keybinding changes made in Settings survive the update, and
+the release notes are written to `/var/lib/nixriot/release-notes.txt`; the
+what's new window shows them once per version.
 
 ![The Update button in the pill, next to the VPN indicator](docs/img/update-pill.webp)
 
