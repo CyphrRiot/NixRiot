@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 2.10
+
+- The island shows a backup while it runs, with the percentage, and clicking it opens the page.
+- The Backup page keeps showing progress when you leave it and come back, and its Cancel button works.
+
 ## 2.9
 
 - Vault passwords no longer reach the clipboard history.

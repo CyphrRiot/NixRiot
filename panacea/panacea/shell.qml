@@ -2994,6 +2994,160 @@ PanelWindow {
         root.browserFound = [];
     }
 
+    property var backupStatus: ({})
+    property bool backupBusy: false
+    property string backupKind: ""
+    property string backupStep: ""
+    property string backupFile: ""
+    property int backupPct: 0
+    property real backupDone: 0
+    property real backupTotal: 0
+    property int backupElapsed: 0
+    property string backupNote: ""
+    property string backupFailed: ""
+    property var backupDrift: []
+    property bool backupConfirm: false
+
+    readonly property string backupScript: root.scriptDir + "/backup.sh"
+    property string backupDrive: ""
+    readonly property bool backupMounted: root.backupStatus.mounted === "yes"
+    readonly property bool backupCrypto: root.backupStatus.crypto === "yes"
+    readonly property string backupHome: root.backupStatus.source && String(root.backupStatus.source).length
+                                         ? String(root.backupStatus.source)
+                                         : (Quickshell.env("HOME") || "")
+
+    function backupReset() {
+        root.backupStep = ""; root.backupFile = "";
+        root.backupNote = ""; root.backupFailed = "";
+        root.backupPct = 0; root.backupDone = 0; root.backupTotal = 0;
+        root.backupElapsed = 0; root.backupDrift = []; root.backupConfirm = false;
+    }
+
+    function backupStart(kind, go) {
+        if (root.backupBusy) return;
+        root.backupReset();
+        root.backupKind = kind;
+        root.backupBusy = true;
+        var busyName = kind === "backup"  ? root.tr("Backing up")
+                     : kind === "verify"  ? root.tr("Verifying")
+                     : kind === "restore" ? root.tr("Restoring")
+                                          : root.tr("Mounting");
+        root.beginBusy(busyName, String.fromCodePoint(0xF006F), 0);
+        var args = kind === "restore" ? " restore " + (go ? "--go " : "") : " " + kind + " ";
+        pBackupJob.command = ["sh", "-c", root.backupScript + args + "\"$1\"", "_", root.backupDrive];
+        pBackupJob.running = false;
+        pBackupJob.running = true;
+    }
+
+    function backupFinish(kind) {
+        root.endBusy();
+        var wasRestore = root.backupKind === "restore";
+        root.backupBusy = false;
+        root.backupKind = "";
+        if (kind === "ok") {
+            if (wasRestore && root.backupDrift.length > 0) {
+                root.backupConfirm = true;
+                root.backupNote = root.tr("Ready to restore") + ": " + root.backupDrift.length;
+            } else if (wasRestore) {
+                root.backupNote = root.tr("Nothing to restore");
+            } else {
+                root.backupNote = root.tr("Done");
+            }
+        } else if (kind === "drift") {
+            root.backupFailed = root.tr("The mirror differs from the source");
+        } else if (kind === "cancelled") {
+            root.backupNote = root.tr("Cancelled");
+        } else {
+            root.backupFailed = kind;
+        }
+        root.backupPct = 100;
+        root.backupRefresh();
+    }
+
+    function backupRefresh() {
+        if (root.backupBusy) return;
+        pBackupStatus.running = false;
+        pBackupStatus.running = true;
+        pBackupDriveRead.running = false;
+        pBackupDriveRead.running = true;
+    }
+
+    function backupSetDrive(p) {
+        root.backupDrive = p;
+        pBackupDriveWrite.command = ["sh", "-c",
+            "printf '%s' \"$1\" > \"$HOME/.config/panacea/backup-drive\"", "_", p];
+        pBackupDriveWrite.running = false;
+        pBackupDriveWrite.running = true;
+    }
+
+    function backupCancel() { pBackupJob.running = false; }
+
+    Process {
+        id: pBackupDriveRead
+        command: ["sh", "-c", "cat \"$HOME/.config/panacea/backup-drive\" 2>/dev/null || true"]
+        stdout: StdioCollector {
+            onStreamFinished: root.backupDrive = text.trim()
+        }
+    }
+
+    Process { id: pBackupDriveWrite }
+
+    Process {
+        id: pBackupStatus
+        command: ["sh", "-c", root.backupScript + " status \"$1\"", "_", root.backupDrive]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                var m = ({});
+                var lines = text.split("\n");
+                for (var i = 0; i < lines.length; i++) {
+                    var k = lines[i].indexOf("=");
+                    if (k < 1) continue;
+                    m[lines[i].substring(0, k)] = lines[i].substring(k + 1);
+                }
+                root.backupStatus = m;
+            }
+        }
+    }
+
+    Process {
+        id: pBackupJob
+        stdout: SplitParser {
+            onRead: line => {
+                var t = line.trim().split(" ");
+                if (t[0] === "STEP") {
+                    var s = t.slice(1).join(" ");
+                    root.backupStep = s;
+                    if (root.backupKind === "restore" && s.indexOf("would change") === 0)
+                        root.backupDrift = root.backupDrift.concat([s.replace("would change ", "")]);
+                } else if (t[0] === "FILE") {
+                    root.backupFile = t.slice(1).join(" ");
+                } else if (t[0] === "PROGRESS") {
+                    root.backupPct = parseInt(t[1]) || 0;
+                    root.busyProgress = root.backupPct;
+                    root.backupDone = parseFloat(t[2]) || 0;
+                    root.backupTotal = parseFloat(t[3]) || 0;
+                } else if (t[0] === "DONE") {
+                    root.backupFinish(t[1] || "ok");
+                } else if (t[0] === "ERROR") {
+                    root.backupFailed = t.slice(2).join(" ") || t[1] || "failed";
+                    root.backupBusy = false;
+                }
+            }
+        }
+        onRunningChanged: {
+            if (running) return;
+            if (root.backupBusy) root.backupFinish("cancelled");
+            root.backupRefresh();
+        }
+    }
+
+    Timer {
+        interval: 1000
+        running: root.backupBusy
+        repeat: true
+        onTriggered: root.backupElapsed++
+    }
+
     property var vaultPrompt: null           // {pw, label}
 
     function looksLikePassword(s) {
@@ -5556,6 +5710,39 @@ PanelWindow {
                     text: "\uf132"
                     color: root.colFg
                     font { family: root.fontFam; pixelSize: root.iconSize - 4 }
+                }
+
+                Item {
+                    Layout.alignment: Qt.AlignVCenter
+                    Layout.preferredWidth: backupRow.implicitWidth
+                    Layout.preferredHeight: backupRow.implicitHeight
+                    visible: root.backupBusy
+
+                    RowLayout {
+                        id: backupRow
+                        spacing: 4
+
+                        Text {
+                            Layout.alignment: Qt.AlignVCenter
+                            text: String.fromCodePoint(0xF006F)
+                            color: root.colOn
+                            font { family: root.fontFam; pixelSize: root.iconSize - 4 }
+                        }
+
+                        Text {
+                            Layout.alignment: Qt.AlignVCenter
+                            text: root.backupPct + "%"
+                            color: root.colFg
+                            font { family: root.fontFam; pixelSize: root.fontSize - 5 }
+                        }
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.openSettingsAt("backup")
+                    }
                 }
 
                 //

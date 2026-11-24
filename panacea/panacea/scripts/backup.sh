@@ -133,7 +133,7 @@ case "${1:-}" in
 
         err="$(mktemp)"
         last="$(mktemp)"
-        trap 'rm -f "$err" "$last"; printf "DONE cancelled\n"; exit 130' INT TERM
+        trap 'pkill -TERM -P $$ 2>/dev/null; rm -f "$err" "$last"; printf "DONE cancelled\n"; exit 130' INT TERM
 
         step "Copying $SRC"
         rsync -aH --delete --numeric-ids --human-readable --no-specials \
@@ -221,7 +221,7 @@ case "${1:-}" in
 
         step "Restoring $DEST into $SRC"
         err="$(mktemp)"
-        trap 'rm -f "$err"; printf "DONE cancelled\n"; exit 130' INT TERM
+        trap 'pkill -TERM -P $$ 2>/dev/null; rm -f "$err"; printf "DONE cancelled\n"; exit 130' INT TERM
         rsync -aH --numeric-ids --human-readable --no-specials \
               --info=progress2 --info=name --no-inc-recursive \
               "$DEST/" "$SRC/" 2>"$err" | tr '\r' '\n' | parse_progress

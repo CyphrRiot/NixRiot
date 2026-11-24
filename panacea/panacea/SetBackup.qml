@@ -11,30 +11,10 @@ ColumnLayout {
     Layout.fillWidth: true
     spacing: 12
 
-    readonly property string drive: page.sys.cfg.backupDrive ? String(page.sys.cfg.backupDrive) : ""
-    readonly property string drivePath: page.drive.length ? page.drive : (page.st.drive || "")
-    readonly property string home: page.st.source && String(page.st.source).length
-                                   ? String(page.st.source)
-                                   : (Quickshell.env("HOME") || "")
-    readonly property string script: page.sys.scriptDir + "/backup.sh"
+    readonly property string drive: page.sys.backupDrive
+    readonly property string drivePath: page.sys.backupDrive.length ? page.sys.backupDrive : (page.sys.backupStatus.drive || "")
 
-    property var st: ({})
     property var drives: []
-    property string job: ""
-    property string step: ""
-    property string file: ""
-    property string note: ""
-    property string failed: ""
-    property int pct: 0
-    property real done: 0
-    property real total: 0
-    property int elapsed: 0
-    property var driftLines: []
-    property bool confirmRestore: false
-
-    readonly property bool busy: page.job.length > 0
-    readonly property bool mounted: page.st.mounted === "yes"
-    readonly property bool crypto: page.st.crypto === "yes"
 
     function human(bytes) {
         var b = Number(bytes) || 0;
@@ -50,63 +30,9 @@ ColumnLayout {
         return (m < 10 ? "0" : "") + m + ":" + (s % 60 < 10 ? "0" : "") + (s % 60);
     }
 
-    function reset() {
-        page.step = "";
-        page.file = "";
-        page.note = "";
-        page.failed = "";
-        page.pct = 0;
-        page.done = 0;
-        page.total = 0;
-        page.elapsed = 0;
-        page.driftLines = [];
-        page.confirmRestore = false;
-    }
-
-    function start(kind) {
-        if (page.busy) return;
-        page.reset();
-        page.job = kind;
-        pJob.command = ["sh", "-c", page.script + " " + (kind === "restore" ? "restore " : kind + " ") + "\"$1\"", "_", page.drive];
-        pJob.running = false;
-        pJob.running = true;
-    }
-
-    function restoreGo() {
-        if (page.busy) return;
-        page.confirmRestore = false;
-        page.job = "restore";
-        pJob.command = ["sh", "-c", page.script + " restore --go \"$1\"", "_", page.drive];
-        pJob.running = false;
-        pJob.running = true;
-    }
-
-    function refresh() {
-        if (page.busy) return;
-        pStatus.running = false;
-        pStatus.running = true;
-    }
-
     function refreshDrives() {
         pDisks.running = false;
         pDisks.running = true;
-    }
-
-    Process {
-        id: pStatus
-        command: ["sh", "-c", page.script + " status \"$1\"", "_", page.drive]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                var m = ({});
-                var lines = text.split("\n");
-                for (var i = 0; i < lines.length; i++) {
-                    var k = lines[i].indexOf("=");
-                    if (k < 1) continue;
-                    m[lines[i].substring(0, k)] = lines[i].substring(k + 1);
-                }
-                page.st = m;
-            }
-        }
     }
 
     Process {
@@ -127,77 +53,66 @@ ColumnLayout {
         }
     }
 
-    Process {
-        id: pJob
-        stdout: SplitParser {
-            onRead: line => {
-                var t = line.trim().split(" ");
-                if (t[0] === "STEP") {
-                    var s = t.slice(1).join(" ");
-                    page.step = s;
-                    if (page.job === "restore" && s.indexOf("would change") === 0) {
-                        page.driftLines = page.driftLines.concat([s.replace("would change ", "")]);
-                    }
-                } else if (t[0] === "FILE") {
-                    page.file = t.slice(1).join(" ");
-                } else if (t[0] === "PROGRESS") {
-                    page.pct = parseInt(t[1]) || 0;
-                    page.done = parseFloat(t[2]) || 0;
-                    page.total = parseFloat(t[3]) || 0;
-                } else if (t[0] === "DONE") {
-                    page.finish(t[1] || "ok");
-                } else if (t[0] === "ERROR") {
-                    page.failed = t.slice(2).join(" ") || t[1] || "failed";
-                    page.step = page.sys.tr("Failed");
-                }
-            }
-        }
-        onRunningChanged: {
-            if (running) return;
-            page.refreshDrives();
-            if (page.job === "mount") { page.job = ""; page.refresh(); return; }
-            if (page.busy) page.finish("cancelled");
-            page.refresh();
-        }
-    }
-
-    function finish(kind) {
-        var wasRestore = page.job === "restore";
-        page.job = "";
-        if (kind === "ok") {
-            if (wasRestore && page.driftLines.length > 0) {
-                page.confirmRestore = true;
-                page.note = page.sys.tr("Ready to restore") + ": " + page.driftLines.length;
-            } else if (wasRestore) {
-                page.note = page.sys.tr("Nothing to restore");
-            } else {
-                page.note = page.sys.tr("Done");
-            }
-        } else if (kind === "drift") {
-            page.failed = page.sys.tr("The mirror differs from the source");
-        } else if (kind === "cancelled") {
-            page.note = page.sys.tr("Cancelled");
-        } else {
-            page.failed = kind;
-        }
-        page.pct = 100;
-    }
-
-    Timer {
-        interval: 1000
-        running: page.busy
-        repeat: true
-        onTriggered: page.elapsed++
-    }
-
     Timer {
         interval: 5000
-        running: !page.busy
+        running: !page.sys.backupBusy
         repeat: true
-        onTriggered: page.refresh()
+        onTriggered: page.sys.backupRefresh()
     }
 
-    Component.onCompleted: { page.refresh(); page.refreshDrives(); }
+    Component.onCompleted: { page.sys.backupRefresh(); page.refreshDrives(); }
+
+    SetCard {
+        sys: page.sys
+        visible: page.sys.backupBusy || page.sys.backupNote.length > 0 || page.sys.backupFailed.length > 0
+
+        SetLabel {
+            sys: page.sys
+            text: page.sys.backupBusy ? page.sys.backupStep
+                             : (page.sys.backupFailed.length > 0 ? page.sys.tr("Failed") : page.sys.backupNote)
+        }
+
+        Rectangle {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 6
+            radius: 3
+            color: Qt.rgba(1, 1, 1, 0.08)
+
+            Rectangle {
+                width: page.sys.backupPct > 0 ? parent.width * Math.min(1, page.sys.backupPct / 100) : 0
+                height: parent.height
+                radius: 3
+                color: page.sys.backupFailed.length > 0 ? page.sys.colCrit : page.sys.colOn
+                Behavior on width { NumberAnimation { duration: 300 } }
+            }
+        }
+
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: 12
+            Text {
+                Layout.fillWidth: true
+                text: page.sys.backupBusy && page.sys.backupFile.length ? page.sys.backupFile
+                      : (page.sys.backupFailed.length ? page.sys.backupFailed : page.sys.backupNote)
+                color: page.sys.backupFailed.length > 0 ? page.sys.colCrit : page.sys.colMuted
+                elide: Text.ElideMiddle
+                font { family: page.sys.fontBody; pixelSize: page.sys.fontSize - 3 }
+            }
+            Text {
+                visible: page.sys.backupBusy
+                text: page.sys.backupPct + "%" + (page.sys.backupTotal > 0 ? "  " + page.human(page.sys.backupDone) + " / " + page.human(page.sys.backupTotal) : "")
+                      + "  " + page.clock(page.sys.backupElapsed)
+                color: page.sys.colMuted
+                font { family: page.sys.fontBody; pixelSize: page.sys.fontSize - 3 }
+            }
+            SetButton {
+                sys: page.sys
+                visible: page.sys.backupBusy
+                text: page.sys.tr("Cancel")
+                onClicked: page.sys.backupCancel()
+            }
+        }
+    }
 
     SetCard {
         sys: page.sys
@@ -209,7 +124,7 @@ ColumnLayout {
             label: page.sys.tr("Location")
             options: [{ id: "", text: page.sys.tr("Automatic") }].concat(page.drives)
             value: page.drive
-            onPicked: id => { page.sys.cfg.backupDrive = id; page.sys.saveCfg(); page.refresh(); }
+            onPicked: id => { page.sys.backupSetDrive(id); }
         }
 
         RowLayout {
@@ -240,18 +155,18 @@ ColumnLayout {
                 font { family: page.sys.fontBody; pixelSize: page.sys.fontSize - 1 }
             }
             Text {
-                text: page.mounted
-                      ? (page.crypto ? page.sys.tr("Mounted, encrypted") : page.sys.tr("Mounted, not encrypted"))
+                text: page.sys.backupMounted
+                      ? (page.sys.backupCrypto ? page.sys.tr("Mounted, encrypted") : page.sys.tr("Mounted, not encrypted"))
                       : page.sys.tr("Not mounted")
-                color: page.mounted ? (page.crypto ? page.sys.colOk : page.sys.colCrit) : page.sys.colMuted
+                color: page.sys.backupMounted ? (page.sys.backupCrypto ? page.sys.colOk : page.sys.colCrit) : page.sys.colMuted
                 font { family: page.sys.fontBody; pixelSize: page.sys.fontSize - 3 }
             }
             SetButton {
                 sys: page.sys
-                visible: !page.mounted
+                visible: !page.sys.backupMounted
                 text: page.sys.tr("Mount")
-                enabled: !page.busy
-                onClicked: { page.reset(); page.job = "mount"; pJob.command = ["sh", "-c", page.script + " mount \"$1\"", "_", page.drive]; pJob.running = false; pJob.running = true; }
+                enabled: !page.sys.backupBusy
+                onClicked: page.sys.backupStart("mount")
             }
         }
 
@@ -265,7 +180,7 @@ ColumnLayout {
                 font { family: page.sys.fontBody; pixelSize: page.sys.fontSize - 1 }
             }
             Text {
-                text: page.mounted ? page.human(page.st.free) : "-"
+                text: page.sys.backupMounted ? page.human(page.sys.backupStatus.free) : "-"
                 color: page.sys.colMuted
                 font { family: page.sys.fontBody; pixelSize: page.sys.fontSize - 3 }
             }
@@ -281,7 +196,7 @@ ColumnLayout {
                 font { family: page.sys.fontBody; pixelSize: page.sys.fontSize - 1 }
             }
             Text {
-                text: page.st.last && page.st.last.length ? page.st.last : page.sys.tr("never")
+                text: page.sys.backupStatus.last && page.sys.backupStatus.last.length ? page.sys.backupStatus.last : page.sys.tr("never")
                 color: page.sys.colMuted
                 font { family: page.sys.fontBody; pixelSize: page.sys.fontSize - 3 }
             }
@@ -297,7 +212,7 @@ ColumnLayout {
                 font { family: page.sys.fontBody; pixelSize: page.sys.fontSize - 1 }
             }
             Text {
-                text: page.human(page.st.size)
+                text: page.human(page.sys.backupStatus.size)
                 color: page.sys.colMuted
                 font { family: page.sys.fontBody; pixelSize: page.sys.fontSize - 3 }
             }
@@ -319,94 +234,36 @@ ColumnLayout {
                 Layout.fillWidth: true
                 text: page.sys.tr("Back up now")
                 primary: true
-                enabled: !page.busy && page.mounted
-                onClicked: page.start("backup")
+                enabled: !page.sys.backupBusy && page.sys.backupMounted
+                onClicked: page.sys.backupStart("backup")
             }
             SetButton {
                 sys: page.sys
                 Layout.fillWidth: true
                 text: page.sys.tr("Verify")
-                enabled: !page.busy && page.mounted
-                onClicked: page.start("verify")
+                enabled: !page.sys.backupBusy && page.sys.backupMounted
+                onClicked: page.sys.backupStart("verify")
             }
             SetButton {
                 sys: page.sys
                 Layout.fillWidth: true
                 text: page.sys.tr("Restore…")
-                enabled: !page.busy && page.mounted
-                onClicked: page.start("restore")
+                enabled: !page.sys.backupBusy && page.sys.backupMounted
+                onClicked: page.sys.backupStart("restore")
             }
         }
     }
 
     SetCard {
         sys: page.sys
-        visible: page.busy || page.note.length > 0 || page.failed.length > 0
-
-        SetLabel {
-            sys: page.sys
-            text: page.title()
-        }
-
-        Text {
-            Layout.fillWidth: true
-            text: page.step
-            color: page.sys.colMuted
-            elide: Text.ElideRight
-            font { family: page.sys.fontBody; pixelSize: page.sys.fontSize - 3 }
-        }
-
-        Rectangle {
-            Layout.fillWidth: true
-            Layout.preferredHeight: 6
-            radius: 3
-            color: Qt.rgba(1, 1, 1, 0.08)
-
-            Rectangle {
-                width: page.pct > 0 ? parent.width * Math.min(1, page.pct / 100) : 0
-                height: parent.height
-                radius: 3
-                color: page.failed.length > 0 ? page.sys.colCrit : page.sys.colOn
-                Behavior on width { NumberAnimation { duration: 300 } }
-            }
-        }
-
-        RowLayout {
-            Layout.fillWidth: true
-            spacing: 12
-            Text {
-                Layout.fillWidth: true
-                text: page.busy && page.file.length ? page.file : (page.failed.length ? page.failed : page.note)
-                color: page.failed.length > 0 ? page.sys.colCrit : page.sys.colMuted
-                elide: Text.ElideMiddle
-                font { family: page.sys.fontBody; pixelSize: page.sys.fontSize - 3 }
-            }
-            Text {
-                visible: page.busy
-                text: page.pct + "%" + (page.total > 0 ? "  " + page.human(page.done) + " / " + page.human(page.total) : "")
-                      + "  " + page.clock(page.elapsed)
-                color: page.sys.colMuted
-                font { family: page.sys.fontBody; pixelSize: page.sys.fontSize - 3 }
-            }
-            SetButton {
-                sys: page.sys
-                visible: page.busy
-                text: page.sys.tr("Cancel")
-                onClicked: pJob.running = false
-            }
-        }
-    }
-
-    SetCard {
-        sys: page.sys
-        visible: page.confirmRestore
+        visible: page.sys.backupConfirm
 
         SetLabel { sys: page.sys; text: page.sys.tr("Restore") }
 
         Text {
             Layout.fillWidth: true
             wrapMode: Text.WordWrap
-            text: page.sys.tr("You will overwrite") + " " + page.home + " "
+            text: page.sys.tr("You will overwrite") + " " + page.sys.backupHome + " "
                   + page.sys.tr("with the backup data. Are you absolutely certain this is what you want to do?")
             color: page.sys.colCrit
             font { family: page.sys.fontBody; pixelSize: page.sys.fontSize - 1; bold: true }
@@ -421,7 +278,7 @@ ColumnLayout {
         }
 
         Repeater {
-            model: page.driftLines.slice(0, 12)
+            model: page.sys.backupDrift.slice(0, 12)
             Text {
                 required property var modelData
                 Layout.fillWidth: true
@@ -434,8 +291,8 @@ ColumnLayout {
 
         Text {
             Layout.fillWidth: true
-            visible: page.driftLines.length > 12
-            text: "+ " + (page.driftLines.length - 12)
+            visible: page.sys.backupDrift.length > 12
+            text: "+ " + (page.sys.backupDrift.length - 12)
             color: page.sys.colMuted
             font { family: page.sys.fontBody; pixelSize: page.sys.fontSize - 3 }
         }
@@ -448,14 +305,14 @@ ColumnLayout {
                 Layout.fillWidth: true
                 text: page.sys.tr("Yes, restore")
                 primary: true
-                enabled: !page.busy
-                onClicked: page.restoreGo()
+                enabled: !page.sys.backupBusy
+                onClicked: page.sys.backupStart("restore", true)
             }
             SetButton {
                 sys: page.sys
                 Layout.fillWidth: true
                 text: page.sys.tr("Cancel")
-                onClicked: page.reset()
+                onClicked: page.sys.backupConfirm = false
             }
         }
     }

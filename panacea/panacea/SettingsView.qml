@@ -75,6 +75,7 @@ Item {
         { id: "vpn", title: "VPN", g: 0xF0582, pages: ["vpn"] },
         { id: "security", title: view.sys.tr("Security"), g: 0xF033E, pages: ["lock"] },
         { id: "installs", title: view.sys.tr("Installs"), g: 0xF01DA, pages: ["installs"] },
+        { id: "backup", title: view.sys.tr("Backup"), g: 0xF006F, pages: ["backup"] },
         { id: "system", title: view.sys.tr("System"), g: 0xF0493, pages: ["system"] }
     ]
 

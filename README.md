@@ -3,7 +3,7 @@
 ![NixRiot](docs/img/banner.webp)
 
 ![Status](https://img.shields.io/badge/status-release-9a2eef?labelColor=1b2b34)
-![Version](https://img.shields.io/badge/version-2.9-9a2eef?labelColor=1b2b34)
+![Version](https://img.shields.io/badge/version-2.10-9a2eef?labelColor=1b2b34)
 ![Platform](https://img.shields.io/badge/platform-NixOS-9a2eef?logo=nixos&logoColor=white&labelColor=1b2b34)
 ![Shell](https://img.shields.io/badge/shell-Hyprland-9a2eef?logo=hyprland&logoColor=9a2eef&labelColor=1b2b34)
 ![UI](https://img.shields.io/badge/UI-Quickshell-9a2eef?labelColor=1b2b34)
@@ -16,16 +16,6 @@
 [![Donate BTC](https://img.shields.io/badge/Donate-Bitcoin-F7931A?logo=bitcoin&logoColor=white&labelColor=1b2b34)](#donations)
 
 </div>
-
-## Status of NixRiot
-
-**Released.** One image, one flake, a desktop that installs itself over the
-network with LUKS and boots straight into the pill. It runs on real hardware:
-Bluetooth input, the lock screen, the password vault, the media capsule and the
-night light are all in use here.
-
-The media keys, the lid, and the fifteen-minute idle lock are checked on
-hardware. The hardware notes below say what was tested, and on what.
 
 ![The NixRiot desktop: the pill, its settings pages, and a terminal](docs/img/desktop-demo.gif)
 
@@ -620,6 +610,8 @@ rebuild
 verifies the mirror, and can put it back. The drive is picked from the mounted
 removable ones; **Automatic** uses `/run/media/<user>/Backup`, and picking a
 drive stores its path as `backupDrive` in `~/.config/panacea/settings.json`.
+
+![The Backup and restore page, with the drive mounted and encrypted](docs/img/backup.webp)
 
 Back up now copies with `rsync -aH --delete`, so the drive is a mirror of
 `$HOME` and files deleted here are deleted there too. When it finishes it
