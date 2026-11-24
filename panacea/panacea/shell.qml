@@ -3050,7 +3050,7 @@ PanelWindow {
     function vaultCopy(pw) {
         touchVault();
         pVaultCopy.command = ["sh", "-c",
-            "printf '%s' \"$1\" | wl-copy --sensitive-data 2>/dev/null "
+            "printf '%s' \"$1\" | wl-copy --sensitive 2>/dev/null "
             + "|| printf '%s' \"$1\" | wl-copy", "_", String(pw)];
         pVaultCopy.running = true;
         vaultClipClear.restart();

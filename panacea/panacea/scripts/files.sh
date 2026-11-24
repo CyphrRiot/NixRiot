@@ -253,6 +253,12 @@ EOF
         [ -d "$DST" ] || { printf 'ERROR no-dir\n'; exit 1; }
         [ -w "$DST" ] || { printf 'ERROR no-write\n'; exit 1; }
 
+        fstype=$(stat -f -c %T "$DST" 2>/dev/null)
+        case "$fstype" in
+            msdos|vfat|exfat|ntfs|ntfs3|udf|fuseblk|fuse|fuse.*) preserve="" ;;
+            *) preserve="--preserve=mode,timestamps" ;;
+        esac
+
         dst_dev=$(stat -c %d "$DST" 2>/dev/null)
         srcs=(); targets=()
         for src; do
@@ -290,7 +296,6 @@ EOF
                 printf 'ERROR no-space %s %s\n' "$total" "$avail"
                 exit 1
             fi
-            fstype=$(stat -f -c %T "$DST" 2>/dev/null)
             if [ "$fstype" = "msdos" ] || [ "$fstype" = "vfat" ]; then
                 big=$(find "${srcs[@]}" -type f -size +4194303k -print -quit 2>/dev/null)
                 [ -n "$big" ] && { printf 'ERROR fat-4g %s\n' "$(basename "$big")"; exit 1; }
@@ -307,15 +312,20 @@ EOF
                 rm -rf -- "${targets[$i]}"
             fi
             CUR_TARGET="${targets[$i]}"
-            if [ "$OP" = "copy" ]; then
-                cp -r --no-clobber --preserve=mode,timestamps -- "${srcs[$i]}" "${targets[$i]}" 2>"/tmp/panacea-fileop.$$" &
-            else
+            src_dev=$(stat -c %d "${srcs[$i]}" 2>/dev/null)
+            if [ "$OP" = "move" ] && { [ -n "$preserve" ] || [ "$src_dev" = "$dst_dev" ]; }; then
                 mv -n -- "${srcs[$i]}" "${targets[$i]}" 2>"/tmp/panacea-fileop.$$" &
+                COPY_MODE=0
+            else
+                cp -r --no-clobber $preserve -- "${srcs[$i]}" "${targets[$i]}" 2>"/tmp/panacea-fileop.$$" &
+                COPY_MODE=1
             fi
             WORK_PID=$!
             if ! wait "$WORK_PID"; then
                 failed=1
                 printf 'ERROR fail %s\n' "$(head -1 "/tmp/panacea-fileop.$$" | tr '\n' ' ')"
+            elif [ "$COPY_MODE" = 1 ] && [ "$OP" = "move" ]; then
+                rm -rf -- "${srcs[$i]}"
             fi
             WORK_PID=""
             CUR_TARGET=""

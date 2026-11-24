@@ -14,6 +14,19 @@ ColumnLayout {
     SetCard {
         sys: page.sys
 
+        SetSelect {
+            sys: page.sys
+            label: page.sys.tr("Position")
+            options: [
+                { id: "top",    text: page.sys.tr("Top") },
+                { id: "left",   text: page.sys.tr("Left") },
+                { id: "right",  text: page.sys.tr("Right") },
+                { id: "bottom", text: page.sys.tr("Bottom") }
+            ]
+            value: page.sys.cfg.pillPos || "top"
+            onPicked: id => { page.sys.cfg.pillPos = id; page.sys.saveCfg(); }
+        }
+
         SetToggle {
             sys: page.sys
             label: page.sys.tr("Notch mode")

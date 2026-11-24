@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## 2.9
+
+- Vault passwords no longer reach the clipboard history.
+- Panacea's system settings can ask for a password now, so the battery charge threshold actually changes.
+- Panacea's privileged helper no longer installs files as root when asked.
+- The island's edge is a setting: Top, Left, Right or Bottom in Settings → Bar and island.
+- Settings → Backup and restore mirrors your home folder to a mounted drive you pick, verifies it, and puts it back.
+
 ## 2.8
 
 - The default wallpaper is `02.webp`.

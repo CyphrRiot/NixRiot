@@ -73,7 +73,7 @@ FocusScope {
 
     function expandPath(p) {
         if (!p) return "";
-        var home = Quickshell.env("HOME") || "/home/ensi";
+        var home = Quickshell.env("HOME") || "";
         if (p.startsWith("~/")) return home + p.substring(1);
         if (p.startsWith("file://")) return p.substring(7);
         return p;

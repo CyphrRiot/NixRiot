@@ -18,7 +18,7 @@ Item {
     readonly property var sections: [
         { id: "bar",     title: view.sys.tr("Bar and island"),   g: 0xF12E1, page: "SetBarIsland.qml",
           sub: view.sys.tr("How the island sits on the edge, and what it unfolds into."),
-          keys: "notch island pill bar height width cpu gpu load temperature" },
+          keys: "notch island pill bar height width position cpu gpu load temperature" },
         { id: "media",   title: view.sys.tr("Media"),          g: 0xF0387, page: "SetMedia.qml",
           sub: view.sys.tr("The player, cover art, and what shows in the collapsed island."),
           keys: "player music cover" },
@@ -49,6 +49,9 @@ Item {
         { id: "installs", title: view.sys.tr("Installs"),      g: 0xF01DA, page: "SetInstalls.qml",
           sub: view.sys.tr("Optional applications you can add or remove."),
           keys: "install apps office games transmission monero bitcoin glyphriot libreoffice claude" },
+        { id: "backup",  title: view.sys.tr("Backup and restore"), g: 0xF006F, page: "SetBackup.qml",
+          sub: view.sys.tr("Mirror your home folder to a mounted drive, and put it back."),
+          keys: "backup restore rsync drive mirror sync" },
         { id: "display", title: view.sys.tr("Display"),        g: 0xF0379, page: "SetDisplay.qml",
           sub: view.sys.tr("Resolution, refresh rate and scale of the connected screens."),
           keys: "display monitor resolution refresh scale layout placement detect island" },

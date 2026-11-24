@@ -3,7 +3,7 @@
 ![NixRiot](docs/img/banner.webp)
 
 ![Status](https://img.shields.io/badge/status-release-9a2eef?labelColor=1b2b34)
-![Version](https://img.shields.io/badge/version-2.8-9a2eef?labelColor=1b2b34)
+![Version](https://img.shields.io/badge/version-2.9-9a2eef?labelColor=1b2b34)
 ![Platform](https://img.shields.io/badge/platform-NixOS-9a2eef?logo=nixos&logoColor=white&labelColor=1b2b34)
 ![Shell](https://img.shields.io/badge/shell-Hyprland-9a2eef?logo=hyprland&logoColor=9a2eef&labelColor=1b2b34)
 ![UI](https://img.shields.io/badge/UI-Quickshell-9a2eef?labelColor=1b2b34)
@@ -611,6 +611,40 @@ To rebuild without fetching anything, run the same `rebuild` alias:
 ```sh
 rebuild
 ```
+
+---
+
+## Backup and restore
+
+**Settings → Backup and restore** mirrors your home folder onto a mounted drive,
+verifies the mirror, and can put it back. The drive is picked from the mounted
+removable ones; **Automatic** uses `/run/media/<user>/Backup`, and picking a
+drive stores its path as `backupDrive` in `~/.config/panacea/settings.json`.
+
+Back up now copies with `rsync -aH --delete`, so the drive is a mirror of
+`$HOME` and files deleted here are deleted there too. When it finishes it
+compares the two trees with a dry-run rsync and reports any difference instead
+of claiming success. Verify runs that comparison alone. Restore always shows
+what would change first, then copies back into `$HOME` without `--delete`, so
+restoring never deletes anything you have locally.
+
+The same script is available in a terminal:
+
+```sh
+~/.config/panacea/scripts/backup.sh status
+~/.config/panacea/scripts/backup.sh backup
+~/.config/panacea/scripts/backup.sh verify
+~/.config/panacea/scripts/backup.sh restore
+```
+
+The drive must be encrypted, checked through `lsblk`, so a plain stick cannot
+be mistaken for the backup. Besides the mirror, the drive gets a `system/`
+directory holding `/etc/nixriot`, `nixos-version`, `lsblk -f`, `blkid`,
+`efibootmgr -v` and `/etc/fstab`, which is what a rebuild needs to come back.
+
+To restore a machine: install NixRiot from the ISO, copy `system/nixriot` over
+`/etc/nixriot`, run `rebuild`, then restore your home folder.
+
 
 `nix flake update` there moves the packages forward, but it only edits the copy:
 the next `nixriot-update apply` replaces the whole tree, `flake.lock` included,

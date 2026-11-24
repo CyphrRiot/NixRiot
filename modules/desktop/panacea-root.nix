@@ -27,6 +27,8 @@ in
   config = lib.mkIf (config.nixriot.enable && config.nixriot.desktop.enable) {
     environment.systemPackages = [ helper ];
 
+    security.polkit.enablePkexecWrapper = true;
+
     environment.etc."polkit-1/actions/org.panacea.root.policy".text = ''
       <?xml version="1.0" encoding="UTF-8"?>
       <!DOCTYPE policyconfig PUBLIC

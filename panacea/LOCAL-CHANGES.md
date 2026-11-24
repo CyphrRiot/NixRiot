@@ -172,6 +172,21 @@ revision has been reviewed, so `UPSTREAM` is the reviewed baseline.
     rejected the stored value.
 31. The pill keeps a 1px border drawn from the foreground colour, including
     through the notch corners (`NotchCorner.stroke`).
+32. `panacea/root/panacea-root` drops the `self`, `update` and `sddm`
+    subcommands. Each took a directory from the caller and installed from it as
+    root: `self` copied a `panacea-root`, `locale.sh`, `bootos.sh` and the
+    polkit policy into `/usr/local/lib/panacea` and
+    `/usr/share/polkit-1/actions`, and `sddm` replaced
+    `/usr/share/sddm/themes/panacea`. The only check was that one expected file
+    existed inside the directory, which any caller can provide, and the polkit
+    action is `auth_admin_keep`, so anything in the session could have called
+    them during the keep window. NixOS installs all of it from
+    `modules/desktop/panacea-root.nix`, and the theme from
+    `modules/desktop/sddm.nix`, so nothing calls them. What remains is
+    `charge-threshold`, `timezone`, `ntp`, `settime`, `locale` and `boot`, all of
+    which validate their arguments. `LIB` is now derived from the script's own
+    path instead of the hardcoded `/usr/local/lib/panacea`, so the same file
+    works here and upstream.
 
 ## Not yet changed
 
