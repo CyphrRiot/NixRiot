@@ -103,14 +103,19 @@
     # Enhanced Prompt Function
     # =============================================================================
 
+    set -q nixriot_icon_color; or set -g nixriot_icon_color 50c9c3
+    set -q nixriot_host_color; or set -g nixriot_host_color 96deda
+    set -q nixriot_path_color; or set -g nixriot_path_color 7dcfff
+    set -q nixriot_prompt_color; or set -g nixriot_prompt_color 50c9c3
+
     function fish_prompt
         set -l last_status $status
         set -l host (hostname -s 2>/dev/null; or echo unknown)
 
-        set -l icon 50c9c3
-        set -l host_color 96deda
-        set -l path_color 7dcfff
-        set -l prompt_color 50c9c3
+        set -l icon $nixriot_icon_color
+        set -l host_color $nixriot_host_color
+        set -l path_color $nixriot_path_color
+        set -l prompt_color $nixriot_prompt_color
 
         set_color $icon
         printf '\uf313  '

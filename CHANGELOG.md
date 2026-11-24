@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 2.18
+
+- Fix fish colors
+
 ## 2.17
 
 > _"The page went dark on its own, and the screen finally learned to sleep. A window can now move over to share the desk with the widgets."_
