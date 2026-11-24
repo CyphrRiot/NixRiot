@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 2.15
+
+- Packages refreshed to the 21 November nixpkgs: crush 0.101, Firefox 160.0.1, LibreOffice 26.8.3, the 6.18.64 kernel, and restic 0.20.
+
 ## 2.14
 
 - The file manager and the media viewer fit the panel instead of running past its bottom: the file list scrolls to the end, and a right-click near the bottom opens where it can be seen
