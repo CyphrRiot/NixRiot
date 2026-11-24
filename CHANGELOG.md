@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 2.22
+
+- Added an audio selection
+- Fixed resolution / monitor bugs
+
 ## 2.21
 
 - The password vault's encrypted store is now authenticated, so a modified file is refused instead of decrypted.

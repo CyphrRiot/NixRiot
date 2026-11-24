@@ -130,25 +130,39 @@ ColumnLayout {
         return "auto";
     }
 
-    function resList(m) {
+    function modeText(s) {
+        var p = String(s).split("@");
+        var wh = p[0].split("x");
+        return wh[0] + " × " + wh[1]
+            + (p.length > 1 ? " · " + Number(parseFloat(p[1])).toFixed(0) + " Hz" : "");
+    }
+    function modeList(m) {
         var seen = {}, out = [];
         (m.modes || []).forEach(s => {
-            var r = s.split("@")[0];
-            if (!seen[r]) { seen[r] = true; out.push(r); }
+            if (seen[s]) return;
+            seen[s] = true;
+            out.push({ id: s, text: page.modeText(s) });
         });
-        if (!out.length) out.push(m.w + "x" + m.h);
+        if (!out.length) {
+            var cur = m.w + "x" + m.h + "@" + m.rr;
+            out.push({ id: cur, text: page.modeText(cur) });
+        }
         return out;
     }
-    function rrList(m, res) {
-        var out = [];
+    function modeValue(m) {
+        var best = "", dist = 1e9;
         (m.modes || []).forEach(s => {
             var p = s.split("@");
-            if (p[0] !== res) return;
-            var hz = parseFloat(p[1]);
-            if (out.indexOf(hz) < 0) out.push(hz);
+            if (p[0] !== m.w + "x" + m.h) return;
+            var d = Math.abs(parseFloat(p[1]) - m.rr);
+            if (d < dist) { dist = d; best = s; }
         });
-        if (!out.length) out.push(m.rr);
-        return out.sort((a, b) => b - a);
+        return best || (m.w + "x" + m.h + "@" + m.rr);
+    }
+    function applyMode(m, id) {
+        var p = String(id).split("@");
+        var wh = p[0].split("x");
+        page.apply(m, { w: +wh[0], h: +wh[1], rr: parseFloat(p[1]) });
     }
 
     SetCard {
@@ -231,26 +245,10 @@ ColumnLayout {
 
             SetPick {
                 sys: page.sys
-                label: page.sys.tr("Resolution")
-                options: page.resList(card.modelData)
-                value: card.res
-                onPicked: id => {
-                    var wh = id.split("x");
-                    var hz = page.rrList(card.modelData, id)[0];
-                    page.apply(card.modelData, { w: +wh[0], h: +wh[1], rr: hz });
-                }
-            }
-
-            SetPick {
-                sys: page.sys
-                label: page.sys.tr("Refresh rate")
-                options: page.rrList(card.modelData, card.res).map(hz => ({
-                    id: String(hz), text: hz.toFixed(2) + " Hz"
-                }))
-                value: String(page.rrList(card.modelData, card.res)
-                              .find(hz => Math.abs(hz - card.modelData.rr) < 0.6)
-                              || card.modelData.rr)
-                onPicked: id => page.apply(card.modelData, { rr: parseFloat(id) })
+                label: page.sys.tr("Mode")
+                options: page.modeList(card.modelData)
+                value: page.modeValue(card.modelData)
+                onPicked: id => page.applyMode(card.modelData, id)
             }
 
             Text {
