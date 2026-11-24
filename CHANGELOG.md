@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 2.14
+
+- The file manager and the media viewer fit the panel instead of running past its bottom: the file list scrolls to the end, and a right-click near the bottom opens where it can be seen
+- Fixed Backup issue
+- New Desktop video
+
 ## 2.13
 
 - The screen no longer blanks at the end of an update: a config reload no longer drops the display to 60 Hz and back.

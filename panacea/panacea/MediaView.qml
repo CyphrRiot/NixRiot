@@ -316,6 +316,10 @@ FocusScope {
     ColumnLayout {
         id: col
         width: parent.width
+        // Fill the page the loader gave us: the stage takes what the header and the
+        // controls leave. Sizing the column to its own content made the page taller
+        // than the panel and cut the bottom of the video off.
+        height: view.height
         spacing: 12
 
         RowLayout {
@@ -409,7 +413,9 @@ FocusScope {
         Rectangle {
             id: stage
             Layout.fillWidth: true
+            Layout.fillHeight: true
             Layout.preferredHeight: Math.round(view.sys.mediaStageH)
+            Layout.minimumHeight: 120
             radius: 16
             color: "#000000"
             clip: true

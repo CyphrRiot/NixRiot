@@ -4723,6 +4723,11 @@ PanelWindow {
         readonly property real settingsPanelH: Math.max(settingsFloor,
                                                         Math.min(contentH, settingsCeil))
 
+        // The file manager and the media viewer draw a stage of their own, so the
+        // page is given the panel's height and the stage shrinks into it, the way
+        // the settings page works. Every other page reports its content height
+        // and the panel follows it.
+        readonly property bool stagePage: root.page === "files" || root.page === "media"
         readonly property real targetH: root.settingsMode && root.page === "settings" ? settingsPanelH
                 : (root.expanded && !root.cfg.pillKeepVisible) ? Math.min(contentH, root.cfg.expandedH)
                 : root.pillSide ? idleLen
@@ -6502,9 +6507,14 @@ PanelWindow {
             anchors.topMargin: (root.page === "main" || root.page === "chat" || root.page === "vpn") && !root.settingsMode ? 55 : 15
             anchors.horizontalCenter: parent ? parent.horizontalCenter : undefined
             width: (root.settingsMode ? root.settingsW : root.panelW) - 30
-            // Constrain the loader to the panel so the page's Flickable can
-            // scroll when the fitted content is taller than the screen allows.
-            height: (root.settingsMode && root.page === "settings") ? capsule.settingsPanelH - 30 : implicitHeight
+            // Constrain the loader to the panel so the page can scroll when what
+            // it fits is taller than the screen allows. The settings page, the
+            // file manager and the media viewer draw a stage and are given the
+            // panel's height; every other page reports its content and the panel
+            // follows it.
+            height: (root.settingsMode && root.page === "settings") ? capsule.settingsPanelH - 30
+                  : capsule.stagePage && parent ? parent.height - 30
+                  : implicitHeight
             active: (root.expanded || capsule.height > root.pillH + 4 || (root.cfg.pillKeepVisible && detachedPanel.opacity > 0.005))
                     && !root.recPickActive && !root.btToastActive && !root.wifiToastActive
                     && !root.acToastActive && !root.voxActive

@@ -532,8 +532,8 @@ Item {
         view.menuPath = path;
         view.menuIsDir = isDir;
         view.menuKind = kind !== undefined ? kind : (path.length ? "file" : "folder");
-        view.menuX = Math.max(0, Math.min(x, view.width - 210));
-        view.menuY = Math.max(0, Math.min(y, Math.max(0, view.height - 250)));
+        view.menuX = Math.max(0, x);
+        view.menuY = Math.max(0, y);
         view.menuOpen = true;
     }
     function closeMenu() { view.menuOpen = false; }
@@ -1102,11 +1102,18 @@ Item {
     ColumnLayout {
         id: col
         width: parent.width
-        height: view.windowMode ? view.height : col.implicitHeight
+        // Fill the page the loader gave us: the list takes what the header and the
+        // status line leave, and scrolls. Sizing the column to its own content made
+        // the page taller than the panel, and the rows past the panel's bottom were
+        // unreachable.
+        height: view.height
         spacing: 12
 
         RowLayout {
             Layout.fillWidth: true
+            // The list is the part that gives up height when the panel is short;
+            // this keeps the header and the search field at their own size.
+            Layout.minimumHeight: 40
             spacing: 10
 
             Rectangle {
@@ -1487,9 +1494,9 @@ Item {
                     id: list
                     visible: view.mode === "list"
                     Layout.fillWidth: true
-                    Layout.fillHeight: view.windowMode
+                    Layout.fillHeight: true
                     Layout.preferredHeight: view.windowMode ? 0 : view.sys.filesListH
-                    Layout.minimumHeight: view.windowMode ? 120 : 0
+                    Layout.minimumHeight: 120
                     clip: true
                     model: entries
                     currentIndex: view.current
@@ -1710,9 +1717,9 @@ Item {
                     id: grid
                     visible: view.mode === "grid"
                     Layout.fillWidth: true
-                    Layout.fillHeight: view.windowMode
+                    Layout.fillHeight: true
                     Layout.preferredHeight: view.windowMode ? 0 : view.sys.filesListH
-                    Layout.minimumHeight: view.windowMode ? 120 : 0
+                    Layout.minimumHeight: 120
                     clip: true
                     model: entries
                     currentIndex: view.current
@@ -1925,6 +1932,7 @@ Item {
 
                 Text {
                     Layout.fillWidth: true
+                    Layout.minimumHeight: 20
                     visible: entries.count === 0
                     text: view.filter.length ? view.sys.tr("Nothing found")
                                              : view.sys.tr("Empty")
@@ -2294,8 +2302,11 @@ Item {
         id: menu
         z: 91
         visible: view.menuOpen
-        x: view.menuX
-        y: view.menuY
+        x: Math.max(0, Math.min(view.menuX, view.width - width))
+        // Fitted here and not where the menu is opened: how tall it is depends on
+        // which items are shown. The fixed 250 the caller reserved cut the menu
+        // off at the bottom of the panel for every case but the shortest.
+        y: Math.max(0, Math.min(view.menuY, view.height - height))
         width: 220
         height: menuCol.implicitHeight + 12
         radius: 14
