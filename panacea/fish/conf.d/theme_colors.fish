@@ -8,6 +8,7 @@ set -g nixriot_prompt_color '50c9c3'
 set -g fish_color_normal '#e5d1c5'
 set -g fish_color_command '#e5d1c5'
 set -g fish_color_param '#8a706b'
+set -g fish_color_option '#b29995'
 set -g fish_color_quote '#9e7871'
 set -g fish_color_redirection magenta
 set -g fish_color_end magenta

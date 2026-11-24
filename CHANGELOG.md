@@ -2,9 +2,16 @@
 
 ## Unreleased
 
+## 2.20
+
+- Fish options such as `--command` now render in their own shade instead of matching every other argument.
+- The website has a new banner, and links to it now show a proper preview.
+- The manual covers the password vault, moving the island to the bottom, and package search in Installs.
+
 ## 2.19
 
 - Fix pill at bottom
+- Fix fish command colors
 
 ## 2.18
 

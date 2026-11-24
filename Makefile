@@ -179,6 +179,17 @@ do-publish:
 	    echo "gh is not authenticated. Run 'gh auth login' first."; \
 	    exit 1; \
 	  }; \
+	  [ -z "$$(git status --porcelain)" ] || { \
+	    echo "The working tree is dirty. Commit or stash before publishing v$$ver."; \
+	    git status --short; \
+	    exit 1; \
+	  }; \
+	  tag=$$(git rev-parse "v$$ver^{commit}" 2>/dev/null || true); \
+	  [ "$$tag" = "$$(git rev-parse HEAD)" ] || { \
+	    echo "HEAD is not the commit tagged v$$ver. Check out the tag before publishing."; \
+	    exit 1; \
+	  }; \
+	  echo "Publishing v$$ver at commit $$tag."; \
 	  echo "Building the ISO for v$$ver. This takes a few minutes."; \
 	  nix build .#iso; \
 	  sha256sum result/iso/NixRiot.iso | sed 's| result/iso/|  |' > SHA256SUMS; \
@@ -190,9 +201,11 @@ do-publish:
 	  echo "  result/iso/NixRiot.iso  ($$(du -h result/iso/NixRiot.iso | cut -f1))"; \
 	  echo "  SHA256SUMS"; \
 	  echo; \
-	  stale=$$(gh release list --limit 200 --json tagName -q '.[].tagName' | sort -V | head -n -1 || true); \
+	  releases=$$(gh release list --limit 200 --json tagName -q '.[].tagName' | sort -V || true); \
+	  keep_newest=$$(printf '%s\n' "$$releases" | grep -vxF "v$$ver" | tail -n 1 || true); \
+	  stale=$$(printf '%s\n' "$$releases" | grep -vxF "v$$ver" | grep -vxF "$$keep_newest" || true); \
 	  if [ -n "$$stale" ]; then \
-	    echo "Old releases that will be deleted (the newest is kept):"; \
+	    echo "Old releases that will be deleted (v$$ver and $$keep_newest are kept):"; \
 	    echo "$$stale" | sed 's/^/  /'; \
 	    echo; \
 	  fi; \

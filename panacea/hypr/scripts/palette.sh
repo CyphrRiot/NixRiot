@@ -75,6 +75,7 @@ h, s, v = colorsys.rgb_to_hsv(r, g, b)
 # Soft shades of the accent for syntax highlighting
 syntax_accent = rgb_to_hex(colorsys.hsv_to_rgb(h, s * 0.55, v * 0.85))
 color_param = rgb_to_hex(colorsys.hsv_to_rgb(h, s * 0.35, v * 0.7))
+color_option = rgb_to_hex(colorsys.hsv_to_rgb(h, s * 0.25, v * 0.9))
 color_quote = rgb_to_hex(colorsys.hsv_to_rgb(h, s * 0.45, v * 0.8))
 
 # 1. FISH
@@ -89,6 +90,7 @@ if os.path.isdir(fish_dir):
         f.write(f"set -g fish_color_normal '{fg}'\n")
         f.write(f"set -g fish_color_command '{fg}'\n")
         f.write(f"set -g fish_color_param '#{color_param}'\n")
+        f.write(f"set -g fish_color_option '#{color_option}'\n")
         f.write(f"set -g fish_color_quote '#{color_quote}'\n")
         f.write("set -g fish_color_redirection magenta\n")
         f.write("set -g fish_color_end magenta\n")
