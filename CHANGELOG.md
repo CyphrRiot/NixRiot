@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 2.25
+
+- Fix Update bug
+
 ## 2.24
 
 - Update gets special treatment

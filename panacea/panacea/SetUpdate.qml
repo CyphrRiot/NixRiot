@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
+import Quickshell.Io
 
 ColumnLayout {
     id: page
@@ -28,6 +29,58 @@ ColumnLayout {
 
     Layout.fillWidth: true
     spacing: 12
+
+    Process { id: pOpen; property string url: ""; command: ["xdg-open", pOpen.url] }
+
+    Rectangle {
+        Layout.fillWidth: true
+        implicitHeight: 64
+        radius: 18
+        color: ghMa.containsMouse
+               ? Qt.rgba(page.sys.colFg.r, page.sys.colFg.g, page.sys.colFg.b, 0.10)
+               : Qt.rgba(page.sys.colFg.r, page.sys.colFg.g, page.sys.colFg.b, 0.045)
+        Behavior on color { ColorAnimation { duration: page.sys.animFade } }
+
+        RowLayout {
+            anchors.fill: parent
+            anchors.leftMargin: 18
+            anchors.rightMargin: 18
+            spacing: 14
+
+            Text {
+                text: String.fromCodePoint(0xF02A4)
+                color: page.sys.colFg
+                font { family: page.sys.fontFam; pixelSize: 26 }
+            }
+            ColumnLayout {
+                Layout.fillWidth: true
+                spacing: 1
+                Text {
+                    text: "github.com/CyphrRiot/NixRiot"
+                    color: page.sys.colFg
+                    font { family: page.sys.fontDisplay; pixelSize: page.sys.fontSize + 1 }
+                }
+                Text {
+                    text: page.sys.tr("The NixRiot project. The shell is Panacea, by EnsixD.")
+                    color: page.sys.colMuted
+                    font { family: page.sys.fontBody; pixelSize: page.sys.fontSize - 4 }
+                }
+            }
+            Text {
+                text: String.fromCodePoint(0xF0327)
+                color: page.sys.colMuted
+                font { family: page.sys.fontFam; pixelSize: page.sys.fontSize }
+            }
+        }
+
+        MouseArea {
+            id: ghMa
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onClicked: { pOpen.url = "https://github.com/CyphrRiot/NixRiot"; pOpen.running = true; }
+        }
+    }
 
     SetCard {
         sys: page.sys

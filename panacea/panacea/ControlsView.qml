@@ -682,51 +682,28 @@ Item {
                         onClicked: view.sys.togglePage("audio")
                     }
                 }
-                RowLayout {
-                    Layout.fillWidth: true
-                    spacing: 6
-                    visible: view.speakerSink && view.headphoneSink
+                Item { Layout.fillWidth: true }
+                Repeater {
+                    model: view.sys.audioSinks
                     Text {
-                        Layout.fillWidth: true
-                        horizontalAlignment: Text.AlignRight
-                        text: "󰕾"
-                        color: Pipewire.defaultAudioSink === view.speakerSink
-                               ? view.sys.colOn : view.sys.colMuted
+                        id: outIcon
+                        required property var modelData
+                        readonly property bool active: Pipewire.defaultAudioSink === outIcon.modelData
+                        text: view.sinkIcon(outIcon.modelData)
+                        color: active ? view.sys.colOn : view.sys.colMuted
                         font {
                             family: view.sys.fontFam; pixelSize: view.sys.iconSize - 4
-                            bold: Pipewire.defaultAudioSink === view.speakerSink
+                            bold: active
                         }
                         MouseArea {
                             anchors.fill: parent
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: view.sys.setSink(view.speakerSink)
-                        }
-                    }
-                    Text {
-                        text: "/"
-                        color: view.sys.colLine
-                        font { family: view.sys.fontFam; pixelSize: 10 }
-                    }
-                    Text {
-                        Layout.fillWidth: true
-                        text: "󰋋"
-                        color: Pipewire.defaultAudioSink === view.headphoneSink
-                               ? view.sys.colOn : view.sys.colMuted
-                        font {
-                            family: view.sys.fontFam; pixelSize: view.sys.iconSize - 4
-                            bold: Pipewire.defaultAudioSink === view.headphoneSink
-                        }
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: view.sys.setSink(view.headphoneSink)
+                            onClicked: view.sys.setSink(outIcon.modelData)
                         }
                     }
                 }
                 Text {
-                    Layout.fillWidth: true
-                    visible: !(view.speakerSink && view.headphoneSink)
-                    horizontalAlignment: Text.AlignRight
+                    visible: view.sys.audioSinks.length === 0
                     text: view.sys.sinkName.length ? view.sys.sinkName
                                                    : view.sys.tr("No devices")
                     color: view.sys.colMuted
