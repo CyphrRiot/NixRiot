@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 2.12
+
+- Fixed Backup & Restore bugs
+
 ## 2.11
 
 - The screen no longer blanks at the end of an update: the compositor and the shell stop re-applying a display mode that is already set.

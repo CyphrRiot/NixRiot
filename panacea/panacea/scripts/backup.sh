@@ -127,6 +127,30 @@ plan_scan() {
     return "$rc"
 }
 
+verify_plan() {
+    local man="$SYS/manifest.txt" miss=0 changed=0 checked=0 p sz d have
+    [ -r "$man" ] || { printf 'STEP no-manifest\n'; return 0; }
+    while IFS='|' read -r p sz; do
+        case "$p" in \#*|"") continue ;; esac
+        checked=$((checked + 1))
+        d="$DEST/$p"
+        if [ ! -e "$d" ]; then miss=$((miss + 1)); continue; fi
+        [ -f "$d" ] || continue
+        have=$(stat -c %s "$d" 2>/dev/null || echo 0)
+        if [ "$have" -lt "$sz" ]; then
+            miss=$((miss + 1))
+        elif [ "$have" -ne "$sz" ]; then
+            changed=$((changed + 1))
+        fi
+    done < "$man"
+    printf 'STEP checked %s files, %s changed while copying\n' "$checked" "$changed"
+    if [ "$miss" -gt 0 ]; then
+        printf 'ERROR verify-missing %s\n' "$miss"
+        return 1
+    fi
+    return 0
+}
+
 parse_progress() {
     awk -v out="${1:-/dev/null}" -v planned="${2:-0}" '
         # rsync --human-readable writes the byte count as 52.43M / 32.77K /
@@ -252,17 +276,7 @@ case "${1:-}" in
         cp /etc/fstab "$SYS/fstab" 2>/dev/null
 
         step "Verifying"
-        drift="$(rsync -n -aH --delete --numeric-ids --itemize-changes \
-                       --no-specials --exclude=/lost+found \
-                       "$SRC/" "$DEST/" 2>/dev/null | awk '!/^\.d\.\.t/')"
-        if [ -n "$drift" ]; then
-            printf '%s\n' "$drift" | head -10 | while IFS= read -r l; do
-                printf 'STEP drift %s\n' "$(printf '%s' "$l" | cut -c1-70)"
-            done
-            rm -f "$err" "$last"
-            printf 'ERROR drift %s\n' "$(printf '%s\n' "$drift" | wc -l)"
-            exit 1
-        fi
+        verify_plan || { rm -f "$err" "$last"; exit 1; }
 
         date -u +%Y-%m-%dT%H:%M:%SZ > "$STAMP"
         printf '%s\n' "${mirrored:-0}" > "$DRIVE/last-size"
@@ -277,17 +291,9 @@ case "${1:-}" in
 
     verify)
         mounted || die not-mounted "$DRIVE"
-        step "Comparing $SRC against $DEST"
-        drift="$(rsync -n -aH --delete --numeric-ids --itemize-changes \
-                       --no-specials --exclude=/lost+found \
-                       "$SRC/" "$DEST/" 2>/dev/null | awk '!/^\.d\.\.t/')"
-        if [ -n "$drift" ]; then
-            printf '%s\n' "$drift" | head -10 | while IFS= read -r l; do
-                printf 'STEP drift %s\n' "$(printf '%s' "$l" | cut -c1-70)"
-            done
-            printf 'ERROR drift %s\n' "$(printf '%s\n' "$drift" | wc -l)"
-            exit 1
-        fi
+        plan_scan || die rsync-failed "planning pass"
+        step "Verifying"
+        verify_plan || exit 1
         done_ok
         ;;
 
