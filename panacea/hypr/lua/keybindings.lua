@@ -40,6 +40,7 @@ B("pillNotif",    mainMod .. " + SHIFT + N",     hl.dsp.exec_cmd(QS .. "notifica
 B("pillRecord",   mainMod .. " + P",             hl.dsp.exec_cmd(QS .. "record"))
 B("pillVault",    mainMod .. " + SHIFT + P",     hl.dsp.exec_cmd(QS .. "passwords"))
 B("backup",       mainMod .. " + SHIFT + R",     hl.dsp.exec_cmd(QS .. "backup"))
+B("installs",     mainMod .. " + SHIFT + I",     hl.dsp.exec_cmd(QS .. "installs"))
 
 -- Voice to text (voxtype): hold the key, speak, release, and the text is
 -- inserted into the active field. One key, two binds: pressing starts the

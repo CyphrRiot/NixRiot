@@ -6,6 +6,19 @@ let
   featuresFile = "/etc/nixriot/hosts/installed/features.nix";
   statusFile = "/run/nixriot-features/status.json";
 
+  # Every attribute name in the pinned nixpkgs, so the Installs page can offer a
+  # package by name and hand the exact attribute to nixriot.packages. Names only:
+  # reading a description means forcing every package, which is a full nixpkgs
+  # evaluation on every build. The two patterns dropped are attribute sets, not
+  # packages, so they cannot be installed.
+  packageIndex = pkgs.writeText "nixriot-packages.txt" (
+    (lib.concatStringsSep "\n" (
+      lib.filter
+        (n: !(lib.hasSuffix "Packages" n) && !(lib.hasSuffix "Extensions" n))
+        (lib.attrNames pkgs)
+    )) + "\n"
+  );
+
   nixriot-features = pkgs.writeShellScriptBin "nixriot-features" ''
     #!${pkgs.runtimeShell}
     set -euo pipefail
@@ -23,7 +36,7 @@ let
     mkdir -p "$(dirname "$status")"
     status_write() { printf '%s\n' "$1" > "$status"; chmod 644 "$status"; }
 
-    usage() { echo "usage: nixriot-features apply <feature>-<on|off>" >&2; exit 1; }
+    usage() { echo "usage: nixriot-features apply <feature>-<on|off> | <package>-<add|remove>" >&2; exit 1; }
 
     [ "$#" -eq 2 ] || usage
     [ "$1" = apply ] || usage
@@ -31,19 +44,35 @@ let
     feature="''${request%-*}"
     action="''${request##*-}"
 
-    case "$feature" in
-      office|games|transmission|monero|bitcoin|glyphriot|claude) ;;
-      *) echo "unknown feature: $feature" >&2; exit 1 ;;
+    case "$action" in
+      on|off)
+        case "$feature" in
+          office|games|transmission|monero|bitcoin|glyphriot|claude) ;;
+          *) echo "unknown feature: $feature" >&2; exit 1 ;;
+        esac
+        ;;
+      add|remove)
+        # A package name from the Installs search box. It is not looked up here:
+        # the rebuild is what proves the name, and nixriot.packages names the
+        # attribute that is wrong.
+        case "$feature" in
+          '''|*[!A-Za-z0-9._+-]*) echo "invalid package name: $feature" >&2; exit 1 ;;
+        esac
+        ;;
+      *) usage ;;
     esac
-    case "$action" in on|off) ;; *) usage ;; esac
 
     if [ ! -f "$state" ]; then
-      echo '{"office":false,"games":false,"transmission":false,"monero":false,"bitcoin":false,"glyphriot":false,"claude":false}' > "$state"
+      echo '{"office":false,"games":false,"transmission":false,"monero":false,"bitcoin":false,"glyphriot":false,"claude":false,"packages":[]}' > "$state"
     fi
 
     desired="$state.desired"
-    if [ "$action" = on ]; then value=true; else value=false; fi
-    jq --arg k "$feature" --argjson v "$value" '.[$k] = $v' "$state" > "$desired"
+    case "$action" in
+      on)     jq --arg k "$feature" --argjson v true  '.[$k] = $v' "$state" > "$desired" ;;
+      off)    jq --arg k "$feature" --argjson v false '.[$k] = $v' "$state" > "$desired" ;;
+      add)    jq --arg n "$feature" '.packages = ((.packages // []) + [$n] | unique)' "$state" > "$desired" ;;
+      remove) jq --arg n "$feature" '.packages = ((.packages // []) - [$n])' "$state" > "$desired" ;;
+    esac
 
     status_write "{\"busy\":true,\"feature\":\"$feature\",\"action\":\"$action\",\"step\":\"write\"}"
 
@@ -75,6 +104,13 @@ in
 {
   config = lib.mkIf (cfg.enable && cfg.desktop.enable) {
     environment.systemPackages = [ nixriot-features ];
+
+    # A stable path for the shell to read. /etc is not replaced by an update, and
+    # the file is the same in every generation.
+    environment.etc."nixriot-packages.txt" = {
+      source = packageIndex;
+      mode = "0644";
+    };
 
     systemd.tmpfiles.rules = [
       "d ${stateDir} 0755 root root -"

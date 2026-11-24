@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 2.16
+
+- Settings → Installs can search nixpkgs by name, install a package with two clicks, and remove it again.
+- `SUPER + SHIFT + I` opens Installs directly.
+
 ## 2.15
 
 - Packages refreshed to the 21 November nixpkgs: crush 0.101, Firefox 160.0.1, LibreOffice 26.8.3, the 6.18.64 kernel, and restic 0.20.

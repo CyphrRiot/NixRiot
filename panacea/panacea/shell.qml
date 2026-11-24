@@ -297,6 +297,7 @@ PanelWindow {
             property string bind_themeSwitch: "SUPER + SHIFT + T"
             property string bind_themeSwitchAlt: "SUPER + SHIFT + D"
             property string bind_backup: "SUPER + SHIFT + R"
+            property string bind_installs: "SUPER + SHIFT + I"
             property string bind_lockScreen: "SUPER + L"
             property string bind_closeMouse: "mouse:277"
             property string bind_focusLeft: "SUPER + left"
@@ -399,6 +400,7 @@ PanelWindow {
         themeSwitch: "SUPER + SHIFT + T",
         themeSwitchAlt: "SUPER + SHIFT + D",
         backup: "SUPER + SHIFT + R",
+        installs: "SUPER + SHIFT + I",
         closeMouse: "mouse:277",
         focusLeft: "SUPER + left",
         focusRight: "SUPER + right",
@@ -4325,6 +4327,7 @@ PanelWindow {
         function calendar(): void { root.togglePage("cal"); }
         function theme(): void { root.toggleWalls(); }
         function backup(): void { root.openSettingsAt("backup"); }
+        function installs(): void { root.openSettingsAt("installs"); }
         // The keybind comes through here, so the state the shell reports cannot
         // drift from what is actually on screen.
         function nightlight(): void { root.toggleNightLight(); }
