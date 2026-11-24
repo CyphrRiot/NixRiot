@@ -158,6 +158,22 @@ B("resizeNarrower", mainMod .. " + bracketleft",  hl.dsp.window.resize({ x = -30
 B("resizeTaller",   mainMod .. " + SHIFT + bracketright", hl.dsp.window.resize({ x = 0, y = 30,  relative = true }), { repeating = true })
 B("resizeShorter",  mainMod .. " + SHIFT + bracketleft",  hl.dsp.window.resize({ x = 0, y = -30, relative = true }), { repeating = true })
 
+-- Floating window on the right half, leaving the left half of the screen visible
+B("tileRightHalf", mainMod .. " + ALT + right", function()
+    local win = hl.get_active_window()
+    if not win then return end
+    local mon = win.monitor or hl.get_active_monitor()
+    if not mon then return end
+    if not win.floating then
+        hl.dispatch(hl.dsp.window.float({ action = "toggle" }))
+    end
+    local scale = mon.scale > 0 and mon.scale or 1
+    local w = math.floor(mon.width / scale / 2)
+    local h = math.floor(mon.height / scale)
+    hl.dispatch(hl.dsp.window.resize({ x = w, y = h, relative = false }))
+    hl.dispatch(hl.dsp.window.move({ x = mon.x + w, y = mon.y, relative = false }))
+end)
+
 -- Workspaces
 B("emptyWorkspace", mainMod .. " + Space",   hl.dsp.focus({ workspace = "empty" }))
 for i = 1, 10 do

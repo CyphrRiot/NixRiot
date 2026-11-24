@@ -39,7 +39,7 @@ let
         [ -n "$remote" ] || exit 0
         if [ "$cur" = "$remote" ]; then avail=false; else avail=true; fi
         subject=$(curl -fsS --max-time 10 "$raw/CHANGELOG.md" 2>/dev/null \
-          | awk -v h="## $remote" '$0 == h { found = 1; next } found && /^- / { sub(/^- /, ""); print; exit }')
+          | awk -v h="## $remote" '$0 == h { found = 1; next } found && /^- / { sub(/^- /, ""); gsub(/\*\*/, ""); print; exit }')
         jq -n --arg i "$cur" --arg a "$remote" --arg s "$subject" --argjson u "$avail" --arg t "$now" \
           '{installed:$i,available:$a,subject:$s,updateAvailable:$u,lastChecked:$t}' > "$status.tmp"
         mv "$status.tmp" "$status"
@@ -128,7 +128,9 @@ let
             /^## / { if ($0 == stop) exit; started = 1; next }
             !started { next }
             /^$/ { next }
-            { print }
+            /^>/ { next }
+            /^###/ { next }
+            { sub(/^- /, ""); gsub(/\*\*/, ""); print }
           ' /etc/nixriot/CHANGELOG.md > "$notes" 2>/dev/null || true
         elif [ -n "$old" ] && [ "$old" != unknown ] && git -C "$tmp" rev-parse --verify --quiet "$old" >/dev/null 2>&1; then
           git -C "$tmp" log --pretty=format:'%s' "$old..HEAD" > "$notes" 2>/dev/null || true

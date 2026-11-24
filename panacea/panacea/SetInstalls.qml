@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Controls
 import Quickshell
 import Quickshell.Io
 
@@ -103,7 +104,34 @@ ColumnLayout {
             if (low.indexOf(needle) >= 0) { sub.push(n); continue; }
             if (needle.length >= 3 && subseq(low)) fuzz.push(n);
         }
-        return exact.concat(prefix, sub, fuzz).slice(0, 5);
+        // nixpkgs keeps the same package under more than one spelling: the
+        // canonical attribute, and an alias that holds the upstream name, so
+        // "supertux" matched superTux, superTuxKart, supertux and
+        // supertuxkart. One row per package, and the lowercase attribute is
+        // the spelling that installs.
+        var dedupe = function (names) {
+            var best = new Map();
+            var order = [];
+            for (var i = 0; i < names.length; i++) {
+                var name = names[i];
+                var key = name.toLowerCase();
+                if (!best.has(key)) {
+                    best.set(key, name);
+                    order.push(key);
+                } else if (name === key) {
+                    best.set(key, name);
+                }
+            }
+            var out = [];
+            for (var j = 0; j < order.length; j++)
+                out.push(best.get(order[j]));
+            return out;
+        };
+        // If the whole name was typed, that is the answer. Variants such as
+        // chromium-bsu and chromium-hsts are prefix matches of "chromium" and
+        // only add noise when the user already typed the exact name.
+        if (exact.length > 0) return dedupe(exact).slice(0, 5);
+        return dedupe(exact.concat(prefix, sub, fuzz)).slice(0, 5);
     }
 
     function displayName(name) {
@@ -225,7 +253,7 @@ ColumnLayout {
 
         Text {
             Layout.fillWidth: true
-            text: page.sys.tr("Search nixpkgs by name and install it. Two letters is enough to start.")
+            text: page.sys.tr("Search packages by name and install them. Two letters is enough to start.")
             color: page.sys.colMuted
             wrapMode: Text.WordWrap
             font { family: page.sys.fontBody; pixelSize: page.sys.fontSize - 3 }
@@ -246,7 +274,7 @@ ColumnLayout {
                 anchors.rightMargin: 14
                 background: null
                 color: page.sys.colFg
-                placeholderText: page.sys.tr("Search nixpkgs")
+                placeholderText: page.sys.tr("Search packages")
                 placeholderTextColor: page.sys.colMuted
                 onTextChanged: page.query = text
                 font { family: page.sys.fontBody; pixelSize: page.sys.fontSize - 2 }
@@ -265,7 +293,7 @@ ColumnLayout {
         Text {
             Layout.fillWidth: true
             visible: page.query.length >= 2 && page.results.length === 0
-            text: page.sys.tr("Nothing in nixpkgs matches that")
+            text: page.sys.tr("Nothing matches that")
             color: page.sys.colMuted
             font { family: page.sys.fontBody; pixelSize: page.sys.fontSize - 3 }
         }
@@ -305,7 +333,8 @@ ColumnLayout {
                 SetButton {
                     sys: page.sys
 
-                    readonly property bool have: page.installedPackages().indexOf(modelData) >= 0
+                    readonly property bool have: page.installedPackages().some(
+                        function (p) { return p.toLowerCase() === modelData.toLowerCase(); })
 
                     text: page.busy && page.status.feature === modelData
                           ? (page.status.action === "add"

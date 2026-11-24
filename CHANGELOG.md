@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+## 2.17
+
+> _"The page went dark on its own, and the screen finally learned to sleep. A window can now move over to share the desk with the widgets."_
+
+- **LibreOffice opens dark on the first launch.** The desktop installs `gnome-themes-extra`, so `Adwaita-dark` actually exists when GTK asks for it, and the bundled LibreOffice profile writes the dark scheme's `AppBackground` and `FontColor` instead of leaving them unset. Existing profiles are left alone; the fix seeds a new one.
+- **The screen sleeps.** Hyprland turns the display off after ten minutes and suspends after twenty, locking first on the way down. "Stay awake" still wins: it holds a `systemd-inhibit` for idle, sleep, and the lid, and hypridle honours it.
+- **A window can take the right half.** `SUPER + ALT + Right` makes the active window floating, sizes it to half the monitor width and full height, and pins it to the right edge, leaving the left half of the desk visible for the widgets.
+- **Rebuilds stop blanking the screen.** The activation refresh no longer overwrites the generated monitor, keybinding, and input files, so a rebuild does not re-apply the display mode and drop the picture for a frame.
+- **The what's-new marker survives a rebuild.** The activation refresh no longer wipes `.whatsnew-seen`, so the window appears once per release instead of every time the system activates.
+
 ## 2.16
 
 - Settings → Installs can search nixpkgs by name, install a package with two clicks, and remove it again.

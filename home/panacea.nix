@@ -96,6 +96,11 @@ in
       run cp ${panaceaSrc}/nano/nanorc "$HOME/.nanorc"
     fi
 
+    run mkdir -p "$HOME/.config/libreoffice/4/user"
+    if [ ! -e "$HOME/.config/libreoffice/4/user/registrymodifications.xcu" ]; then
+      run cp ${./libreoffice/registrymodifications.xcu} "$HOME/.config/libreoffice/4/user/registrymodifications.xcu"
+    fi
+
     run mkdir -p "$HOME/.local/bin"
     run cp -r ${patchedPanacea}/bin/. "$HOME/.local/bin/"
     run chmod -R u+w "$HOME/.local/bin"

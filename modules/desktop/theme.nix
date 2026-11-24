@@ -27,6 +27,7 @@
         done
       '')
       kora-icon-theme
+      gnome-themes-extra
     ];
 
     environment.sessionVariables = {
