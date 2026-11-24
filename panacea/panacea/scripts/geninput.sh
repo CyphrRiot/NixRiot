@@ -40,9 +40,16 @@ printf 'return { layouts = %s, variants = %s, options = %s }\n' \
     "$lua_layouts" "$lua_variants" "$lua_options" > "$lua_tmp"
 printf 'input {\n    kb_layout = "%s"\n    kb_variant = "%s"\n    kb_options = "%s"\n}\n' \
     "$layouts" "$variants" "$options" > "$conf_tmp"
+changed=0
+cmp -s "$lua_tmp" "$lua_out" || changed=1
+cmp -s "$conf_tmp" "$conf_out" || changed=1
 mv -f "$lua_tmp" "$lua_out"
 mv -f "$conf_tmp" "$conf_out"
 
-if [ "${PANACEA_DRYRUN:-0}" != "1" ] && [ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]; then
+# A reload re-runs the whole Hyprland config, which re-applies the display rules
+# and modesets every output, which is a visible black frame during an update.
+# Nothing about the keyboard changed, so only reload when a file really moved.
+if [ "${PANACEA_DRYRUN:-0}" != "1" ] && [ "$changed" = 1 ] \
+   && [ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]; then
     hyprctl reload >/dev/null 2>&1 || true
 fi

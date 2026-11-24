@@ -79,7 +79,7 @@ in
 
   home.activation.panaceaConfig = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     ${refresh "panacea" [ "settings.json" "clipboard_pins.json" ".whatsnew-seen" ".run_history" ]}
-    ${refresh "hypr" [ "custom" "wallpaper.conf" "hyprpaper.conf" ]}
+    ${refresh "hypr" [ "custom" "wallpaper.conf" "hyprpaper.conf" "lua/binds_data.lua" "lua/monitors_data.lua" "lua/input_data.lua" ]}
     ${refresh "foot" []}
     ${refresh "fastfetch" []}
 

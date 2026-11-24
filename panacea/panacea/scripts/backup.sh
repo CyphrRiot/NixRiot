@@ -30,6 +30,8 @@ SYS="$DRIVE/system"
 LABEL="${NIXRIOT_BACKUP_LABEL:-$(basename "$DRIVE")}"
 STAMP="$DRIVE/last-run"
 LOG="$DRIVE/backup.log"
+TEST="${NIXRIOT_BACKUP_TEST:-0}"
+BWLIMIT="${NIXRIOT_BACKUP_BWLIMIT:-}"
 
 case "${1:-}" in
     restore)
@@ -47,7 +49,12 @@ esac
 
 step() { printf 'STEP %s\n' "$*"; }
 done_ok() { printf 'DONE %s\n' "${1:-ok}"; }
-die() { printf 'ERROR %s %s\n' "$1" "${2:-}"; exit 1; }
+die() {
+    printf '%s %s %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$1" "${2:-}" \
+        >> "${HOME}/.config/panacea/backup-errors.log" 2>/dev/null || true
+    printf 'ERROR %s %s\n' "$1" "${2:-}"
+    exit 1
+}
 
 mounted() { findmnt -no SOURCE --target "$DRIVE" >/dev/null 2>&1; }
 
@@ -102,6 +109,7 @@ plan_scan() {
             files = 0; bytes = 0; del = 0
         }
         /^\*?deleting[[:space:]]/ { del++; next }
+        $0 !~ /\|[0-9]+$/ { next }
         {
             n = $0
             sub(/\|[^|]*$/, "", n)          # path is everything before the last |
@@ -121,29 +129,44 @@ plan_scan() {
            "${PLAN_FILES:-0}" "${PLAN_BYTES:-0}" \
            "${PLAN_DELETES:-0}" "${PLAN_FREE:-0}"
 
-    if [ "${PLAN_BYTES:-0}" -gt "$(( ${PLAN_FREE:-0} - 512 * 1024 * 1024 ))" ]; then
+    if [ "$TEST" != 1 ] \
+       && [ "${PLAN_BYTES:-0}" -gt "$(( ${PLAN_FREE:-0} - 512 * 1024 * 1024 ))" ]; then
         die no-space "${PLAN_BYTES:-0} ${PLAN_FREE:-0}"
     fi
     return "$rc"
 }
 
 verify_plan() {
-    local man="$SYS/manifest.txt" miss=0 changed=0 checked=0 p sz d have
-    [ -r "$man" ] || { printf 'STEP no-manifest\n'; return 0; }
-    while IFS='|' read -r p sz; do
-        case "$p" in \#*|"") continue ;; esac
-        checked=$((checked + 1))
-        d="$DEST/$p"
-        if [ ! -e "$d" ]; then miss=$((miss + 1)); continue; fi
-        [ -f "$d" ] || continue
-        have=$(stat -c %s "$d" 2>/dev/null || echo 0)
-        if [ "$have" -lt "$sz" ]; then
-            miss=$((miss + 1))
-        elif [ "$have" -ne "$sz" ]; then
-            changed=$((changed + 1))
-        fi
-    done < "$man"
-    printf 'STEP checked %s files, %s changed while copying\n' "$checked" "$changed"
+    local names="${1:-}" man="$SYS/manifest.txt"
+    local miss=0 changed=0 skipped=0 sent=0 checked=0 p sz d have
+
+    if [ -n "$names" ] && [ -s "$names" ]; then
+        while IFS= read -r p; do
+            [ -n "$p" ] || continue
+            case "$p" in */) continue ;; esac
+            case "$p" in ./*) p="${p#./}" ;; esac
+            sent=$((sent + 1))
+            d="$DEST/$p"
+            if [ ! -f "$d" ]; then miss=$((miss + 1)); continue; fi
+            have=$(stat -c %s "$d" 2>/dev/null || echo 0)
+            [ "$have" -eq 0 ] && miss=$((miss + 1))
+        done < "$names"
+    fi
+
+    if [ -r "$man" ]; then
+        while IFS='|' read -r p sz; do
+            case "$p" in \#*|"") continue ;; esac
+            checked=$((checked + 1))
+            d="$DEST/$p"
+            if [ ! -e "$d" ]; then skipped=$((skipped + 1)); continue; fi
+            [ -f "$d" ] || continue
+            have=$(stat -c %s "$d" 2>/dev/null || echo 0)
+            [ "$have" -ne "$sz" ] && changed=$((changed + 1))
+        done < "$man"
+    fi
+
+    printf 'STEP sent %s files, %s changed, %s of %s not copied\n' \
+           "$sent" "$changed" "$skipped" "$checked"
     if [ "$miss" -gt 0 ]; then
         printf 'ERROR verify-missing %s\n' "$miss"
         return 1
@@ -152,7 +175,7 @@ verify_plan() {
 }
 
 parse_progress() {
-    awk -v out="${1:-/dev/null}" -v planned="${2:-0}" '
+    awk -v out="${1:-/dev/null}" -v planned="${2:-0}" -v names="${3:-}" '
         # rsync --human-readable writes the byte count as 52.43M / 32.77K /
         # 1.23G / 0, so the old "digits and commas only" match never fired and
         # every progress line was mistaken for a FILE. Turn a human size into
@@ -194,6 +217,7 @@ parse_progress() {
             }
             if ($0 ~ /^[[:space:]]*$/) next
             printf "FILE %s\n", $0
+            if (names != "") { print $0 > names; close(names) }
             fflush()
         }
     '
@@ -233,8 +257,10 @@ case "${1:-}" in
 
     backup)
         step "Checking the drive"
-        mounted || mount_drive || die not-mounted "$DRIVE"
-        crypto_ok || die not-encrypted "$(drive_device)"
+        if [ "$TEST" != 1 ]; then
+            mounted || mount_drive || die not-mounted "$DRIVE"
+            crypto_ok || die not-encrypted "$(drive_device)"
+        fi
         [ -d "$DEST" ] || mkdir -p "$DEST" || die no-dest "$DEST"
 
         plan_scan
@@ -245,13 +271,15 @@ case "${1:-}" in
 
         err="$(mktemp)"
         last="$(mktemp)"
-        trap 'pkill -TERM -P $$ 2>/dev/null; rm -f "$err" "$last"; printf "DONE cancelled\n"; exit 130' INT TERM
+        sent_list="$(mktemp)"
+        trap 'pkill -TERM -P $$ 2>/dev/null; rm -f "$err" "$last" "$sent_list"; printf "DONE cancelled\n"; exit 130' INT TERM
 
         step "Copying $SRC"
         rsync -aH --delete --numeric-ids --human-readable --no-specials \
               --info=progress2 --info=name --no-inc-recursive \
               --exclude=/lost+found \
-              "$SRC/" "$DEST/" 2>"$err" | tr '\r' '\n' | parse_progress "$last" "${PLAN_BYTES:-0}"
+              ${BWLIMIT:+--bwlimit="$BWLIMIT"} \
+              "$SRC/" "$DEST/" 2>"$err" | tr '\r' '\n' | parse_progress "$last" "${PLAN_BYTES:-0}" "$sent_list"
         rc=${PIPESTATUS[0]}
         if [ "$rc" -ne 0 ] && [ "$rc" -ne 24 ]; then
             die rsync-failed "$(head -1 "$err" | tr -d '\n')"

@@ -28,6 +28,56 @@ update:
 fmt:
 	nix fmt
 
+# Exercise the backup script end to end in /tmp. NIXRIOT_BACKUP_TEST=1 makes the
+# script skip the mount, encryption and space guards, so it runs against a
+# scratch directory instead of a real drive.
+test-backup:
+	@set -euo pipefail; \
+	  t=$$(mktemp -d /tmp/nixriot-backup-test.XXXXXX); \
+	  trap 'rm -rf "$$t"' EXIT; \
+	  mkdir -p "$$t/src/sub" "$$t/dst/home"; \
+	  head -c 33554432 /dev/urandom > "$$t/src/big.bin"; \
+	  printf 'one\n' > "$$t/src/one.txt"; \
+	  printf 'two\n' > "$$t/src/sub/two.txt"; \
+	  printf 'stale\n' > "$$t/dst/home/stale.txt"; \
+	  run() { HOME="$$t/src" NIXRIOT_BACKUP_TEST=1 bash panacea/panacea/scripts/backup.sh "$$@"; }; \
+	  echo "== first run"; \
+	  run backup "$$t/dst" > "$$t/first.out"; cat "$$t/first.out"; \
+	  rg -q '^PLAN files=3 bytes=[0-9]+ deletes=1 free=' "$$t/first.out"; \
+	  rg -q '^DONE ok' "$$t/first.out"; \
+	  test -f "$$t/dst/home/one.txt" && test -f "$$t/dst/home/sub/two.txt"; \
+	  test -f "$$t/dst/home/big.bin" && test ! -e "$$t/dst/home/stale.txt"; \
+	  test -f "$$t/dst/system/manifest.txt"; \
+	  echo "== second run, nothing changed"; \
+	  run backup "$$t/dst" > "$$t/second.out"; cat "$$t/second.out"; \
+	  rg -q '^PLAN files=0 bytes=0 deletes=0' "$$t/second.out"; \
+	  rg -q '^DONE ok' "$$t/second.out"; \
+	  echo "== a new file"; \
+	  printf 'three\n' > "$$t/src/three.txt"; \
+	  run backup "$$t/dst" > "$$t/third.out"; \
+	  test -f "$$t/dst/home/three.txt" && rg -q '^DONE ok' "$$t/third.out"; \
+	  echo "== verify"; \
+	  run verify "$$t/dst" > "$$t/verify.out"; cat "$$t/verify.out"; \
+	  rg -q '^DONE ok' "$$t/verify.out"; \
+	  echo "== cancel through a scope"; \
+	  head -c 268435456 /dev/urandom > "$$t/src/huge.bin"; \
+	  systemd-run --user --scope --collect --quiet --unit=panacea-backup-test \
+	    env HOME="$$t/src" NIXRIOT_BACKUP_TEST=1 NIXRIOT_BACKUP_BWLIMIT=10000 \
+	    bash panacea/panacea/scripts/backup.sh backup "$$t/dst" > "$$t/cancel.out" 2>&1 & \
+	  sleep 3; \
+	  systemctl --user kill --signal=SIGTERM panacea-backup-test.scope || true; \
+	  wait || true; \
+	  for _ in 1 2 3 4 5 6 7 8 9 10; do \
+	    pgrep -f "[r]sync .*nixriot-backup-test" >/dev/null || break; \
+	    sleep 0.5; \
+	  done; \
+	  if pgrep -f "[r]sync .*nixriot-backup-test" >/dev/null; then \
+	    echo "FAIL: rsync survived the cancel"; exit 1; \
+	  fi; \
+	  cat "$$t/cancel.out"; \
+	  rg -q '^DONE cancelled' "$$t/cancel.out"; \
+	  echo "== test-backup: OK"
+
 # Bump the version, commit and tag it, so installed machines see the update,
 # without building an ISO or creating a GitHub release. 'make release' then
 # publishes that same version.

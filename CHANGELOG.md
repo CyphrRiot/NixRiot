@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+## 2.13
+
+- The screen no longer blanks at the end of an update: a config reload no longer drops the display to 60 Hz and back.
+- Your display and keyboard settings survive an update instead of being reset to the defaults.
+- The keybinding and keyboard generators only reload the compositor when what they generate actually changed.
+- The Settings window grows to fit the page you are on instead of cutting it off.
+- Backup moved to `SUPER + SHIFT + R`, in the shape of the other island shortcuts.
+- The "what's new" window is looked for on a timer, so it appears even when the file watch does not fire.
+- A backup verifies the files it copied, instead of demanding that the whole home folder match a system that is still running.
+
 ## 2.12
 
 - Fixed Backup & Restore bugs

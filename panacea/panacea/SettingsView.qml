@@ -12,7 +12,11 @@ Item {
     property int tab: 0
 
     implicitWidth: 980
-    implicitHeight: 620
+    // Report the active page's own height so the island can grow to fit it.
+    // chromeHeight is the arrow row, the tab row, and the two 12px gaps above
+    // the scrolling page area; the page itself is measured by pageCol.
+    readonly property real chromeHeight: (28 + 12) + (32 + 12)
+    implicitHeight: Math.max(320, chromeHeight + pageCol.implicitHeight)
 
     // Center).
     readonly property var sections: [

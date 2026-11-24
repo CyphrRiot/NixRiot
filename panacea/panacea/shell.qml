@@ -296,7 +296,7 @@ PanelWindow {
             property string bind_moveWorkspace10: "SUPER + SHIFT + 0"
             property string bind_themeSwitch: "SUPER + SHIFT + T"
             property string bind_themeSwitchAlt: "SUPER + SHIFT + D"
-            property string bind_backup: "SUPER + ALT + B"
+            property string bind_backup: "SUPER + SHIFT + R"
             property string bind_lockScreen: "SUPER + L"
             property string bind_closeMouse: "mouse:277"
             property string bind_focusLeft: "SUPER + left"
@@ -398,7 +398,7 @@ PanelWindow {
         moveWorkspace10: "SUPER + SHIFT + 0",
         themeSwitch: "SUPER + SHIFT + T",
         themeSwitchAlt: "SUPER + SHIFT + D",
-        backup: "SUPER + ALT + B",
+        backup: "SUPER + SHIFT + R",
         closeMouse: "mouse:277",
         focusLeft: "SUPER + left",
         focusRight: "SUPER + right",
@@ -1185,6 +1185,21 @@ PanelWindow {
         onLoadFailed: {
             root.notesReady = false;
             root.whatsNew = [];
+        }
+    }
+
+    // The update's rsync replaces the tree in a way inotify can miss (the
+    // directory is swapped during the copy), and the shell only reloads itself
+    // when its own files changed. So look again on a timer, or the notes land
+    // and nothing ever notices.
+    Timer {
+        interval: 30000
+        running: true
+        repeat: true
+        onTriggered: {
+            versionFile.reload();
+            seenFile.reload();
+            notesFile.reload();
         }
     }
 
@@ -4699,7 +4714,16 @@ PanelWindow {
             function onImplicitHeightChanged() { capsule.refreshContentH(); }
         }
 
-        readonly property real targetH: root.settingsMode ? Math.min(contentH, root.height - 48)
+        // Settings pages report their own implicit height from the active page
+        // content. Fit that on screen when there is room; otherwise hold the
+        // screen limit, which keeps the page's inner Flickable scrolling.
+        readonly property real settingsFloor: 260
+        readonly property real settingsCeil: Math.max(settingsFloor,
+                                                      root.height - Math.max(0, edgeMargin) - 24)
+        readonly property real settingsPanelH: Math.max(settingsFloor,
+                                                        Math.min(contentH, settingsCeil))
+
+        readonly property real targetH: root.settingsMode && root.page === "settings" ? settingsPanelH
                 : (root.expanded && !root.cfg.pillKeepVisible) ? Math.min(contentH, root.cfg.expandedH)
                 : root.pillSide ? idleLen
                                 : idleThick
@@ -6478,6 +6502,9 @@ PanelWindow {
             anchors.topMargin: (root.page === "main" || root.page === "chat" || root.page === "vpn") && !root.settingsMode ? 55 : 15
             anchors.horizontalCenter: parent ? parent.horizontalCenter : undefined
             width: (root.settingsMode ? root.settingsW : root.panelW) - 30
+            // Constrain the loader to the panel so the page's Flickable can
+            // scroll when the fitted content is taller than the screen allows.
+            height: (root.settingsMode && root.page === "settings") ? capsule.settingsPanelH - 30 : implicitHeight
             active: (root.expanded || capsule.height > root.pillH + 4 || (root.cfg.pillKeepVisible && detachedPanel.opacity > 0.005))
                     && !root.recPickActive && !root.btToastActive && !root.wifiToastActive
                     && !root.acToastActive && !root.voxActive
