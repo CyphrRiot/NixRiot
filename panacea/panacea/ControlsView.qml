@@ -691,12 +691,11 @@ Item {
                     Text {
                         Layout.fillWidth: true
                         horizontalAlignment: Text.AlignRight
-                        text: view.sys.tr("Speaker")
+                        text: "󰕾"
                         color: Pipewire.defaultAudioSink === view.speakerSink
                                ? view.sys.colOn : view.sys.colMuted
-                        elide: Text.ElideRight
                         font {
-                            family: view.sys.fontFam; pixelSize: 10
+                            family: view.sys.fontFam; pixelSize: view.sys.iconSize - 4
                             bold: Pipewire.defaultAudioSink === view.speakerSink
                         }
                         MouseArea {
@@ -712,12 +711,11 @@ Item {
                     }
                     Text {
                         Layout.fillWidth: true
-                        text: view.sys.tr("Headphones")
+                        text: "󰋋"
                         color: Pipewire.defaultAudioSink === view.headphoneSink
                                ? view.sys.colOn : view.sys.colMuted
-                        elide: Text.ElideRight
                         font {
-                            family: view.sys.fontFam; pixelSize: 10
+                            family: view.sys.fontFam; pixelSize: view.sys.iconSize - 4
                             bold: Pipewire.defaultAudioSink === view.headphoneSink
                         }
                         MouseArea {

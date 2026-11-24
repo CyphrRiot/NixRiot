@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 2.23
+
+- Switch between Speakers and Headphones in the island, like a boss
+
 ## 2.22
 
 - Added an audio selection
