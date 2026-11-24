@@ -621,6 +621,10 @@ what's new window shows them once per version.
 
 ![Settings, System page, with the update ready to install](docs/img/update-settings.webp)
 
+![Settings, System page, while the update downloads](docs/img/update-progress.webp)
+
+![The what's new window after the update](docs/img/whats-new.webp)
+
 Before switching, the updater copies the current tree to
 `/var/lib/nixriot/previous` and builds the new one with `nixos-rebuild build`.
 If `local.nix` is missing its user or the build fails, it restores the previous
