@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 2.26
+
+- Fix HDMI "audio" cruft
+
 ## 2.25
 
 - Fix Update bug

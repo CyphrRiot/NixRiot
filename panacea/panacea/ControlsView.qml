@@ -43,6 +43,19 @@ Item {
         if (s.indexOf("hdmi") >= 0 || s.indexOf("display") >= 0) return "󰍹";
         return "󰕾";
     }
+    function sinkIsDisplay(n) {
+        var s = (" " + String((n && n.name) || "") + " "
+                 + String((n && (n.nickname || n.description)) || "")).toLowerCase();
+        return s.indexOf("hdmi") >= 0 || s.indexOf("displayport") >= 0
+            || s.indexOf("display") >= 0;
+    }
+    readonly property var cardSinks: {
+        var all = view.sys.audioSinks || [];
+        var out = all.filter(n => !view.sinkIsDisplay(n));
+        var cur = Pipewire.defaultAudioSink;
+        if (cur && view.sinkIsDisplay(cur) && out.indexOf(cur) < 0) out.push(cur);
+        return out;
+    }
 
     function fmtTime(sec) {
         var t = Math.max(0, Math.floor(sec));
@@ -684,7 +697,7 @@ Item {
                 }
                 Item { Layout.fillWidth: true }
                 Repeater {
-                    model: view.sys.audioSinks
+                    model: view.cardSinks
                     Text {
                         id: outIcon
                         required property var modelData
@@ -703,7 +716,7 @@ Item {
                     }
                 }
                 Text {
-                    visible: view.sys.audioSinks.length === 0
+                    visible: view.cardSinks.length === 0
                     text: view.sys.sinkName.length ? view.sys.sinkName
                                                    : view.sys.tr("No devices")
                     color: view.sys.colMuted
