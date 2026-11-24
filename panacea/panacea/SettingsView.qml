@@ -64,6 +64,9 @@ Item {
           keys: "mouse keyboard layouts xkb pointer cursor sensitivity speed accel acceleration raw input flat" },
         { id: "vpn", title: "VPN", g: 0xF0582, page: "SetVpn.qml",
           sub: view.sys.tr("Client and profile for quick connection."), keys: "vpn happ hiddify clash proxy" },
+        { id: "update",  title: view.sys.tr("Update"),         g: 0xF0450, page: "SetUpdate.qml",
+          sub: view.sys.tr("Version, and installing a newer one."),
+          keys: "update upgrade version check release" },
         { id: "system",  title: view.sys.tr("System"),         g: 0xF0493, page: "SetSystem.qml",
           sub: view.sys.tr("What the machine is made of, and what it is busy with."),
           keys: "about system cpu ram temperature" }
@@ -80,6 +83,7 @@ Item {
         { id: "security", title: view.sys.tr("Security"), g: 0xF033E, pages: ["lock"] },
         { id: "installs", title: view.sys.tr("Installs"), g: 0xF01DA, pages: ["installs"] },
         { id: "backup", title: view.sys.tr("Backup"), g: 0xF006F, pages: ["backup"] },
+        { id: "update", title: view.sys.tr("Update"), g: 0xF0450, pages: ["update"] },
         { id: "system", title: view.sys.tr("System"), g: 0xF0493, pages: ["system"] }
     ]
 

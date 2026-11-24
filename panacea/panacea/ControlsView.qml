@@ -34,17 +34,15 @@ Item {
         return i < 0 ? view.ccDefault.indexOf(id) : i;
     }
 
-    function sinkMatching(kind) {
-        var all = view.sys.audioSinks || [];
-        for (var i = 0; i < all.length; i++) {
-            var n = all[i];
-            var s = String(n.nickname || n.description || n.name || "").toLowerCase();
-            if (s.indexOf(kind) >= 0) return n;
-        }
-        return null;
+    function sinkIcon(n) {
+        var s = (String((n && n.name) || "") + " "
+                 + String((n && (n.nickname || n.description)) || "")).toLowerCase();
+        if (s.indexOf("bluez") >= 0 || s.indexOf("bluetooth") >= 0) return "󰂯";
+        if (s.indexOf("headphone") >= 0 || s.indexOf("headset") >= 0) return "󰋋";
+        if (s.indexOf("speaker") >= 0) return "󰕾";
+        if (s.indexOf("hdmi") >= 0 || s.indexOf("display") >= 0) return "󰍹";
+        return "󰕾";
     }
-    readonly property var speakerSink: view.sinkMatching("speaker")
-    readonly property var headphoneSink: view.sinkMatching("headphone")
 
     function fmtTime(sec) {
         var t = Math.max(0, Math.floor(sec));

@@ -2643,7 +2643,7 @@ PanelWindow {
             root.updNotifId = -1;
             root.dismissToast();
             root.dropNotification(id);
-            root.openSettingsAt("system");
+            root.openSettingsAt("update");
             return;
         }
 
@@ -6244,7 +6244,7 @@ PanelWindow {
                 anchors.fill: parent
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
-                onClicked: root.openSettingsAt("system")
+                onClicked: root.openSettingsAt("update")
             }
         }
 

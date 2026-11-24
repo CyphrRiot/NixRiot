@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 2.24
+
+- Update gets special treatment
+
 ## 2.23
 
 - Switch between Speakers and Headphones in the island, like a boss
