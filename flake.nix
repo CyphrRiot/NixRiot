@@ -69,7 +69,7 @@
       formatter.${system} = nixpkgs.legacyPackages.${system}.nixfmt-rfc-style;
 
       devShells.${system}.default = nixpkgs.legacyPackages.${system}.mkShell {
-        packages = with nixpkgs.legacyPackages.${system}; [ gnumake git gh jq curl ];
+        packages = with nixpkgs.legacyPackages.${system}; [ gnumake git gh jq curl gnupg openssl ];
       };
     };
 }

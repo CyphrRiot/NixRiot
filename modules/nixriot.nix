@@ -293,6 +293,7 @@ in
     environment.systemPackages = (with pkgs; [
       git
       curl
+      gnupg
       rsync
       unzip
       zip

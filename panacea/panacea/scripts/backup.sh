@@ -56,9 +56,9 @@ die() {
     exit 1
 }
 
-mounted() { findmnt -no SOURCE --target "$DRIVE" >/dev/null 2>&1; }
+mounted() { findmnt -n -o SOURCE --mountpoint "$DRIVE" >/dev/null 2>&1; }
 
-drive_device() { findmnt -no SOURCE --target "$DRIVE" 2>/dev/null; }
+drive_device() { findmnt -n -o SOURCE --mountpoint "$DRIVE" 2>/dev/null; }
 
 crypto_ok() {
     local dev
@@ -79,7 +79,10 @@ mount_drive() {
     return 1
 }
 
-free_bytes() { df -B1 --output=avail "$DRIVE" 2>/dev/null | tail -1 | tr -d ' '; }
+free_bytes() {
+    mounted || { printf '0\n'; return 0; }
+    df -B1 --output=avail "$DRIVE" 2>/dev/null | tail -1 | tr -d ' '
+}
 
 # One read-only scan of the source before the copy. Emits STEP Planning and
 # PLAN, writes $SYS/manifest.txt, and refuses to start if the transfer will not

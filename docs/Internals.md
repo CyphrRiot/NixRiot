@@ -1,10 +1,10 @@
 # NixRiot internals
 
 Maintainer and agent notes. The user-facing manual is `../README.md`; the
-reasoning and roadmap are in `Design.md`. This file is the durable record of how
-the system works and why, so it survives a clone.
+project history and parity table are in `Design.md`. This file is the durable
+record of how the system works and why, so it survives a clone.
 
-Last updated: 2026-11-19.
+Last updated: 2026-11-24.
 
 ## Decisions, and why
 
@@ -136,6 +136,15 @@ Last updated: 2026-11-19.
     set, and a wrong field name makes that comparison silently fail: every load
     then looks like a change and forces a modeset, which is the black frame at
     the end of every update.
+22. **The vault store is authenticated.** `panacea/scripts/vault.sh` writes
+    `~/.local/share/panacea/vault.enc` with GPG symmetric AES-256, so the MDC
+    rejects a modified file instead of decrypting attacker-chosen JSON. The
+    password arrives through a 600-mode temp file (`--passphrase-file`), never
+    argv, and `--batch --no-tty --pinentry-mode loopback` keeps GPG away from
+    pinentry and the agent; that last part regressed in the past, so
+    `make test-vault` puts a failing `pinentry` first in `PATH` and fails if it
+    is ever invoked. Stores written by older releases are still read through the
+    old `openssl enc` path and are rewritten as GPG on the next save.
 
 ## Verified package facts
 
@@ -329,25 +338,15 @@ qemu-system-x86_64 -enable-kvm -machine q35 -cpu host -smp 4 -m 8G \
   anything that adds firmware must be appended there.
 - Cosmetic `buildEnv` collisions exist for `gvfs` and `bitcoind` (duplicates).
 
-## Why installs are slow: fish completions
+## Fish completions are off
 
 `programs.fish.generateCompletions` defaults to **true** and, for every package
 in the profile, creates a `<package>_fish-completions` derivation with
 `runCommandLocal` (`nixos/modules/programs/fish.nix`). `runCommandLocal` is
-never substituted from a binary cache, so **every install builds hundreds of
-tiny derivations locally, one after another**. A slow install looks like it has
-hung on whichever one is currently building. It was seen on
-`kora-icon-theme_fish-completions`, which is confusing because kora itself is
-pre-seeded and already in the store.
+never substituted from a binary cache, so every install built hundreds of tiny
+derivations locally, one after another, and looked hung on whichever one was
+running. It was seen on `kora-icon-theme_fish-completions`, which is confusing
+because kora itself is pre-seeded and already in the store.
 
-We enable it implicitly with `programs.fish.enable = true` in
-`modules/apps/shell.nix`.
-
-Fix: `programs.fish.generateCompletions = false;`. The cost is completions
-derived from man pages, and we ship no man pages. Decision pending a full
-install run.
-
-## Open questions
-
-- `docs/Design.md` still describes the old installer flow, old milestones, and
-  the old ISO-size risk.
+`modules/apps/shell.nix` sets `programs.fish.generateCompletions = false;`. The
+cost is completions derived from man pages, and we ship no man pages.

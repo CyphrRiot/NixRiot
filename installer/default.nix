@@ -21,6 +21,7 @@ pkgs.writeScriptBin "nixriot-install" ''
 
   cleanup() { if [ -n "$keyfile" ]; then rm -f "$keyfile"; fi; }
 
+  umask 077
   exec > >(tee -a "$LOG") 2>&1
   trap 'cleanup' EXIT
   trap 'echo; echo "Installer stopped at line $LINENO."; echo "Log: $LOG" >&2' ERR
@@ -201,7 +202,20 @@ pkgs.writeScriptBin "nixriot-install" ''
 
   echo
   echo "Encrypting $root (LUKS2) ..."
-  cryptsetup luksFormat --type luks2 --label nixos "''${luks_opts[@]}" "$root"
+  cryptsetup luksFormat --type luks2 --label nixos \
+    --cipher aes-xts-plain64 --key-size 512 --hash sha256 \
+    --pbkdf argon2id --pbkdf-memory 262144 --pbkdf-parallel 4 \
+    "''${luks_opts[@]}" "$root"
+
+  echo "Backing up the LUKS header to /root/nixriot-luks-header.img ..."
+  cryptsetup luksHeaderBackup "$root" \
+    --header-backup-file /root/nixriot-luks-header.img
+  chmod 600 /root/nixriot-luks-header.img
+
+  echo
+  echo "WARNING: copy /root/nixriot-luks-header.img to a USB stick or another"
+  echo "machine before rebooting. This live system is wiped on reboot, and a"
+  echo "damaged LUKS header cannot be recovered from the passphrase alone."
 
   echo "Unlocking the encrypted volume ..."
   cryptsetup open "''${luks_opts[@]}" "$root" cryptroot

@@ -31,8 +31,13 @@ load)
         echo "[]"
         exit 0
     fi
-    out="$(openssl enc -d -aes-256-cbc -pbkdf2 -iter "$ITER" \
-            -in "$STORE" -pass file:"$PWFILE" 2>/dev/null)" || exit 2
+    if out="$(gpg --batch --no-tty --quiet --yes --pinentry-mode loopback \
+            --passphrase-file "$PWFILE" --decrypt "$STORE" 2>/dev/null)"; then
+        :
+    else
+        out="$(openssl enc -d -aes-256-cbc -pbkdf2 -iter "$ITER" \
+                -in "$STORE" -pass file:"$PWFILE" 2>/dev/null)" || exit 2
+    fi
     printf '%s' "$out" | jq -e 'type == "array"' >/dev/null 2>&1 || exit 2
     printf '%s' "$out"
     ;;
@@ -42,8 +47,10 @@ save)
     body="$(cat)"
     printf '%s' "$body" | jq -e 'type == "array"' >/dev/null 2>&1 || exit 1
     tmp="$STORE.new"
-    printf '%s' "$body" | openssl enc -aes-256-cbc -pbkdf2 -iter "$ITER" \
-        -salt -out "$tmp" -pass file:"$PWFILE" || { rm -f "$tmp"; exit 1; }
+    printf '%s' "$body" | gpg --batch --no-tty --yes --quiet --pinentry-mode loopback \
+        --passphrase-file "$PWFILE" --symmetric --cipher-algo AES256 \
+        --s2k-digest-algo SHA512 --s2k-count 65011712 \
+        --output "$tmp" 2>/dev/null || { rm -f "$tmp"; exit 1; }
     chmod 600 "$tmp"
     mv "$tmp" "$STORE"
     ;;

@@ -6,6 +6,7 @@ import QtQuick.Controls
 import QtQuick.Effects
 import Quickshell
 import Quickshell.Bluetooth
+import Quickshell.Services.Pipewire
 
 //
 Item {
@@ -32,6 +33,18 @@ Item {
         var i = view.ccOrder.indexOf(id);
         return i < 0 ? view.ccDefault.indexOf(id) : i;
     }
+
+    function sinkMatching(kind) {
+        var all = view.sys.audioSinks || [];
+        for (var i = 0; i < all.length; i++) {
+            var n = all[i];
+            var s = String(n.nickname || n.description || n.name || "").toLowerCase();
+            if (s.indexOf(kind) >= 0) return n;
+        }
+        return null;
+    }
+    readonly property var speakerSink: view.sinkMatching("speaker")
+    readonly property var headphoneSink: view.sinkMatching("headphone")
 
     function fmtTime(sec) {
         var t = Math.max(0, Math.floor(sec));
@@ -671,8 +684,52 @@ Item {
                         onClicked: view.sys.togglePage("audio")
                     }
                 }
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 6
+                    visible: view.speakerSink && view.headphoneSink
+                    Text {
+                        Layout.fillWidth: true
+                        horizontalAlignment: Text.AlignRight
+                        text: view.sys.tr("Speaker")
+                        color: Pipewire.defaultAudioSink === view.speakerSink
+                               ? view.sys.colOn : view.sys.colMuted
+                        elide: Text.ElideRight
+                        font {
+                            family: view.sys.fontFam; pixelSize: 10
+                            bold: Pipewire.defaultAudioSink === view.speakerSink
+                        }
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: view.sys.setSink(view.speakerSink)
+                        }
+                    }
+                    Text {
+                        text: "/"
+                        color: view.sys.colLine
+                        font { family: view.sys.fontFam; pixelSize: 10 }
+                    }
+                    Text {
+                        Layout.fillWidth: true
+                        text: view.sys.tr("Headphones")
+                        color: Pipewire.defaultAudioSink === view.headphoneSink
+                               ? view.sys.colOn : view.sys.colMuted
+                        elide: Text.ElideRight
+                        font {
+                            family: view.sys.fontFam; pixelSize: 10
+                            bold: Pipewire.defaultAudioSink === view.headphoneSink
+                        }
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: view.sys.setSink(view.headphoneSink)
+                        }
+                    }
+                }
                 Text {
                     Layout.fillWidth: true
+                    visible: !(view.speakerSink && view.headphoneSink)
                     horizontalAlignment: Text.AlignRight
                     text: view.sys.sinkName.length ? view.sys.sinkName
                                                    : view.sys.tr("No devices")

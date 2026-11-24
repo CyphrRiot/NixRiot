@@ -840,8 +840,7 @@ PanelWindow {
         root.saveCfg();
 
         root.sysLangPending = true;
-        pLocaleSet.command = root.rootCmd(["locale", code],
-            ["pkexec", Quickshell.env("HOME") + "/.config/panacea/scripts/locale.sh", "set", code]);
+        pLocaleSet.command = root.rootCmd(["locale", code]);
         pLocaleSet.running = false;
         pLocaleSet.running = true;
     }
@@ -915,14 +914,13 @@ PanelWindow {
             onStreamFinished: root.rootHelper = text.trim()
         }
     }
-    function rootCmd(args, legacy) {
-        return root.rootHelper !== "" ? ["pkexec", root.rootHelper].concat(args) : legacy;
+    function rootCmd(args) {
+        return root.rootHelper !== "" ? ["pkexec", root.rootHelper].concat(args) : ["false"];
     }
 
     function bootIntoSystem(id) {
         if (!id) return;
-        pBootOs.command = root.rootCmd(["boot", String(id)],
-            ["pkexec", root.scriptDir + "/bootos.sh", "boot", String(id)]);
+        pBootOs.command = root.rootCmd(["boot", String(id)]);
         pBootOs.running = false;
         pBootOs.running = true;
     }

@@ -3,7 +3,7 @@
 ![NixRiot](docs/img/banner.webp)
 
 ![Status](https://img.shields.io/badge/status-release-9a2eef?labelColor=1b2b34)
-![Version](https://img.shields.io/badge/version-2.20-9a2eef?labelColor=1b2b34)
+![Version](https://img.shields.io/badge/version-2.21-9a2eef?labelColor=1b2b34)
 ![Platform](https://img.shields.io/badge/platform-NixOS-9a2eef?logo=nixos&logoColor=white&labelColor=1b2b34)
 ![Shell](https://img.shields.io/badge/shell-Hyprland-9a2eef?logo=hyprland&logoColor=9a2eef&labelColor=1b2b34)
 ![UI](https://img.shields.io/badge/UI-Quickshell-9a2eef?labelColor=1b2b34)
@@ -233,8 +233,13 @@ disk until that answers.
    somewhere safe.
 8. It partitions (512M ESP labeled `BOOT`, the rest as an encrypted `nixos`
    volume), formats, mounts, and runs `nixos-install`.
-9. When `nixos-install` finishes, it unmounts and reboots into the installed
-   system. Remove the USB stick.
+9. After formatting it writes a LUKS header backup to
+   `/root/nixriot-luks-header.img` and warns you to copy it to a USB stick or
+   another machine before rebooting. Keep that file: if the header is damaged,
+   the passphrase alone cannot open the disk. The live system is wiped on
+   reboot.
+10. When `nixos-install` finishes, it unmounts and reboots into the installed
+    system. Remove the USB stick.
 
 The install builds the target system from the flake and downloads it from
 `cache.nixos.org`, so it needs a network connection. Everything is logged to
@@ -479,11 +484,11 @@ draws: screenshots and recordings carry it. The pill shows a moon when it is on.
 ## Password vault
 
 `SUPER + SHIFT + P` opens the vault. It holds labelled logins and passwords,
-encrypted with AES-256 (PBKDF2, 240000 iterations) at
-`~/.local/share/panacea/vault.enc`, whose directory is mode 700. The password
-that unlocks it is your system password, checked through PAM, so there is no
-second password to remember or lose. The vault locks itself after fifteen
-minutes without use.
+encrypted with GPG's symmetric AES-256 at `~/.local/share/panacea/vault.enc`,
+whose directory is mode 700. The store is authenticated, so a modified file is
+refused instead of decrypted. The password that unlocks it is your system
+password, checked through PAM, so there is no second password to remember or
+lose. The vault locks itself after fifteen minutes without use.
 
 The same store is reachable from a terminal through
 `~/.config/panacea/scripts/vault.sh load`, `save` and `wipe`; `load` and `save`

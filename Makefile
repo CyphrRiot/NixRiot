@@ -1,6 +1,6 @@
 SHELL := bash
 
-.PHONY: check build iso switch update fmt bump ship release release-major do-release publish
+.PHONY: check build iso switch update fmt test-backup test-vault bump ship release release-major do-release publish
 
 VERSION_FILE = VERSION
 CHANGELOG = CHANGELOG.md
@@ -59,6 +59,10 @@ test-backup:
 	  echo "== verify"; \
 	  run verify "$$t/dst" > "$$t/verify.out"; cat "$$t/verify.out"; \
 	  rg -q '^DONE ok' "$$t/verify.out"; \
+	  echo "== an unmounted directory is not a drive"; \
+	  HOME="$$t/src" bash panacea/panacea/scripts/backup.sh status "$$t/dst" > "$$t/status.out"; \
+	  cat "$$t/status.out"; \
+	  rg -qx 'mounted=no' "$$t/status.out"; \
 	  echo "== cancel through a scope"; \
 	  head -c 268435456 /dev/urandom > "$$t/src/huge.bin"; \
 	  systemd-run --user --scope --collect --quiet --unit=panacea-backup-test \
@@ -77,6 +81,48 @@ test-backup:
 	  cat "$$t/cancel.out"; \
 	  rg -q '^DONE cancelled' "$$t/cancel.out"; \
 	  echo "== test-backup: OK"
+
+# Exercise the vault end to end in a scratch HOME. A failing pinentry is first
+# in PATH, so the test proves the GPG calls never reach pinentry or the agent.
+test-vault:
+	@set -euo pipefail; \
+	  t=$$(mktemp -d /tmp/nixriot-vault-test.XXXXXX); \
+	  trap 'rm -rf "$$t"' EXIT; \
+	  mkdir -p "$$t/home/.gnupg" "$$t/run" "$$t/fake"; \
+	  printf '#!/bin/sh\necho invoked >> "%s/marker"\nexit 1\n' "$$t" > "$$t/fake/pinentry"; \
+	  chmod +x "$$t/fake/pinentry"; \
+	  printf 'pinentry-program %s/pinentry\n' "$$t/fake" > "$$t/home/.gnupg/gpg-agent.conf"; \
+	  chmod 700 "$$t/home/.gnupg"; \
+	  home="$$t/home"; \
+	  store="$$home/.local/share/panacea/vault.enc"; \
+	  v=panacea/panacea/scripts/vault.sh; \
+	  run() { HOME="$$home" XDG_RUNTIME_DIR="$$t/run" DISPLAY= WAYLAND_DISPLAY= GPG_TTY= \
+	          PATH="$$t/fake:$$PATH" sh "$$v" "$$@"; }; \
+	  echo "== save and load"; \
+	  printf 'pw\n[{"id":"1","label":"x"}]\n' | run save; \
+	  test "$$(printf 'pw\n' | run load)" = '[{"id":"1","label":"x"}]'; \
+	  test ! -e "$$t/marker" || { echo "FAIL: pinentry was invoked"; exit 1; }; \
+	  echo "== wrong password"; \
+	  if printf 'wrong\n' | run load >/dev/null 2>&1; then \
+	    echo "FAIL: a wrong password opened the vault"; exit 1; \
+	  fi; \
+	  echo "== tampered store"; \
+	  cp "$$store" "$$t/good"; \
+	  printf '\000' | dd of="$$store" bs=1 seek=40 conv=notrunc status=none; \
+	  if printf 'pw\n' | run load >/dev/null 2>&1; then \
+	    echo "FAIL: a tampered store opened"; exit 1; \
+	  fi; \
+	  cp "$$t/good" "$$store"; \
+	  echo "== legacy openssl store"; \
+	  printf pw > "$$t/pwfile"; \
+	  printf '[{"id":"old"}]' | openssl enc -aes-256-cbc -pbkdf2 -iter 240000 \
+	    -salt -out "$$store" -pass file:"$$t/pwfile"; \
+	  test "$$(printf 'pw\n' | run load)" = '[{"id":"old"}]'; \
+	  echo "== wipe"; \
+	  run wipe; \
+	  test ! -e "$$store"; \
+	  test ! -e "$$t/marker" || { echo "FAIL: pinentry was invoked"; exit 1; }; \
+	  echo "== test-vault: OK"
 
 # Bump the version, commit and tag it, so installed machines see the update,
 # without building an ISO or creating a GitHub release. 'make release' then

@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 2.21
+
+- The password vault's encrypted store is now authenticated, so a modified file is refused instead of decrypted.
+- Backup Now refuses to run when the drive is not mounted, instead of silently writing into a local folder.
+- The control center's Sound card has Speaker and Headphones buttons, so switching output is one click.
+- The installer pins the LUKS cipher, key size, hash and argon2id cost, and writes a header backup that must be copied off the live system before reboot.
+
 ## 2.20
 
 - Fish options such as `--command` now render in their own shade instead of matching every other argument.
