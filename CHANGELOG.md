@@ -2,9 +2,16 @@
 
 ## Unreleased
 
+## 2.19
+
+- Fix pill at bottom
+
 ## 2.18
 
-- Fix fish colors
+> _"The prompt found its colours again, and the island learned to live at the bottom of the screen without disappearing."_
+
+- **Fish colours are readable again.** The prompt is back to OpenRiot teal, commands are near-white, parameters are a muted shade, and the selection is cyan instead of the accent red. The red search and bracket backgrounds are gone.
+- **The island works at the bottom.** Moving the pill to the bottom no longer leaves the expanded panel at zero height. The detached panel now measures the space above the capsule instead of the space below it, so it opens where it should.
 
 ## 2.17
 

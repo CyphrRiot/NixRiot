@@ -6650,7 +6650,10 @@ PanelWindow {
 
         readonly property real detachedTargetH: Math.min(capsule.contentH, root.cfg.expandedH)
         height: (root.cfg.pillKeepVisible && !root.settingsMode && (root.expanded || opacity > 0.005))
-                ? Math.min(detachedTargetH, root.height - (capsule.y + capsule.height + panelGap + 24))
+                ? Math.min(detachedTargetH,
+                           Math.max(0, root.pillAtBottom
+                                       ? capsule.y - panelGap - 24
+                                       : root.height - (capsule.y + capsule.height + panelGap + 24)))
                 : 0
         Behavior on height { NumberAnimation { duration: root.animQuick; easing.type: Easing.OutCubic } }
 
