@@ -3,7 +3,7 @@
 ![NixRiot](docs/img/banner.webp)
 
 ![Status](https://img.shields.io/badge/status-release-9a2eef?labelColor=1b2b34)
-![Version](https://img.shields.io/badge/version-2.30-9a2eef?labelColor=1b2b34)
+![Version](https://img.shields.io/badge/version-2.31-9a2eef?labelColor=1b2b34)
 ![Platform](https://img.shields.io/badge/platform-NixOS-9a2eef?logo=nixos&logoColor=white&labelColor=1b2b34)
 ![Shell](https://img.shields.io/badge/shell-Hyprland-9a2eef?logo=hyprland&logoColor=9a2eef&labelColor=1b2b34)
 ![UI](https://img.shields.io/badge/UI-Quickshell-9a2eef?labelColor=1b2b34)
@@ -37,6 +37,7 @@ This file is the manual. The reasoning is in
 - [What is installed](#what-is-installed)
 - [Shell aliases and quick reference](#shell-aliases-and-quick-reference)
 - [Control center](#control-center)
+- [Desktop widgets](#desktop-widgets)
 - [Wallpapers](#wallpapers)
 - [Night light](#night-light)
 - [Password vault](#password-vault)
@@ -435,14 +436,14 @@ placement opens its panels above the capsule instead of below it.
 ### Installs
 
 Optional applications live in **Settings → Installs**: LibreOffice, the games
-collection, Transmission, Monero GUI, Bitcoin Core, GlyphRiot and Claude Code.
+collection, Transmission, Monero GUI, Bitcoin Core and Claude Code.
 The search box matches package names from the pinned nixpkgs, so a package that
 is not in that list, or anything else from nixpkgs, can be installed by name.
 Install and Remove run a rebuild in the background; the button shows what it is
 doing. Your selection is kept in `/etc/nixriot/hosts/installed/features.nix`,
 which an update preserves, and the same switches exist in `local.nix`
 (`nixriot.office`, `nixriot.games`, `nixriot.crypto.monero`,
-`nixriot.crypto.bitcoin`, `nixriot.crypto.glyphriot`, `nixriot.claude`) if you
+`nixriot.crypto.bitcoin`, `nixriot.claude`) if you
 prefer to edit there. Transmission and the games collection are off by default;
 LibreOffice is about 1 GB.
 
@@ -462,6 +463,20 @@ Then run `rebuild`. Names are nixpkgs attribute names, so `"kdePackages.kate"`
 works, and a name that does not exist fails the build and tells you which one.
 Claude Code is unfree; NixRiot allows unfree packages, the same as it does for
 Crush.
+
+---
+
+## Desktop widgets
+
+The wallpaper carries a set of cards: date, clock, weather, system load, a
+pomodoro timer, the music player, and a scratchpad. Every one is optional and
+switched in **Settings → Appearance → Widgets**. Clicking a card changes its
+mode or starts it; right-clicking usually does the other thing.
+
+The pomodoro is 25 minutes of focus and 5 of break: click the tomato to start or
+pause, double click to reset, or press `SUPER + ,` from anywhere.
+
+![The desktop widgets, including the pomodoro timer and the music player](docs/img/widgets.webp)
 
 ---
 
@@ -531,17 +546,15 @@ next to your username. The file holds both, and an update preserves it:
   nixriot = {
     crypto.monero = true;
     crypto.bitcoin = true;
-    crypto.glyphriot = true;
   };
 }
 ```
 
-Monero GUI and Bitcoin Core come from nixpkgs. `crypto.glyphriot` installs
-[GlyphRiot](https://github.com/CyphrRiot/glyphriot), a seed-phrase glyph tool
-for self-custody, built from source and pinned to a commit. WireGuard is
-configured with `nixriot.wireguard.enable = true;` in the same stanza. Wallet
-files and keys, seed phrases included, are yours to create and back up; the
-flake never ships them.
+Monero GUI and Bitcoin Core come from nixpkgs. [GlyphRiot](https://github.com/CyphrRiot/glyphriot),
+a seed-phrase glyph tool for self-custody, is installed by default, built from source and pinned
+to a commit. WireGuard is configured with `nixriot.wireguard.enable = true;` in the same stanza.
+Wallet files and keys, seed phrases included, are yours to create and back up; the flake never
+ships them.
 
 ---
 

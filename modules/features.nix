@@ -47,7 +47,7 @@ let
     case "$action" in
       on|off)
         case "$feature" in
-          office|games|transmission|monero|bitcoin|glyphriot|claude) ;;
+          office|games|transmission|monero|bitcoin|claude) ;;
           *) echo "unknown feature: $feature" >&2; exit 1 ;;
         esac
         ;;
@@ -63,7 +63,7 @@ let
     esac
 
     if [ ! -f "$state" ]; then
-      echo '{"office":false,"games":false,"transmission":false,"monero":false,"bitcoin":false,"glyphriot":false,"claude":false,"packages":[]}' > "$state"
+      echo '{"office":false,"games":false,"transmission":false,"monero":false,"bitcoin":false,"claude":false,"packages":[]}' > "$state"
     fi
 
     desired="$state.desired"

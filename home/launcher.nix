@@ -62,20 +62,5 @@ in
       icon = "signal-desktop";
       categories = "Network;Chat;";
     };
-    "applications/signal-tui.desktop" = appFile {
-      name = "Signal TUI";
-      exec = "footclient -e gurk";
-      categories = "Network;Chat;";
-    };
-    "applications/proton-mail.desktop" = appFile {
-      name = "Proton Mail";
-      exec = "firefox https://mail.proton.me/inbox";
-      categories = "Network;Email;";
-    };
-    "applications/x.desktop" = appFile {
-      name = "X";
-      exec = "firefox https://x.com/";
-      categories = "Network;News;";
-    };
   };
 }

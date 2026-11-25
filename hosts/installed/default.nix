@@ -10,12 +10,11 @@ let
     // lib.optionalAttrs (features ? games) { games = features.games; }
     // lib.optionalAttrs (features ? transmission) { media.transmission = features.transmission; }
     // lib.optionalAttrs
-         (features ? monero || features ? bitcoin || features ? glyphriot)
+         (features ? monero || features ? bitcoin)
          {
            crypto = lib.filterAttrs (_: v: v != null) {
              monero = features.monero or null;
              bitcoin = features.bitcoin or null;
-             glyphriot = features.glyphriot or null;
            };
          };
 in

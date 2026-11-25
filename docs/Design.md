@@ -76,7 +76,7 @@ asset is carried.
 | Mullvad | **Port** | daemon plus the GUI |
 | Transmission | **Port** | nixpkgs `transmission_4-gtk` |
 | Proton Drive sync | **Port** | `rclone`, configured by hand |
-| Signal (gurk) | **Port** | nixpkgs `gurk-rs`, with a launcher entry |
+| Signal (gurk) | **Port** | nixpkgs `gurk-rs`, CLI only |
 | LibreOffice, Firefox | **Port** | nixpkgs |
 | Backup and restore | **Port** | `backup.sh` mirrors the home folder with `rsync`; `restic` and `rclone` are also installed |
 | SSH hardening | **Port** | NixOS options |

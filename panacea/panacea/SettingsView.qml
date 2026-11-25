@@ -52,7 +52,7 @@ Item {
           keys: "lock screen blur idle" },
         { id: "installs", title: view.sys.tr("Installs"),      g: 0xF01DA, page: "SetInstalls.qml",
           sub: view.sys.tr("Optional applications you can add or remove."),
-          keys: "install apps office games transmission monero bitcoin glyphriot libreoffice claude" },
+          keys: "install apps office games transmission monero bitcoin libreoffice claude" },
         { id: "backup",  title: view.sys.tr("Backup and restore"), g: 0xF006F, page: "SetBackup.qml",
           sub: view.sys.tr("Mirror your home folder to a mounted drive, and put it back."),
           keys: "backup restore rsync drive mirror sync" },

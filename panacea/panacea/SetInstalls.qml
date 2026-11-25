@@ -21,7 +21,6 @@ ColumnLayout {
         { key: "transmission", name: "Transmission", sub: "BitTorrent client." },
         { key: "monero",       name: "Monero",      sub: "Monero GUI wallet." },
         { key: "bitcoin",      name: "Bitcoin",     sub: "Bitcoin Core and Bitcoin Qt." },
-        { key: "glyphriot",    name: "GlyphRiot",   sub: "Seed-phrase glyph tool." },
         { key: "claude",       name: "Claude Code", sub: "Anthropic's command-line agent." }
     ]
 

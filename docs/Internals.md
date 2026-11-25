@@ -49,8 +49,9 @@ Last updated: 2026-11-24.
     `security.pam.services.swaylock` is set in `modules/desktop/panacea.nix`;
     `lock.qml` and `shell.qml` both use `PamContext { config: "swaylock" }`.
 12. **No default password, no default username.** The installer asks for both.
-13. **GlyphRiot and fingerprint are opt-in** (`nixriot.crypto.glyphriot`,
-    `nixriot.fingerprint.{enable,pam,tod}`).
+13. **GlyphRiot is installed by default** and can be disabled with
+    `nixriot.crypto.glyphriot = false;`. Fingerprint remains opt-in
+    (`nixriot.fingerprint.{enable,pam,tod}`).
 14. **Zed is not installed.** If it is wanted, it is a one-line option plus a
     writable `~/.config/zed/settings.json` so Panacea's `palette.sh` can theme
     it. Helix and Crush are the defaults.
@@ -165,7 +166,7 @@ Checked against nixpkgs. Do not re-add removed packages, and use these names.
 | `noto-fonts-extra` | **gone**: use `noto-fonts-lgc-plus` |
 | `gnome-disks` | **renamed**: `gnome-disk-utility` |
 | `crush` | present, 0.101.0, `fsl11Mit` (unfree; `allowUnfree` is set) |
-| `gurk-rs` | present, 0.10.2; the `signal` alias and its launcher entry |
+| `gurk-rs` | present, 0.10.2; the `signal` alias, no launcher entry |
 | `quickshell` | present, 0.3.2 |
 | `zeroad`, `frozen-bubble` | **removed from nixpkgs** |
 

@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+## 2.31
+
+> _"The toolbox got quieter and the seed phrase got its own namespace."_
+
+- GlyphRiot is installed by default, not tucked away in Installs; it is on PATH as glyphriot.
+- The app menu is leaner: Signal TUI, Proton Mail and X are gone. 🦩
+- gurk is CLI-only. If you want it, type gurk in a terminal.
+- Settings → Installs still handles LibreOffice, games, Transmission, Monero, Bitcoin and Claude Code.
+
 ## 2.30
 
 > _"The boot screen came back, the tomato started ticking, and the releases learned to sign their own work."_
