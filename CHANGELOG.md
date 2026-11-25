@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 2.28
+
+- Security updates
+
 ## 2.27
 
 - Update icon on expanded pill goes to "Update" not "System" now

@@ -3,7 +3,7 @@
 ![NixRiot](docs/img/banner.webp)
 
 ![Status](https://img.shields.io/badge/status-release-9a2eef?labelColor=1b2b34)
-![Version](https://img.shields.io/badge/version-2.27-9a2eef?labelColor=1b2b34)
+![Version](https://img.shields.io/badge/version-2.28-9a2eef?labelColor=1b2b34)
 ![Platform](https://img.shields.io/badge/platform-NixOS-9a2eef?logo=nixos&logoColor=white&labelColor=1b2b34)
 ![Shell](https://img.shields.io/badge/shell-Hyprland-9a2eef?logo=hyprland&logoColor=9a2eef&labelColor=1b2b34)
 ![UI](https://img.shields.io/badge/UI-Quickshell-9a2eef?labelColor=1b2b34)
@@ -132,8 +132,17 @@ Grab the latest image and write it to a USB stick. No build tools required.
 sudo dd if=NixRiot.iso of=/dev/sdX bs=4M status=progress oflag=sync
 ```
 
-Each release also publishes `SHA256SUMS`; check the image against it before
-writing it to a stick (`sha256sum -c SHA256SUMS`).
+Each release also publishes `SHA256SUMS` and a detached `SHA256SUMS.sig`,
+signed with the same SSH key that signs the release tags. Verify the signature
+before trusting the checksum:
+
+```sh
+ssh-keygen -Y verify -f allowed_signers -I CyphrRiot@protonmail.com \
+  -n file -s SHA256SUMS.sig < SHA256SUMS
+sha256sum -c SHA256SUMS
+```
+
+`allowed_signers` ships in the repository and stays inside the installed tree.
 
 It is a network installer: it carries the installer, the project and the biggest
 parts of the desktop, and downloads the rest while it installs. It needs an
@@ -789,8 +798,9 @@ attach the log.
   sync
   ```
 
-  Verify the ISO against `SHA256SUMS`, boot UEFI with Secure Boot off, and try a
-  second stick before blaming the machine.
+  Verify the ISO signature with `ssh-keygen -Y verify` as in Download, and the
+  checksum with `sha256sum -c SHA256SUMS`, then boot UEFI with Secure Boot off,
+  and try a second stick before blaming the machine.
 
 ---
 

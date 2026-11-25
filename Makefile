@@ -9,6 +9,7 @@ EDITOR ?= hx
 # stops, and PUBLISH=0 only skips the ISO build and the GitHub release.
 PUBLISH ?= 1
 SIGNKEY ?= $(HOME)/.ssh/nixriot.pub
+SECKEY ?= $(HOME)/.ssh/nixriot
 
 check:
 	nix flake check
@@ -239,6 +240,7 @@ do-publish:
 	  echo "Building the ISO for v$$ver. This takes a few minutes."; \
 	  nix build .#iso; \
 	  sha256sum result/iso/NixRiot.iso | sed 's| result/iso/|  |' > SHA256SUMS; \
+	  ssh-keygen -Y sign -f $(SECKEY) -n file SHA256SUMS; \
 	  notes() { \
 	    awk -v h="## $$ver" '$$0 == h { f = 1; next } /^## / { f = 0 } f' $(CHANGELOG); \
 	  }; \
@@ -246,6 +248,7 @@ do-publish:
 	  echo "About to publish v$$ver to github.com/CyphrRiot/NixRiot:"; \
 	  echo "  result/iso/NixRiot.iso  ($$(du -h result/iso/NixRiot.iso | cut -f1))"; \
 	  echo "  SHA256SUMS"; \
+	  echo "  SHA256SUMS.sig"; \
 	  echo; \
 	  releases=$$(gh release list --limit 200 --json tagName -q '.[].tagName' | sort -V || true); \
 	  keep_newest=$$(printf '%s\n' "$$releases" | grep -vxF "v$$ver" | tail -n 1 || true); \
@@ -259,15 +262,15 @@ do-publish:
 	  case "$$answer" in n|N) echo "Nothing published. Re-run 'make publish' when ready."; exit 0 ;; *) ;; esac; \
 	  git push origin main; \
 	  git push origin "v$$ver"; \
-	  if gh release view "v$$ver" >/dev/null 2>&1; then \
-	    gh release upload "v$$ver" result/iso/NixRiot.iso SHA256SUMS --clobber; \
-	    gh release edit "v$$ver" --title "NixRiot v$$ver" --notes-file <(notes); \
-	  else \
-	    gh release create "v$$ver" --title "NixRiot v$$ver" --notes-file <(notes) \
-	      result/iso/NixRiot.iso SHA256SUMS; \
-	  fi; \
+	if gh release view "v$$ver" >/dev/null 2>&1; then \
+		gh release upload "v$$ver" result/iso/NixRiot.iso SHA256SUMS SHA256SUMS.sig --clobber; \
+		gh release edit "v$$ver" --title "NixRiot v$$ver" --notes-file <(notes); \
+	else \
+		gh release create "v$$ver" --title "NixRiot v$$ver" --notes-file <(notes) \
+			result/iso/NixRiot.iso SHA256SUMS SHA256SUMS.sig; \
+	fi; \
 	  gh release edit "v$$ver" --draft=false >/dev/null; \
-	  for f in NixRiot.iso SHA256SUMS; do \
+	  for f in NixRiot.iso SHA256SUMS SHA256SUMS.sig; do \
 	    gh release view "v$$ver" --json assets --jq '.assets[].name' | rg -qx "$$f" || { \
 	      echo "v$$ver is missing $$f, or is still a draft."; \
 	      exit 1; \
