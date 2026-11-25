@@ -22,8 +22,9 @@
       "x-scheme-handler/http" = "firefox.desktop";
       "x-scheme-handler/https" = "firefox.desktop";
       "application/pdf" = "org.pwmt.zathura.desktop";
-      "text/markdown" = "org.gnome.TextEditor.desktop";
-      "text/x-markdown" = "org.gnome.TextEditor.desktop";
+      "text/markdown" = "text-editor.desktop";
+      "text/x-markdown" = "text-editor.desktop";
+      "text/plain" = "text-editor.desktop";
       "inode/directory" = "panacea-files.desktop";
 
       "image/png" = "panacea-media.desktop";
@@ -42,6 +43,17 @@
   };
 
   xdg.dataFile = {
+    "applications/text-editor.desktop".text = ''
+      [Desktop Entry]
+      Type=Application
+      Name=Text Editor
+      Exec=gnome-text-editor %U
+      Icon=org.gnome.TextEditor
+      Terminal=false
+      Categories=Utility;TextEditor;
+      MimeType=text/plain;text/markdown;text/x-markdown;text/rtf;application/json;
+    '';
+
     "applications/mpv.desktop".text = ''
       [Desktop Entry]
       Type=Application

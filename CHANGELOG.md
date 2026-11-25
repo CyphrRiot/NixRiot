@@ -2,10 +2,11 @@
 
 ## Unreleased
 
-## 2.37
+## 2.38
 
 > _"Small mercies: the right half fits, the password prompt comes back, and the Done card knows when to leave."_
 
+- Add .md file support
 - SUPER + ALT + Right puts the window on the right half without clipping the edges.
 - After a password prompt, the pill returns to the page you were on instead of collapsing.
 - Updates no longer ask for a password; the signature is the gate.

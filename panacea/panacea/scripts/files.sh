@@ -351,6 +351,7 @@ EOF
         for k in Downloads Documents Pictures Videos Music Desktop; do
             [ -d "$HOME/$k" ] && printf '%s|%s/%s|%s\n' "${k,,}" "$HOME" "$k" "$k"
         done
+        [ -d "$HOME/Code" ] && printf 'code|%s/Code|Code\n' "$HOME"
         printf 'root|/|System\n'
         printf 'trash|%s/Trash/files|Trash\n' "${XDG_DATA_HOME:-$HOME/.local/share}"
         ;;
