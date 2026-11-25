@@ -104,16 +104,13 @@ ColumnLayout {
             onPicked: id => { page.sys.cfg.widgetRightMode = id; page.sys.saveCfg(); }
         }
 
-        SetSelect {
+        SetToggle {
             visible: page.sys.cfg.featWidgets && page.detailsOpen
             sys: page.sys
-            label: page.sys.tr("Progress bar")
-            options: [
-                { id: "day", text: page.sys.tr("Day progress (24 hours)") },
-                { id: "year", text: page.sys.tr("Year progress (365 days)") }
-            ]
-            value: page.sys.cfg.widgetProgressMode || "day"
-            onPicked: id => { page.sys.cfg.widgetProgressMode = id; page.sys.saveCfg(); }
+            label: page.sys.tr("Pomodoro timer")
+            sub: page.sys.tr("A 25 minute focus timer with a 5 minute break, in place of the day progress bar.")
+            on: page.sys.cfg.featPomodoro !== false
+            onToggled: v => { page.sys.cfg.featPomodoro = v; page.sys.saveCfg(); }
         }
 
         SetToggle {

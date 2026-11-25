@@ -39,6 +39,7 @@ B("pillPower",    mainMod .. " + Escape",        hl.dsp.exec_cmd(QS .. "powermen
 B("pillNotif",    mainMod .. " + SHIFT + N",     hl.dsp.exec_cmd(QS .. "notifications"))
 B("pillRecord",   mainMod .. " + P",             hl.dsp.exec_cmd(QS .. "record"))
 B("pillVault",    mainMod .. " + SHIFT + P",     hl.dsp.exec_cmd(QS .. "passwords"))
+B("pillPomodoro", mainMod .. " + comma",         hl.dsp.exec_cmd(QS .. "pomodoro"))
 B("backup",       mainMod .. " + SHIFT + R",     hl.dsp.exec_cmd(QS .. "backup"))
 B("installs",     mainMod .. " + SHIFT + I",     hl.dsp.exec_cmd(QS .. "installs"))
 

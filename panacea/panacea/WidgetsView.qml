@@ -675,6 +675,7 @@ Item {
 
         Card {
             id: progressCard
+            visible: !view.sys || !view.sys.cfg || view.sys.cfg.featPomodoro !== false
             Layout.preferredWidth: view.fullW
             Layout.preferredHeight: 72
             color: progMa.containsMouse ? Qt.rgba(0.13, 0.13, 0.14, 0.98) : Qt.rgba(0.09, 0.09, 0.09, 0.96)
@@ -691,69 +692,45 @@ Item {
 
                 RowLayout {
                     Layout.fillWidth: true
+                    spacing: 8
+
+                    Image {
+                        source: "assets/tomato.svg"
+                        sourceSize.width: 18
+                        sourceSize.height: 18
+                        Layout.alignment: Qt.AlignVCenter
+                        opacity: view.sys.pomoRunning ? 1.0 : 0.85
+                    }
 
                     Caption {
                         Layout.fillWidth: true
-                        text: view.progressMode === "day"
-                              ? (view.sys ? view.sys.tr("DAY PROGRESS") : "DAY PROGRESS")
-                              : (view.sys ? view.sys.tr("YEAR PROGRESS") : "YEAR PROGRESS")
+                        text: view.sys.pomoLabel
                         font.bold: true
                         font.pixelSize: 9
                         font.letterSpacing: 1.2
-                        color: view.sys ? view.sys.colMuted : "#888888"
+                        color: view.sys.colMuted
                     }
 
                     Num {
-                        value: (view.progressMode === "day" ? view.dayPct : view.yearPct) + "%"
+                        value: view.sys.pomoClock
                         size: 13
                         gapRatio: 0.15
-                        color: view.sys ? view.sys.colFg : "#ffffff"
+                        color: view.sys.pomoMode === "break" ? view.sys.colOk : view.sys.colFg
                     }
                 }
 
-                RowLayout {
+                Rectangle {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 6
-                    spacing: 3
-                    visible: view.progressMode === "day"
+                    radius: 3
+                    color: Qt.rgba(1, 1, 1, 0.12)
 
-                    Repeater {
-                        model: 24
-                        Rectangle {
-                            required property int index
-                            Layout.fillWidth: true
-                            Layout.preferredHeight: 6
-                            radius: 3
-                            color: index < view.curHour
-                                   ? Qt.rgba(1, 1, 1, 0.88)
-                                   : (index === view.curHour
-                                      ? (view.sys ? view.sys.colCrit : "#d71921")
-                                      : Qt.rgba(1, 1, 1, 0.12))
-                            opacity: index === view.curHour ? view.pulseOpacity : 1.0
-                        }
-                    }
-                }
-
-                RowLayout {
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: 6
-                    spacing: 5
-                    visible: view.progressMode === "year"
-
-                    Repeater {
-                        model: 12
-                        Rectangle {
-                            required property int index
-                            Layout.fillWidth: true
-                            Layout.preferredHeight: 6
-                            radius: 3
-                            color: index < view.curMonth
-                                   ? Qt.rgba(1, 1, 1, 0.88)
-                                   : (index === view.curMonth
-                                      ? (view.sys ? view.sys.colCrit : "#d71921")
-                                      : Qt.rgba(1, 1, 1, 0.12))
-                            opacity: index === view.curMonth ? view.pulseOpacity : 1.0
-                        }
+                    Rectangle {
+                        height: parent.height
+                        radius: parent.radius
+                        width: parent.width * view.sys.pomoFrac
+                        color: view.sys.pomoMode === "break" ? view.sys.colOk : view.sys.colOn
+                        Behavior on width { NumberAnimation { duration: 250 } }
                     }
                 }
 
@@ -762,21 +739,16 @@ Item {
 
                     Text {
                         Layout.fillWidth: true
-                        text: (view.sys ? view.sys.tr("Remaining ") : "Remaining ") +
-                              (view.progressMode === "day"
-                               ? view.remainDayText
-                               : (view.remainYearDays + " " + (view.sys ? view.sys.tr("d") : "days")))
-                        color: view.sys ? view.sys.colMuted : "#888888"
-                        font {
-                            family: view.sys ? view.sys.fontFam : "sans-serif"
-                            pixelSize: 10
-                        }
+                        text: view.sys.pomoHint
+                        color: view.sys.colMuted
+                        elide: Text.ElideRight
+                        font { family: view.sys.fontFam; pixelSize: 10 }
                     }
 
                     Caption {
-                        text: "󰔛 " + (view.progressMode === "day" ? "24H" : "365D")
+                        text: view.sys.pomoWorkMin + "/" + view.sys.pomoBreakMin
                         font.pixelSize: 8
-                        color: view.sys ? Qt.rgba(view.sys.colFg.r, view.sys.colFg.g, view.sys.colFg.b, 0.4) : "#666666"
+                        color: Qt.rgba(view.sys.colFg.r, view.sys.colFg.g, view.sys.colFg.b, 0.4)
                     }
                 }
             }
@@ -786,12 +758,21 @@ Item {
                 anchors.fill: parent
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
-                onClicked: {
-                    if (view.sys && view.sys.cfg) {
-                        view.sys.cfg.widgetProgressMode = (view.progressMode === "day" ? "year" : "day");
-                        view.sys.saveCfg();
-                    }
+                acceptedButtons: Qt.LeftButton | Qt.RightButton
+                onClicked: mouse => {
+                    if (mouse.button === Qt.RightButton) view.sys.pomoReset();
+                    else clickDelay.restart();
                 }
+                onDoubleClicked: {
+                    clickDelay.stop();
+                    view.sys.pomoReset();
+                }
+            }
+
+            Timer {
+                id: clickDelay
+                interval: 250
+                onTriggered: view.sys.pomoToggle()
             }
         }
 

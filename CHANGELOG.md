@@ -2,9 +2,16 @@
 
 ## Unreleased
 
-## 2.29
+## 2.30
 
-- Attempting to get that beautiful boot screen
+> _"The boot screen came back, the tomato started ticking, and the releases learned to sign their own work."_
+
+- The graphics driver now loads in the initrd, so the LUKS prompt and the boot splash can use the GPU instead of leaving you a black screen and an Escape key.
+- The desktop widgets traded the day progress bar for a pomodoro timer: 25 minutes of focus, 5 of break, a white tomato that starts, pauses and resets. SUPER + comma toggles it.
+- The Sound card lists the real outputs as icons, headphones, speakers and Bluetooth, and no longer dresses up idle HDMI ports as speakers.
+- Release checksums are signed now, with the same key as the release tag, and the README shows the one command that checks it.
+- The config sync compares file contents instead of size and timestamp, so a fix that happens to be the same length actually reaches your machine.
+- The manual covers the password vault, moving the island to the bottom, and installing packages from the Installs page.
 
 ## 2.28
 

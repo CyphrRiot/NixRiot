@@ -193,6 +193,7 @@ PanelWindow {
             property bool   featFiles: true
             property bool   featMedia: true
             property bool   featVault: true
+            property bool   featPomodoro: true
             property bool   featLock: true
             property bool   featAudio: true
             property bool   featPowerProfiles: true
@@ -938,6 +939,74 @@ PanelWindow {
     property real   updCheckedAt: 0
 
     readonly property bool updateAvailable: updStatus === "behind"
+
+    // ------------------------------------------------------------- pomodoro
+    // 25 minute focus, 5 minute break, click to start or pause, right click to
+    // reset. State lives here so it survives the widgets being toggled off.
+    property int    pomoWorkMin: 25
+    property int    pomoBreakMin: 5
+    property string pomoMode: "idle"      // idle | work | break | ready
+    property bool   pomoRunning: false
+    property int    pomoRemaining: 25 * 60
+    readonly property int pomoTotal:
+        (pomoMode === "break" ? pomoBreakMin : pomoWorkMin) * 60
+    readonly property string pomoClock: {
+        var s = Math.max(0, root.pomoRemaining);
+        var m = Math.floor(s / 60);
+        var sec = s % 60;
+        return (m < 10 ? "0" : "") + m + ":" + (sec < 10 ? "0" : "") + sec;
+    }
+    readonly property string pomoLabel:
+        pomoMode === "work"  ? root.tr("FOCUS")
+      : pomoMode === "break" ? root.tr("BREAK")
+      : pomoMode === "ready" ? root.tr("BREAK OVER")
+      : root.tr("POMODORO")
+    readonly property string pomoHint:
+        pomoRunning ? (pomoMode === "break" ? root.tr("Five minute break")
+                                            : root.tr("Focus, 25 minutes"))
+      : pomoMode === "ready" ? root.tr("Click to start the next session")
+      : pomoMode === "idle"  ? root.tr("Click to start a 25 minute session")
+      : root.tr("Paused, click to resume")
+    readonly property real pomoFrac: {
+        if (root.pomoTotal <= 0) return 0;
+        var f = (root.pomoTotal - root.pomoRemaining) / root.pomoTotal;
+        return Math.max(0, Math.min(1, f));
+    }
+    function pomoToggle() {
+        if (root.pomoMode === "idle" || root.pomoMode === "ready") {
+            root.pomoMode = "work";
+            root.pomoRemaining = root.pomoWorkMin * 60;
+            root.pomoRunning = true;
+            return;
+        }
+        root.pomoRunning = !root.pomoRunning;
+    }
+    function pomoReset() {
+        root.pomoRunning = false;
+        root.pomoMode = "idle";
+        root.pomoRemaining = root.pomoWorkMin * 60;
+    }
+    function pomoStep() {
+        if (!root.pomoRunning) return;
+        root.pomoRemaining = Math.max(0, root.pomoRemaining - 1);
+        if (root.pomoRemaining > 0) return;
+        if (root.pomoMode === "work") {
+            root.pomoMode = "break";
+            root.pomoRemaining = root.pomoBreakMin * 60;
+            root.pomoRunning = true;
+        } else {
+            root.pomoMode = "ready";
+            root.pomoRunning = false;
+            root.pomoRemaining = 0;
+        }
+    }
+    Timer {
+        id: pomoTick
+        interval: 1000
+        repeat: true
+        running: root.pomoRunning
+        onTriggered: root.pomoStep()
+    }
 
     readonly property string updErrorText: {
         switch (root.updError) {
@@ -4326,6 +4395,8 @@ PanelWindow {
         function theme(): void { root.toggleWalls(); }
         function backup(): void { root.openSettingsAt("backup"); }
         function installs(): void { root.openSettingsAt("installs"); }
+        function pomodoro(): void { root.pomoToggle(); }
+        function pomodoroReset(): void { root.pomoReset(); }
         // The keybind comes through here, so the state the shell reports cannot
         // drift from what is actually on screen.
         function nightlight(): void { root.toggleNightLight(); }
