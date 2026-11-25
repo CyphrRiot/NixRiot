@@ -169,6 +169,9 @@ release-major: crush
 do-release:
 	@set -euo pipefail; \
 	  old=$$(cat $(VERSION_FILE)); \
+	  tmp=$$(mktemp -d); \
+	  trap 'rm -rf "$$tmp"' EXIT; \
+	  cp $(VERSION_FILE) $(CHANGELOG) README.md "$$tmp/"; \
 	  major=$${old%%.*}; \
 	  minor=$${old#*.}; \
 	  if [ -n "$$(git tag -l "v$$old")" ]; then \
@@ -222,7 +225,9 @@ do-release:
 	      y|Y) ;; \
 	      *) \
 	        git reset -q; \
-	        git checkout HEAD -- $(VERSION_FILE) $(CHANGELOG) README.md; \
+	        cp "$$tmp/$(VERSION_FILE)" $(VERSION_FILE); \
+	        cp "$$tmp/$(CHANGELOG)" $(CHANGELOG); \
+	        cp "$$tmp/README.md" README.md; \
 	        echo "Nothing committed or tagged. The release files were put back."; \
 	        exit 0; \
 	        ;; \

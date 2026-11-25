@@ -3,7 +3,7 @@
 ![NixRiot](docs/img/banner.webp)
 
 ![Status](https://img.shields.io/badge/status-release-9a2eef?labelColor=1b2b34)
-![Version](https://img.shields.io/badge/version-2.41-9a2eef?labelColor=1b2b34)
+![Version](https://img.shields.io/badge/version-2.42-9a2eef?labelColor=1b2b34)
 ![Platform](https://img.shields.io/badge/platform-NixOS-9a2eef?logo=nixos&logoColor=white&labelColor=1b2b34)
 ![Shell](https://img.shields.io/badge/shell-Hyprland-9a2eef?logo=hyprland&logoColor=9a2eef&labelColor=1b2b34)
 ![UI](https://img.shields.io/badge/UI-Quickshell-9a2eef?labelColor=1b2b34)
@@ -29,9 +29,9 @@ This file is the manual. The reasoning is in
 - [The usual free software warning](#the-usual-free-software-warning)
 - [What you get](#what-you-get)
 - [Download](#download)
+- [Install](#install)
 - [Requirements](#requirements)
 - [Supported hardware](#supported-hardware)
-- [Install](#install)
 - [First boot](#first-boot)
 - [Keybindings](#keybindings)
 - [What is installed](#what-is-installed)
@@ -107,10 +107,12 @@ NixRiot ships no wallet files and no secrets. You own those.
   **Settings → Installs**, or set `nixriot.office = true;` in
   `/etc/nixriot/hosts/installed/local.nix` and run `rebuild`. LibreOffice opens
   with the dark theme on its first launch.
-- **Media**: mpv, Lollypop, Transmission (removable from Installs).
+- **Media**: mpv, Lollypop, and Transmission, which is installed by default and
+  can be removed from Installs.
 - **Signal** Desktop, with `gurk` for the terminal, which is the only Signal
   OpenRiot could have: OpenBSD has no desktop client.
-- **Crypto** (opt-in): Monero GUI, Bitcoin Core, WireGuard.
+- **Crypto** (opt-in): Monero GUI, Bitcoin Core. GlyphRiot is installed by
+  default.
 - **Mullvad VPN**: the daemon and the desktop app are installed and enabled by
   default, with the GUI in the app launcher and the `mullvad` command line.
 - **Security**: firewall, SSH hardening, sysctl hardening, MAC randomization,
@@ -118,6 +120,7 @@ NixRiot ships no wallet files and no secrets. You own those.
 - The **NixRiot wallpaper set** (39 WebP images, `01.webp` through `39.webp`).
 - A **night light** for the screen, off until you switch it on (`SUPER + N`).
 - A **password vault** (`SUPER + SHIFT + P`), encrypted with your login password.
+  It can be turned off in **Settings → Controls → Launcher**.
 - Full-disk encryption (LUKS2) on the root volume, chosen during install.
 
 ---
@@ -153,6 +156,47 @@ Prefer to build the image yourself? See Advanced, at the end of this file.
 
 ---
 
+## Install
+
+**A network connection is required.** The installer builds the target system from
+the flake and fetches the rest from `cache.nixos.org`, and it will not touch a
+disk until that answers.
+
+1. Boot the USB stick (disable Secure Boot first if the firmware refuses it).
+2. It comes up on a text console, logs in as `nixos`, and starts the installer by
+   itself.
+3. It asks for a username, a hostname for the machine, then a password for that
+   user. The username uses lowercase letters, digits, underscore or hyphen, and
+   does not start with a digit or underscore. The hostname defaults to
+   `nixriot` if you press Enter, and takes lowercase letters, digits and
+   hyphens.
+4. It checks that it can reach `cache.nixos.org`, and will not touch a disk until
+   it can. If the check fails it offers `retry`, `w` to run `nmtui`, or `skip`;
+   `skip` is for a machine whose store already holds everything, not for a broken
+   connection.
+5. It lists the disks it can see. Type the target disk, for example
+   `/dev/nvme0n1`.
+6. Type `ERASE` to confirm. This is the point of no return.
+7. Enter the LUKS passphrase twice (once to set it, once to confirm). It is
+   reused to unlock the new volume, so there is no third prompt. You will type
+   this at every boot, so pick something you can remember and write it down
+   somewhere safe.
+8. It partitions (512M ESP labeled `BOOT`, the rest as an encrypted `nixos`
+   volume), formats, mounts, and runs `nixos-install`.
+9. After formatting it writes a LUKS header backup to
+   `/root/nixriot-luks-header.img` and warns you to copy it to a USB stick or
+   another machine before rebooting. Keep that file: if the header is damaged,
+   the passphrase alone cannot open the disk. The live system is wiped on
+   reboot.
+10. When `nixos-install` finishes, it unmounts and reboots into the installed
+    system. Remove the USB stick.
+
+The install builds the target system from the flake and downloads it from
+`cache.nixos.org`, so it needs a network connection. Everything is logged to
+`/tmp/nixriot-install.log`.
+
+---
+
 ## Requirements
 
 - x86_64 machine that boots UEFI.
@@ -160,7 +204,8 @@ Prefer to build the image yourself? See Advanced, at the end of this file.
 - A target disk that can be erased.
 - An internet connection during install.
 
-Installing does not require Nix on your machine: the image provides it. You only
+Installing does not require Nix on your machine. The ISO performs the install,
+verifies what it needs, and downloads the rest from cache.nixos.org. You only
 need Nix, with flakes enabled and about 40 GB free, if you build the image
 yourself.
 
@@ -216,47 +261,6 @@ instead of leaving it off, is planned.
 
 ---
 
-## Install
-
-**A network connection is required.** The installer builds the target system from
-the flake and fetches the rest from `cache.nixos.org`, and it will not touch a
-disk until that answers.
-
-1. Boot the USB stick (disable Secure Boot first if the firmware refuses it).
-2. It comes up on a text console, logs in as `nixos`, and starts the installer by
-   itself.
-3. It asks for a username, a hostname for the machine, then a password for that
-   user. The username uses lowercase letters, digits, underscore or hyphen, and
-   does not start with a digit or underscore. The hostname defaults to
-   `nixriot` if you press Enter, and takes lowercase letters, digits and
-   hyphens.
-4. It checks that it can reach `cache.nixos.org`, and will not touch a disk until
-   it can. If the check fails it offers `retry`, `w` to run `nmtui`, or `skip`;
-   `skip` is for a machine whose store already holds everything, not for a broken
-   connection.
-5. It lists the disks it can see. Type the target disk, for example
-   `/dev/nvme0n1`.
-6. Type `ERASE` to confirm. This is the point of no return.
-7. Enter the LUKS passphrase twice (once to set it, once to confirm). It is
-   reused to unlock the new volume, so there is no third prompt. You will type
-   this at every boot, so pick something you can remember and write it down
-   somewhere safe.
-8. It partitions (512M ESP labeled `BOOT`, the rest as an encrypted `nixos`
-   volume), formats, mounts, and runs `nixos-install`.
-9. After formatting it writes a LUKS header backup to
-   `/root/nixriot-luks-header.img` and warns you to copy it to a USB stick or
-   another machine before rebooting. Keep that file: if the header is damaged,
-   the passphrase alone cannot open the disk. The live system is wiped on
-   reboot.
-10. When `nixos-install` finishes, it unmounts and reboots into the installed
-    system. Remove the USB stick.
-
-The install builds the target system from the flake and downloads it from
-`cache.nixos.org`, so it needs a network connection. Everything is logged to
-`/tmp/nixriot-install.log`.
-
----
-
 ## First boot
 
 The machine boots in text mode (no splash). The LUKS passphrase prompt appears
@@ -266,7 +270,8 @@ user in automatically, so the login screen is skipped. The lock screen
 and if you log out you land on the themed login screen. `sudo` asks for the
 password you set during install.
 
-NixRiot ships no default user or password.
+NixRiot ships no default account. The installer creates the user for you,
+with the password you chose.
 
 To change or reset your password, log in and run:
 
@@ -303,6 +308,7 @@ the settings panel (`SUPER + I`) writes overrides to
 | `SUPER + SHIFT + H` | Put the island away, or bring it back |
 | `SUPER + SHIFT + P` | Password vault |
 | `SUPER + SHIFT + I` | Installs |
+| `SUPER + ,` | Pomodoro timer, start or pause |
 
 ### Apps and windows
 
@@ -325,7 +331,6 @@ another application land in the same view.
 | `SUPER + W` | Toggle floating |
 | `SUPER + SHIFT + Space` | Float, resize, center |
 | `SUPER + J` | Toggle split |
-| `SUPER + S` | Scratchpad workspace (toggle) |
 | `SUPER + SHIFT + F` | Fullscreen |
 | `SUPER + L` | Lock |
 | `SUPER + SHIFT + T` or `SUPER + SHIFT + D` | Wallpapers |
@@ -340,6 +345,8 @@ another application land in the same view.
 | `SUPER + M` or `XF86Mail` | Proton Mail |
 | `SUPER + X` | X (compose with `SUPER + SHIFT + X`) |
 
+`gurk`, the Signal terminal client, is CLI-only: type `gurk` in a terminal.
+
 ### Workspaces and movement
 
 | Keys | Action |
@@ -347,7 +354,7 @@ another application land in the same view.
 | `SUPER + 1..0` | Focus workspace |
 | `SUPER + SHIFT + 1..0` | Move window to workspace |
 | `SUPER + Space` | First empty workspace |
-| `SUPER + S` | Special workspace (`magic`) |
+| `SUPER + S` | Special workspace `magic` (scratchpad, toggle) |
 | `SUPER + arrows` | Focus window |
 | `SUPER + SHIFT + arrows` | Move window |
 | `ALT + arrows` | Resize window |
@@ -514,6 +521,9 @@ refused instead of decrypted. The password that unlocks it is your system
 password, checked through PAM, so there is no second password to remember or
 lose. The vault locks itself after fifteen minutes without use.
 
+If the key does nothing, the feature is off: turn on **Password manager** in
+**Settings → Controls → Launcher**.
+
 The same store is reachable from a terminal through
 `~/.config/panacea/scripts/vault.sh load`, `save` and `wipe`; `load` and `save`
 read the password on stdin.
@@ -621,7 +631,7 @@ subset of OpenRiot's list; several OpenRiot games are no longer in nixpkgs.
 project and keeps the machine files (`local.nix`, `hardware-configuration.nix`
 and `features.nix`, the Installs state).
 
-From the pill: **Settings → System → Update**. On the command line:
+From the pill: **Settings → Update**. On the command line:
 
 ```sh
 sudo nixriot-update apply
@@ -733,7 +743,7 @@ so the change is discarded.
 Package versions come from the flake's `nixpkgs` input, not from `/etc/nixriot`.
 To move them for everyone, run `nix flake update nixpkgs` in a clone of this
 repository, commit the new `flake.lock`, and release; installed machines pick it
-up with the next update, run from **Settings → System → Update** or with
+up with the next update, run from **Settings → Update** or with
 `sudo nixriot-update apply`.
 
 Never install or upgrade system packages with `nix profile` or `nix-env`. They

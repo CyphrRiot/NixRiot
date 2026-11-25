@@ -268,6 +268,22 @@ Checked against nixpkgs. Do not re-add removed packages, and use these names.
   `gh release create`) is `make release` and `make publish`. The mechanics and
   the rules are in `AGENTS.md` under Releasing.
 
+### Making a release
+
+1. `make update` refreshes `flake.lock` to the newest nixpkgs and commits it.
+2. `make local` builds and activates the working tree on this machine, using a
+   candidate copy in `/tmp` with the machine's own files overlaid, and you test
+   it.
+3. `make ship` bumps `VERSION`, commits, tags, and pushes `main` and the tag.
+   No ISO. `make bump` is the same without the push.
+4. `make release` builds the ISO and publishes the GitHub release. Run it after
+   `ship`, or on its own for everything. On an already-tagged version it
+   resumes by publishing instead of bumping.
+
+`bump`, `ship`, `release` and `release-major` each run `make crush` first, so
+the Crush pin moves to the latest upstream release in the same commit.
+`make publish` re-runs only the ISO build and upload.
+
 ## Root helper
 
 - `modules/desktop/panacea-root.nix` builds `panacea-root`, `locale.sh` and

@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+## 2.42
+
+> _"The menu got quieter, the editor stopped flickering, and the boot screen went back to being honest about the password."_
+
+- Text Editor handles Markdown, no longer flickers while scrolling, and appears once in the menu.
+- The app menu drops Signal TUI, Proton Mail and X. Files gets its own entry, and a Code shortcut appears in its sidebar when `~/Code` exists.
+- btop++ is now System Monitor.
+- The Files window grows to fit its sidebar and mounted drives, so the last row is no longer cut off.
+- The desktop widgets have a pomodoro timer: 25 minutes of focus, 5 of break, and SUPER + comma starts or pauses it.
+- The boot splash is off again. The LUKS prompt shows on the console without pressing Escape.
+- The display Scale picker only offers values the compositor accepts.
+- The update check no longer fails a rebuild when the changelog fetch is cut short.
+- GlyphRiot is installed by default; gurk is CLI-only.
+- Crush is updated to 0.102.
+
 ## 2.41
 
 - Always update packages
