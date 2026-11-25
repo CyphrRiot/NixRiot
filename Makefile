@@ -1,6 +1,6 @@
 SHELL := bash
 
-.PHONY: check build iso switch update fmt test-backup test-vault bump ship release release-major do-release publish
+.PHONY: check build iso switch local update fmt test-backup test-vault bump ship release release-major do-release publish
 
 VERSION_FILE = VERSION
 CHANGELOG = CHANGELOG.md
@@ -22,6 +22,21 @@ iso:
 
 switch:
 	sudo nixos-rebuild switch --flake .#nixriot
+
+# Build and activate the working tree on this machine, without touching
+# /etc/nixriot and without pushing anything.
+local:
+	@set -euo pipefail; \
+	  dst=/tmp/nixriot-candidate; \
+	  rm -rf "$$dst"; \
+	  mkdir -p "$$dst"; \
+	  rsync -a --exclude .git "$(CURDIR)/" "$$dst/"; \
+	  cp /etc/nixriot/hosts/installed/local.nix \
+	     /etc/nixriot/hosts/installed/hardware-configuration.nix "$$dst/hosts/installed/"; \
+	  if [ -f /etc/nixriot/hosts/installed/features.nix ]; then \
+	    cp /etc/nixriot/hosts/installed/features.nix "$$dst/hosts/installed/"; \
+	  fi; \
+	  sudo nixos-rebuild switch --flake "$$dst#installed"
 
 update:
 	nix flake update
