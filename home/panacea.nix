@@ -23,7 +23,7 @@ let
   # PATH.
   refresh = name: extraExcludes: ''
     run mkdir -p "$HOME/.config"
-    run ${pkgs.rsync}/bin/rsync -a --delete ${lib.concatStringsSep " " (map (e: "--exclude ${e}") extraExcludes)} \
+    run ${pkgs.rsync}/bin/rsync -a --checksum --delete ${lib.concatStringsSep " " (map (e: "--exclude ${e}") extraExcludes)} \
       ${patchedPanacea}/${name}/ "$HOME/.config/${name}/"
     run chmod -R u+w "$HOME/.config/${name}"
   '';

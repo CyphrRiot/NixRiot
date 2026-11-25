@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 2.27
+
+- Update icon on expanded pill goes to "Update" not "System" now
+
 ## 2.26
 
 - Fix HDMI "audio" cruft
