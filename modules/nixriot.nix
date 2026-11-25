@@ -180,8 +180,9 @@ in
     # The passphrase prompt is written to the console the initrd runs on. On
     # some Intel panels the firmware framebuffer ignores the partial updates the
     # console makes, so the prompt stays invisible until a key forces a redraw.
-    # Loading the display driver here puts the initrd console on i915 instead.
-    boot.initrd.kernelModules = [ "i915" ];
+    # Loading the display driver here puts the initrd console on the GPU.
+    # Lunar Lake uses xe; older Intel panels need i915; AMD needs amdgpu.
+    boot.initrd.kernelModules = [ "i915" "xe" "amdgpu" ];
 
     boot.kernel.sysctl = {
       "vm.dirty_background_bytes" = 67108864;

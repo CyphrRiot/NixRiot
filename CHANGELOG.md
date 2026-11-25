@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 2.29
+
+- Attempting to get that beautiful boot screen
+
 ## 2.28
 
 - Security updates
