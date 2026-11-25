@@ -2,9 +2,19 @@
 
 ## Unreleased
 
-## 2.35
+## 2.36
 
-- Minor fixes
+> _"Small mercies: the right half fits, the password prompt comes back, and the Done card knows when to leave."_
+
+- SUPER + ALT + Right puts the window on the right half without clipping the edges.
+- After a password prompt, the pill returns to the page you were on instead of collapsing.
+- Updates no longer ask for a password; the signature is the gate.
+- Release checksums are signed now, with the same key as the release tag.
+- Installs lists your own packages, so anything added from search is removable from the page.
+- A finished install says Done for half a minute, not forever.
+- The installer ISO drops GPU firmware it does not boot, so the image fits the GitHub limit again.
+
+## 2.35
 
 ## 2.34
 

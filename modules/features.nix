@@ -34,7 +34,7 @@ let
     features="${featuresFile}"
     status="${statusFile}"
     mkdir -p "$(dirname "$status")"
-    status_write() { printf '%s\n' "$1" > "$status"; chmod 644 "$status"; }
+    status_write() { printf '%s' "$1" | ${pkgs.jq}/bin/jq -c --argjson t "$(date +%s)" '. + {ts:$t}' > "$status"; chmod 644 "$status"; }
 
     usage() { echo "usage: nixriot-features apply <feature>-<on|off> | <package>-<add|remove>" >&2; exit 1; }
 

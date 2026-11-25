@@ -15,6 +15,10 @@ ColumnLayout {
     spacing: 12
 
     readonly property bool busy: status && status.busy === true
+    // A finished run leaves status.json behind; show it only while it is fresh,
+    // so a "Done" from days ago does not sit on the page forever.
+    readonly property bool statusFresh: status && status.ts !== undefined
+        && (Date.now() / 1000 - status.ts) < 30
     readonly property var features: [
         { key: "office",       name: "LibreOffice", sub: "Writer, Calc, Impress. About 1 GB." },
         { key: "games",        name: "Games",       sub: "SuperTux, OpenTTD, Cataclysm-DDA, Endless Sky, Angband, Brogue." },
@@ -207,7 +211,51 @@ ColumnLayout {
 
     SetCard {
         sys: page.sys
-        visible: page.busy || page.status.step === "done" || page.status.step === "failed"
+        visible: page.installedPackages().length > 0
+
+        SetLabel { sys: page.sys; text: page.sys.tr("Your packages") }
+
+        Text {
+            Layout.fillWidth: true
+            text: page.sys.tr("Anything installed from the search box, removable here.")
+            color: page.sys.colMuted
+            wrapMode: Text.WordWrap
+            font { family: page.sys.fontBody; pixelSize: page.sys.fontSize - 3 }
+        }
+
+        Repeater {
+            model: page.installedPackages()
+
+            RowLayout {
+                required property var modelData
+
+                Layout.fillWidth: true
+                spacing: 12
+
+                Text {
+                    Layout.fillWidth: true
+                    text: page.displayName(modelData)
+                    color: page.sys.colFg
+                    elide: Text.ElideMiddle
+                    font { family: page.sys.fontBody; pixelSize: page.sys.fontSize - 1 }
+                }
+
+                SetButton {
+                    sys: page.sys
+                    text: page.busy && page.status.feature === modelData
+                          ? page.sys.tr("Removing…")
+                          : page.sys.tr("Remove")
+                    enabled: !page.busy
+                    onClicked: page.setPackage(modelData, false)
+                }
+            }
+        }
+    }
+
+    SetCard {
+        sys: page.sys
+        visible: page.busy || page.status.step === "failed"
+                 || (page.status.step === "done" && page.statusFresh)
 
         SetLabel {
             sys: page.sys
