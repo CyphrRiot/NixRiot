@@ -47,7 +47,7 @@
       [Desktop Entry]
       Type=Application
       Name=Text Editor
-      Exec=gnome-text-editor %U
+      Exec=env GSK_RENDERER=cairo gnome-text-editor %U
       Icon=org.gnome.TextEditor
       Terminal=false
       Categories=Utility;TextEditor;

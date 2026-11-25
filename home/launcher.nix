@@ -33,6 +33,7 @@ in
       icon = "foot";
       categories = "System;TerminalEmulator;";
     };
+    "applications/org.gnome.TextEditor.desktop" = hiddenFile "Text Editor";
     "applications/nm-connection-editor.desktop" = hiddenFile "Advanced Network Configuration";
     "applications/org.pulseaudio.pavucontrol.desktop" = hiddenFile "Volume Control";
     "applications/xterm.desktop" = hiddenFile "XTerm";
