@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-## 2.31
+## 2.32
 
 > _"The toolbox got quieter and the seed phrase got its own namespace."_
 

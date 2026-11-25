@@ -131,7 +131,7 @@ in
         if (action.id == "org.freedesktop.systemd1.manage-units" &&
             unit.indexOf("nixriot-features@") == 0 &&
             subject.isInGroup("wheel")) {
-          return polkit.Result.YES;
+          return polkit.Result.AUTH_ADMIN_KEEP;
         }
       });
     '';
