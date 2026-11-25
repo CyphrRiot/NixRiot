@@ -102,10 +102,10 @@ NixRiot ships no wallet files and no secrets. You own those.
 - **fish** with a prompt of its own (hostname, directory, git branch, exit
   status), plus the OpenRiot aliases and functions.
 - **Helix** (the default editor), Crush, and a plain text editor.
-- **Firefox**, zathura, and LibreOffice when `nixriot.office` is on. LibreOffice
-  opens with the dark theme on its first launch. To use it, set
-  `nixriot.office = true;` in `/etc/nixriot/hosts/installed/local.nix` and run
-  `rebuild`.
+- **Firefox** and zathura. LibreOffice is optional: install it from
+  **Settings → Installs**, or set `nixriot.office = true;` in
+  `/etc/nixriot/hosts/installed/local.nix` and run `rebuild`. LibreOffice opens
+  with the dark theme on its first launch.
 - **Media**: mpv, Lollypop, Transmission (removable from Installs).
 - **Signal** Desktop, with `gurk` for the terminal, which is the only Signal
   OpenRiot could have: OpenBSD has no desktop client.
