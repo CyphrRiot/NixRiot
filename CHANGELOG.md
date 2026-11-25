@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-## 2.33
+## 2.34
 
 > _"The menu learned to say less, and the toolbox got exactly one job."_
 

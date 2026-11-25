@@ -168,9 +168,8 @@ B("tileRightHalf", mainMod .. " + ALT + right", function()
     if not win.floating then
         hl.dispatch(hl.dsp.window.float({ action = "toggle" }))
     end
-    local scale = mon.scale > 0 and mon.scale or 1
-    local w = math.floor(mon.width / scale / 2)
-    local h = math.floor(mon.height / scale)
+    local w = math.floor(mon.width / 2)
+    local h = math.floor(mon.height)
     hl.dispatch(hl.dsp.window.resize({ x = w, y = h, relative = false }))
     hl.dispatch(hl.dsp.window.move({ x = mon.x + w, y = mon.y, relative = false }))
 end)

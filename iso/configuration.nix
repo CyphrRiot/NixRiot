@@ -43,6 +43,7 @@ in
   };
 
   boot.plymouth.enable = lib.mkForce false;
+  boot.initrd.kernelModules = lib.mkForce [ ];
   # tty0 only. The last console= on the line becomes /dev/console, so adding
   # ttyS0 here sends userspace console output to a serial port that most
   # machines do not have, and the screen stops at the last kernel message.
