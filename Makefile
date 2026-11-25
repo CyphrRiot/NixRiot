@@ -1,6 +1,6 @@
 SHELL := bash
 
-.PHONY: check build iso switch local update fmt test-backup test-vault bump ship release release-major do-release publish
+.PHONY: check build iso switch local update crush fmt test-backup test-vault bump ship release release-major do-release publish
 
 VERSION_FILE = VERSION
 CHANGELOG = CHANGELOG.md
@@ -40,6 +40,12 @@ local:
 
 update:
 	nix flake update
+	git add flake.lock
+	git commit -m "Update nixpkgs"
+
+# Move the pinned Crush prebuilt to the latest upstream release.
+crush:
+	bash scripts/update-crush.sh
 
 fmt:
 	nix fmt
@@ -143,21 +149,21 @@ test-vault:
 # Bump the version, commit and tag it, so installed machines see the update,
 # without building an ISO or creating a GitHub release. 'make release' then
 # publishes that same version.
-bump:
+bump: crush
 	@$(MAKE) --no-print-directory do-release BUMP=minor PUBLISH=0
 
 # Bump and publish to installed machines without building an ISO or creating a
 # GitHub release. The version and tag are the whole change: machines compare
 # VERSION with main, so pushing both is the release.
-ship:
+ship: crush
 	@$(MAKE) --no-print-directory do-release BUMP=minor PUBLISH=0
 	git push origin main
 	git push origin "v$$(cat VERSION)"
 
-release:
+release: crush
 	@$(MAKE) --no-print-directory do-release BUMP=minor
 
-release-major:
+release-major: crush
 	@$(MAKE) --no-print-directory do-release BUMP=major
 
 do-release:

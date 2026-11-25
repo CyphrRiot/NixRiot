@@ -39,7 +39,7 @@ let
         [ -n "$remote" ] || exit 0
         if [ "$cur" = "$remote" ]; then avail=false; else avail=true; fi
         subject=$(curl -fsS --max-time 10 "$raw/CHANGELOG.md" 2>/dev/null \
-          | awk -v h="## $remote" '$0 == h { found = 1; next } found && /^- / { sub(/^- /, ""); gsub(/\*\*/, ""); print; exit }')
+          | awk -v h="## $remote" '$0 == h { found = 1; next } found && /^- / { sub(/^- /, ""); gsub(/\*\*/, ""); print; exit }' || true)
         jq -n --arg i "$cur" --arg a "$remote" --arg s "$subject" --argjson u "$avail" --arg t "$now" \
           '{installed:$i,available:$a,subject:$s,updateAvailable:$u,lastChecked:$t}' > "$status.tmp"
         mv "$status.tmp" "$status"

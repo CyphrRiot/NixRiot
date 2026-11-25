@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 2.41
+
+- Always update packages
+- Always update crush binary if new
+
 ## 2.40
 
 - Fix Plymouth boot so you do not have to hit ESC for the LUKS password
