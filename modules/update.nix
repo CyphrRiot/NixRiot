@@ -212,7 +212,7 @@ in
         if (action.id == "org.freedesktop.systemd1.manage-units" &&
             action.lookup("unit") == "nixriot-update.service" &&
             subject.isInGroup("wheel")) {
-          return polkit.Result.AUTH_ADMIN_KEEP;
+          return polkit.Result.YES;
         }
       });
     '';

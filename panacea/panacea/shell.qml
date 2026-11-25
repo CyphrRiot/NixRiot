@@ -1353,6 +1353,8 @@ PanelWindow {
 
     property int settingsTab: 0
     property string settingsSection: ""
+    property string authReturnPage: ""
+    property bool   authReturnExpanded: false
     function openSettingsAt(sectionId) {
         root.settingsSection = sectionId;
         if (root.page !== "settings" || !root.expanded) root.togglePage("settings");
@@ -2486,6 +2488,8 @@ PanelWindow {
         sourceComponent: PolkitAgent {
             onAuthenticationRequestStarted: {
                 root.authFlow = flow;
+                root.authReturnPage = root.page;
+                root.authReturnExpanded = root.expanded;
                 pageResetTimer.stop();
                 root.page = "auth";
                 root.expanded = true;
@@ -2500,7 +2504,13 @@ PanelWindow {
         function onIsCompletedChanged() {
             if (root.authFlow && root.authFlow.isCompleted) {
                 root.authFlow = null;
-                root.collapse();
+                if (root.authReturnExpanded && root.authReturnPage.length > 0) {
+                    root.page = root.authReturnPage;
+                    root.expanded = true;
+                    root.holdOpen = true;
+                } else {
+                    root.collapse();
+                }
             }
         }
     }
