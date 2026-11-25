@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+## 2.33
+
+> _"The menu learned to say less, and the toolbox got exactly one job."_
+
+- GlyphRiot is installed by default and no longer lives in Installs.
+- The app menu is leaner: Signal TUI, Proton Mail and X are gone. 🦩
+- A Files entry sits in the menu and opens the Files view directly.
+- btop++ is now System Monitor.
+- Panacea files and editor are not competing for your attention in the launcher.
+
 ## 2.32
 
 > _"The toolbox got quieter and the seed phrase got its own namespace."_

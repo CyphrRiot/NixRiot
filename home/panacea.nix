@@ -40,13 +40,6 @@ let
   # Panacea ships its desktop entries with an @HOME@ placeholder that upstream's
   # install.sh substitutes. Generate them here rather than copying verbatim,
   # which would leave a literal @HOME@ in every Exec line.
-  desktopFile = name: {
-    text = builtins.replaceStrings
-      [ "@HOME@" ]
-      [ config.home.homeDirectory ]
-      (builtins.readFile "${panaceaSrc}/applications/${name}.desktop");
-  };
-
   # "open some/relative/file.gif" hands the pill a relative path, which becomes
   # file://relative and fails to load. Resolve it against the caller's directory
   # before the IPC call.
@@ -72,9 +65,7 @@ let
 in
 {
   xdg.dataFile = {
-    "applications/panacea-files.desktop" = desktopFile "panacea-files";
     "applications/panacea-media.desktop" = mediaDesktop;
-    "applications/panacea-text.desktop" = desktopFile "panacea-text";
   };
 
   home.activation.panaceaConfig = lib.hm.dag.entryAfter [ "writeBoundary" ] ''

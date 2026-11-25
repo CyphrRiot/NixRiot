@@ -1,4 +1,4 @@
-{ ... }:
+{ config, ... }:
 let
   hiddenFile = name: {
     text = ''
@@ -46,7 +46,7 @@ in
       categories = "Utility;TextEditor;";
     };
     "applications/btop.desktop" = appFile {
-      name = "btop++";
+      name = "System Monitor";
       exec = "footclient -e btop";
       icon = "btop";
       categories = "System;Monitor;";
@@ -55,6 +55,11 @@ in
       name = "Crush AI";
       exec = "footclient -e crush";
       categories = "Utility;Development;";
+    };
+    "applications/files.desktop" = appFile {
+      name = "Files";
+      exec = "qs -c \"${config.home.homeDirectory}/.config/panacea\" ipc call pill files";
+      categories = "System;FileManager;";
     };
     "applications/signal.desktop" = appFile {
       name = "Signal";
