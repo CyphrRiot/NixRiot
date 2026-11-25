@@ -255,6 +255,7 @@ do-publish:
 	  echo "Building the ISO for v$$ver. This takes a few minutes."; \
 	  nix build .#iso; \
 	  sha256sum result/iso/NixRiot.iso | sed 's| result/iso/|  |' > SHA256SUMS; \
+	  rm -f SHA256SUMS.sig; \
 	  ssh-keygen -Y sign -f $(SECKEY) -n file SHA256SUMS; \
 	  notes() { \
 	    awk -v h="## $$ver" '$$0 == h { f = 1; next } /^## / { f = 0 } f' $(CHANGELOG); \

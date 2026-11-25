@@ -312,14 +312,13 @@ ColumnLayout {
                 onMoved: v => page.sys.applyVibrance(v)
             }
 
-            SetSlider {
+            SetPick {
                 sys: page.sys
                 label: page.sys.tr("Scale")
-                from: 1; to: 3; step: 0.01
-                decimals: 2
-                value: card.modelData.scale
-                suffix: "×"
-                onMoved: v => page.apply(card.modelData, { scale: v })
+                options: ["1.00", "1.25", "1.50", "1.67", "1.75", "2.00", "2.50", "3.00"].map(
+                    s => ({ id: s, text: s + "×" }))
+                value: Number(card.modelData.scale).toFixed(2)
+                onPicked: id => page.apply(card.modelData, { scale: parseFloat(id) })
             }
 
             SetSelect {

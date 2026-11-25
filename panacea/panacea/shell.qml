@@ -6463,8 +6463,7 @@ PanelWindow {
             anchors.right: (root.trayItems && root.trayItems.values.length > 0) ? pillTray.left : vpnTab.left
             anchors.rightMargin: 8
             z: 65
-            readonly property string label: root.wifiSsid.length ? root.wifiSsid : root.tr("Wi-Fi")
-            width: Math.max(34, wifiChipLabel.implicitWidth + 40)
+            width: 34
             height: 34; radius: 17
             visible: vpnTab.visible && root.cfg.featWifi
             color: root.page === "wifi" ? Qt.rgba(1, 1, 1, 0.12)
@@ -6472,22 +6471,11 @@ PanelWindow {
             Behavior on color { ColorAnimation { duration: root.animFast } }
             Text {
                 id: wifiChipGlyph
-                anchors.verticalCenter: parent.verticalCenter
-                anchors.left: parent.left
-                anchors.leftMargin: 10
+                anchors.centerIn: parent
                 text: root.wifiOn ? (root.wifiQuality > 66 ? "󰤨"
                                    : root.wifiQuality > 33 ? "󰤥" : "󰤟") : "󰤮"
                 color: root.wifiOn ? root.colFg : root.colMuted
                 font { family: root.fontFam; pixelSize: 12 }
-            }
-            Text {
-                id: wifiChipLabel
-                anchors.verticalCenter: parent.verticalCenter
-                anchors.left: wifiChipGlyph.right
-                anchors.leftMargin: 6
-                text: parent.label
-                color: root.colFg
-                font { family: root.fontBody; pixelSize: 12; bold: true }
             }
             MouseArea {
                 anchors.fill: parent; cursorShape: Qt.PointingHandCursor

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 2.40
+
+- Fix Plymouth boot so you do not have to hit ESC for the LUKS password
+- Fix Scale in monitors so it's not brittle
+
 ## 2.39
 
 > _"Small mercies: the right half fits, the password prompt comes back, and the Done card knows when to leave."_

@@ -60,13 +60,16 @@ hl.config({
     dwindle = { preserve_split = true },
     master = { new_status = "master" },
     scrolling = { fullscreen_on_one_column = true },
+    debug = { damage_tracking = 0 },
     misc = {
         force_default_wallpaper = 0,
         disable_splash_rendering = true,
         disable_hyprland_logo   = true,
         background_color        = "rgb(000000)",
         animate_manual_resizes  = true,
-        vrr                     = 1,
+        -- GTK4 surfaces on this GPU leave stale damage while scrolling when
+        -- variable refresh is on; a fixed repaint tick clears it.
+        vrr                     = 0,
     },
     xwayland = { force_zero_scaling = true },
     cursor = {

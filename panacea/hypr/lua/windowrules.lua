@@ -47,6 +47,15 @@ hl.window_rule({
     move  = "(monitor_w-410) 95",
 })
 
+-- GTK4 on the Intel GPU leaves blinking damage behind while scrolling with the
+-- compositor blur enabled; the window paints correctly on its own.
+hl.window_rule({
+    name  = "text-editor-no-blur",
+    match = { class = "org.gnome.TextEditor" },
+    no_blur = true,
+    opacity = "1.0 1.0",
+})
+
 hl.window_rule({
     name  = "file-dialogs",
     match = { title = "^(Apri file|Open File|Salva come|Save As|Sfoglia|Library)$" },
