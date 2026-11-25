@@ -4811,7 +4811,10 @@ PanelWindow {
         // and the panel follows it.
         readonly property bool stagePage: root.page === "files" || root.page === "media"
         readonly property real targetH: root.settingsMode && root.page === "settings" ? settingsPanelH
-                : (root.expanded && !root.cfg.pillKeepVisible) ? Math.min(contentH, root.cfg.expandedH)
+                : (root.expanded && !root.cfg.pillKeepVisible)
+                  ? Math.min(contentH, stagePage
+                                   ? Math.max(root.cfg.expandedH, Math.round(root.height * 0.72))
+                                   : root.cfg.expandedH)
                 : root.pillSide ? idleLen
                                 : idleThick
         height: Math.min(targetH, root.height - root.gap * 2)
@@ -6727,7 +6730,10 @@ PanelWindow {
 
         width: (root.cfg.pillKeepVisible && !root.settingsMode && (root.expanded || opacity > 0.005)) ? root.panelW : 0
 
-        readonly property real detachedTargetH: Math.min(capsule.contentH, root.cfg.expandedH)
+        readonly property real detachedTargetH:
+            Math.min(capsule.contentH, capsule.stagePage
+                                      ? Math.max(root.cfg.expandedH, Math.round(root.height * 0.72))
+                                      : root.cfg.expandedH)
         height: (root.cfg.pillKeepVisible && !root.settingsMode && (root.expanded || opacity > 0.005))
                 ? Math.min(detachedTargetH,
                            Math.max(0, root.pillAtBottom

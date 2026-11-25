@@ -1251,6 +1251,7 @@ Item {
             visible: !view.openWithFile.length
 
             ColumnLayout {
+                id: placesCol
                 Layout.preferredWidth: 190
                 Layout.maximumWidth: 190
                 Layout.minimumWidth: 190
@@ -1495,7 +1496,7 @@ Item {
                     visible: view.mode === "list"
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    Layout.preferredHeight: view.windowMode ? 0 : view.sys.filesListH
+                    Layout.preferredHeight: view.windowMode ? 0 : placesCol.implicitHeight
                     Layout.minimumHeight: 120
                     clip: true
                     model: entries
@@ -1718,7 +1719,7 @@ Item {
                     visible: view.mode === "grid"
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    Layout.preferredHeight: view.windowMode ? 0 : view.sys.filesListH
+                    Layout.preferredHeight: view.windowMode ? 0 : placesCol.implicitHeight
                     Layout.minimumHeight: 120
                     clip: true
                     model: entries

@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-## 2.36
+## 2.37
 
 > _"Small mercies: the right half fits, the password prompt comes back, and the Done card knows when to leave."_
 
@@ -13,6 +13,7 @@
 - Installs lists your own packages, so anything added from search is removable from the page.
 - A finished install says Done for half a minute, not forever.
 - The installer ISO drops GPU firmware it does not boot, so the image fits the GitHub limit again.
+- Fix size of Files window to expand if external connections (smb, usb, etc)
 
 ## 2.35
 
