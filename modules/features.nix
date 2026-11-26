@@ -78,7 +78,7 @@ let
 
     {
       echo '{'
-      jq -r 'to_entries[] | "  \(.key) = \(.value);"' "$desired"
+      jq -r 'to_entries[] | if (.value | type) == "array" then "  \(.key) = [ " + (.value | map(tojson) | join(" ")) + " ];" else "  \(.key) = \(.value);" end' "$desired"
       echo '}'
     } > "$features"
     chown root:root "$features"
@@ -88,7 +88,7 @@ let
     if ! nixos-rebuild switch --flake /etc/nixriot#installed; then
       {
         echo '{'
-        jq -r 'to_entries[] | "  \(.key) = \(.value);"' "$state"
+        jq -r 'to_entries[] | if (.value | type) == "array" then "  \(.key) = [ " + (.value | map(tojson) | join(" ")) + " ];" else "  \(.key) = \(.value);" end' "$state"
         echo '}'
       } > "$features"
       chown root:root "$features"
@@ -131,7 +131,7 @@ in
         if (action.id == "org.freedesktop.systemd1.manage-units" &&
             unit.indexOf("nixriot-features@") == 0 &&
             subject.isInGroup("wheel")) {
-          return polkit.Result.AUTH_ADMIN_KEEP;
+          return polkit.Result.YES;
         }
       });
     '';

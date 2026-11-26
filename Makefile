@@ -1,6 +1,6 @@
 SHELL := bash
 
-.PHONY: check build iso switch local update crush fmt test-backup test-vault bump ship release release-major do-release publish
+.PHONY: check build iso switch local sync update crush fmt test-backup test-vault bump ship release release-major do-release publish
 
 VERSION_FILE = VERSION
 CHANGELOG = CHANGELOG.md
@@ -37,6 +37,18 @@ local:
 	    cp /etc/nixriot/hosts/installed/features.nix "$$dst/hosts/installed/"; \
 	  fi; \
 	  sudo nixos-rebuild switch --flake "$$dst#installed"
+
+# Sync the working tree into /etc/nixriot, machine files preserved. This is
+# what the update path does from a release, but from the repo, so unreleased
+# fixes reach the installed system's feature installer on this machine. It
+# diverges from upstream until the next release.
+sync:
+	@set -euo pipefail; \
+	  sudo rsync -a --delete --exclude .git \
+	    --exclude hosts/installed/local.nix \
+	    --exclude hosts/installed/features.nix \
+	    --exclude hosts/installed/hardware-configuration.nix \
+	    "$(CURDIR)/" /etc/nixriot/
 
 update:
 	nix flake update

@@ -130,10 +130,6 @@ ColumnLayout {
                 out.push(best.get(order[j]));
             return out;
         };
-        // If the whole name was typed, that is the answer. Variants such as
-        // chromium-bsu and chromium-hsts are prefix matches of "chromium" and
-        // only add noise when the user already typed the exact name.
-        if (exact.length > 0) return dedupe(exact).slice(0, 5);
         return dedupe(exact.concat(prefix, sub, fuzz)).slice(0, 5);
     }
 
