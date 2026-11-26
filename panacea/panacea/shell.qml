@@ -5899,6 +5899,20 @@ PanelWindow {
                     color: root.colFg
                     font { family: root.fontFam; pixelSize: root.iconSize - 4 }
                 }
+                Text {
+                    Layout.alignment: Qt.AlignVCenter
+                    visible: root.updateAvailable
+                    text: String.fromCodePoint(0xF019)
+                    color: root.colOn
+                    font { family: root.fontFam; pixelSize: root.iconSize - 2 }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.openSettingsAt("update")
+                    }
+                }
 
                 Item {
                     Layout.alignment: Qt.AlignVCenter

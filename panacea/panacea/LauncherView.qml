@@ -91,6 +91,26 @@ FocusScope {
         return String.fromCodePoint(0xF02CA);                   // md-harddisk
     }
 
+    function normApp(s) {
+        return String(s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+    }
+    function appAlreadyRunning(app) {
+        var want = [];
+        if (app && app.startupClass) want.push(normApp(app.startupClass));
+        var first = String(app && (app.execString || app.exec || "")).trim().split(/\s+/)[0] || "";
+        var bin = normApp(first.split("/").pop());
+        if (bin.length) want.push(bin);
+        var tops = Compositor.toplevels || [];
+        for (var i = 0; i < tops.length; i++) {
+            var geo = tops[i] && tops[i].geo;
+            var cls = normApp(geo ? geo.cls : "");
+            if (!cls) continue;
+            for (var j = 0; j < want.length; j++)
+                if (want[j] && want[j] === cls) return true;
+        }
+        return false;
+    }
+
     function bootInto(app) {
         //
         sys.bootIntoSystem(app.bootId);
@@ -244,10 +264,12 @@ FocusScope {
         if (app.builtin === "bootos") { bootInto(app); return; }
         if (app.builtin === "web") { webSearch(); return; }
         if (app.builtin === "ai") { ask(); return; }
+        var already = view.appAlreadyRunning(app);
         rememberApp(app);
         app.execute();
         sys.closeLauncher();
-        view.sys.sayToast(app.name, view.sys.tr("Launching..."));
+        view.sys.sayToast(app.name, already ? view.sys.tr("Already launched")
+                                            : view.sys.tr("Launching..."));
     }
     function move(delta) {
         if (results.length === 0) return;

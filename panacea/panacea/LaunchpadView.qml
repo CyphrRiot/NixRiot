@@ -392,12 +392,34 @@ FocusScope {
     }
     onFolderChanged: if (folderId.length && !folder && !dragging) Qt.callLater(view.closeFolder)
 
+    function normApp(s) {
+        return String(s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+    }
+    function appAlreadyRunning(app) {
+        var want = [];
+        if (app && app.startupClass) want.push(normApp(app.startupClass));
+        var first = String(app && (app.execString || app.exec || "")).trim().split(/\s+/)[0] || "";
+        var bin = normApp(first.split("/").pop());
+        if (bin.length) want.push(bin);
+        var tops = Compositor.toplevels || [];
+        for (var i = 0; i < tops.length; i++) {
+            var geo = tops[i] && tops[i].geo;
+            var cls = normApp(geo ? geo.cls : "");
+            if (!cls) continue;
+            for (var j = 0; j < want.length; j++)
+                if (want[j] && want[j] === cls) return true;
+        }
+        return false;
+    }
+
     function launchApp(app) {
         if (!app) return;
+        var already = view.appAlreadyRunning(app);
         view.rememberApp(String(app.id));
         app.execute();
         view.sys.closeLaunchpad();
-        view.sys.sayToast(app.name, view.sys.tr("Launching..."));
+        view.sys.sayToast(app.name, already ? view.sys.tr("Already launched")
+                                             : view.sys.tr("Launching..."));
     }
     function activate(e) {
         if (!e) return;

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 2.44
+
+- Better info in collapsed pill (update icon)
+
 ## 2.43
 
 - Installing a second optional package from the Installs page works again; the installer no longer fails the build with a syntax error.

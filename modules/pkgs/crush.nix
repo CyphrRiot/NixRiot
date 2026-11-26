@@ -1,14 +1,14 @@
 { pkgs }:
 pkgs.stdenvNoCC.mkDerivation {
   pname = "crush";
-  version = "0.102.0";
+  version = "0.103.0";
 
   src = pkgs.fetchurl {
-    url = "https://github.com/charmbracelet/crush/releases/download/v0.102.0/crush_0.102.0_Linux_x86_64.tar.gz";
-    hash = "sha256-eTDMFKLew6hX3dIHDIY8HF1+2zNdIM37ZaW0TmKgyh4=";
+    url = "https://github.com/charmbracelet/crush/releases/download/v0.103.0/crush_0.103.0_Linux_x86_64.tar.gz";
+    hash = "sha256-7N7GYeKTaET+mISZpPXfvwy6JZy6a971rZBSqdksCJc=";
   };
 
-  sourceRoot = "crush_0.102.0_Linux_x86_64";
+  sourceRoot = "crush_0.103.0_Linux_x86_64";
   installPhase = ''
     install -Dm755 crush $out/bin/crush
   '';
