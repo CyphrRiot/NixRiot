@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 2.43
+
+- Installing a second optional package from the Installs page works again; the installer no longer fails the build with a syntax error.
+- Installing optional packages no longer asks for a password.
+- Searching Installs with a full package name shows the variants, not just the exact match.
+- Packages are updated to the latest pinned nixpkgs.
+
 ## 2.42
 
 > _"The menu got quieter, the editor stopped flickering, and the boot screen went back to being honest about the password."_

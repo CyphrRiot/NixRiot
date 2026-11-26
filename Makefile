@@ -23,9 +23,10 @@ iso:
 switch:
 	sudo nixos-rebuild switch --flake .#nixriot
 
-# Build and activate the working tree on this machine, without touching
-# /etc/nixriot and without pushing anything.
-local:
+# Build and activate the working tree on this machine. Syncs the tree into
+# /etc/nixriot first (via the sync dependency), so the feature installer and
+# any local nixos-rebuild build from the same code.
+local: sync
 	@set -euo pipefail; \
 	  dst=/tmp/nixriot-candidate; \
 	  rm -rf "$$dst"; \
