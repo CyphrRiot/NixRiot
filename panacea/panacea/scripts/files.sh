@@ -202,7 +202,13 @@ EOF
         shift
         for P; do
             P="${P/#\~/$HOME}"
-            gio trash "$P" 2>/dev/null || rm -rf -- "$P"
+            printf 'FILE %s\n' "$P"
+            fs="$(findmnt -T "$P" -no FSTYPE 2>/dev/null)"
+            src="$(findmnt -T "$P" -no SOURCE 2>/dev/null)"
+            case "$fs $src" in
+                *gvfs*|*mtp*|*gvfsd*) rm -rf -- "$P" ;;
+                *) gio trash "$P" 2>/dev/null || rm -rf -- "$P" ;;
+            esac
         done
         ;;
 

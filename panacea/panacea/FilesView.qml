@@ -312,7 +312,8 @@ Item {
 
     function emptyTrash() {
         closeMenu();
-        run(["sh", "-c", view.scripts + " emptytrash"], view.sys.tr("Trash emptied"));
+        runLong(["sh", "-c", view.scripts + " emptytrash"],
+                 undefined, view.sys.tr("Emptying trash"));
     }
 
     function loadPlaces() {
@@ -476,8 +477,8 @@ Item {
         if (view.current < 0 || view.current >= entries.count) return;
         var e = entries.get(view.current);
         var full = (view.dir === "/" ? "" : view.dir) + "/" + e.eName;
-        run(["sh", "-c", view.scripts + " trash \"$1\"", "_", full],
-            view.sys.tr("Trashed: ") + e.eName);
+        runLong(["sh", "-c", view.scripts + " trash \"$1\"", "_", full],
+                undefined, view.sys.tr("Deleting: ") + e.eName);
     }
     Timer { id: statusClear; interval: 2600; onTriggered: view.status = "" }
 
@@ -729,7 +730,7 @@ Item {
         var cmd = ["sh", "-c", view.scripts + " trash \"$@\"", "_"].concat(targets);
         var label = targets.length === 1 ? view.baseName(targets[0])
                                          : (targets.length + " " + view.sys.tr("files"));
-        run(cmd, view.sys.tr("Trashed: ") + label);
+        runLong(cmd, undefined, view.sys.tr("Deleting: ") + label);
         view.clearSelection();
     }
 

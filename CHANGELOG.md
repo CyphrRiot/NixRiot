@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 2.47
+
+- Deleting on a phone or a gvfs mount deletes permanently instead of moving to trash. The Files app now shows "Deleting: <name>" while the delete is in flight.
+- New installs label the encrypted disk "nixriot" and the root filesystem "nixriot-root".
+- The README documents the Display page, with a screenshot.
+- The widgets screenshot is the native size.
+
 ## 2.46
 
 - You can turn a monitor on or off from Settings → Display, and a disabled screen shows as off until you enable it again.

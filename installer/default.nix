@@ -202,7 +202,7 @@ pkgs.writeScriptBin "nixriot-install" ''
 
   echo
   echo "Encrypting $root (LUKS2) ..."
-  cryptsetup luksFormat --type luks2 --label nixos \
+  cryptsetup luksFormat --type luks2 --label nixriot \
     --cipher aes-xts-plain64 --key-size 512 --hash sha256 \
     --pbkdf argon2id --pbkdf-memory 262144 --pbkdf-parallel 4 \
     "''${luks_opts[@]}" "$root"
@@ -221,7 +221,7 @@ pkgs.writeScriptBin "nixriot-install" ''
   cryptsetup open "''${luks_opts[@]}" "$root" cryptroot
 
   echo "Creating the root filesystem ..."
-  mkfs.ext4 -F -L nixos-root /dev/mapper/cryptroot
+  mkfs.ext4 -F -L nixriot-root /dev/mapper/cryptroot
 
   mkdir -p /mnt
   mount /dev/mapper/cryptroot /mnt
