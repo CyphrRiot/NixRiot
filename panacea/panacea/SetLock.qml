@@ -14,7 +14,7 @@ ColumnLayout {
 
         SetToggle {
             sys: page.sys
-            label: page.sys.tr("Lock screen")
+            label: page.sys.tr("Lock Screen")
             sub: page.sys.tr("Turn off if another program handles locking.")
             on: page.sys.cfg.featLock
             onToggled: v => { page.sys.cfg.featLock = v; page.sys.saveCfg(); }

@@ -9,7 +9,7 @@ ColumnLayout {
     property var sys
 
     readonly property var blocks: [
-        { id: "clock",   name: page.sys.tr("Clock and date") },
+        { id: "clock",   name: page.sys.tr("Clock and Date") },
         { id: "toggles", name: page.sys.tr("Wi-Fi · Bluetooth") },
         { id: "sliders", name: page.sys.tr("Volume and brightness") },
         { id: "media",   name: page.sys.tr("Now playing") },

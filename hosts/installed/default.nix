@@ -9,6 +9,7 @@ let
     // lib.optionalAttrs (features ? claude) { claude = features.claude; }
     // lib.optionalAttrs (features ? games) { games = features.games; }
     // lib.optionalAttrs (features ? transmission) { media.transmission = features.transmission; }
+    // lib.optionalAttrs (features ? ssh) { ssh = features.ssh; }
     // lib.optionalAttrs
          (features ? monero || features ? bitcoin)
          {

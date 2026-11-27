@@ -355,6 +355,43 @@ qemu-system-x86_64 -enable-kvm -machine q35 -cpu host -smp 4 -m 8G \
   anything that adds firmware must be appended there.
 - Cosmetic `buildEnv` collisions exist for `gvfs` and `bitcoind` (duplicates).
 
+## Hardening backlog
+
+Proposed, not applied. Each is self-contained; the reason it waits is written
+down so a later session does not have to re-derive it.
+
+- **Sysctls.** `boot.kernel.sysctl` in `modules/security/hardening.nix` holds
+  four entries. Add, in the same block:
+
+  ```nix
+  "kernel.yama.ptrace_scope" = 1;
+  "kernel.unprivileged_bpf_disabled" = 1;
+  "kernel.perf_event_paranoid" = 3;
+  "vm.unprivileged_userfaultfd" = 0;
+  "kernel.kexec_load_disabled" = 1;
+  "dev.tty.ldisc_autoload" = 0;
+  "net.ipv4.tcp_rfc1337" = 1;
+  "net.ipv6.conf.all.accept_redirects" = 0;
+  "fs.protected_fifos" = 2;
+  ```
+
+  Costs: `ptrace_scope` stops `gdb -p` and `strace -p` on processes you do not
+  own, `unprivileged_bpf_disabled` and `perf_event_paranoid` stop unprivileged
+  `bpftrace` and `perf`, `kexec_load_disabled` removes the kexec reboot. The
+  rest are invisible. `fs.protected_regular` is the same class and is not in the
+  list.
+- **AppArmor** is off and `lsm=` does not include it. Wanted eventually; the
+  profiles for the shell and Firefox are the part that breaks things.
+- **`nixriot-update.service`** is unsandboxed root. The additions are
+  `PrivateTmp`, `ProtectSystem=strict` with `ReadWritePaths`,
+  `ProtectHome=read-only` and `NoNewPrivileges`. The update path is already
+  authenticated by the signed tag, so this is blast radius, not correctness.
+- **Bluetooth** runs `bt-agent -c NoInputNoOutput`, which accepts pairing
+  without asking. Wanted: a mode that requires confirmation. Deliberate tradeoff
+  today.
+- **Live image** ships empty `root` and `nixos` passwords, passwordless sudo and
+  `PermitRootLogin yes`. Accepted as the installer's posture.
+
 ## Fish completions are off
 
 `programs.fish.generateCompletions` defaults to **true** and, for every package

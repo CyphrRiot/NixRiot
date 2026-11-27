@@ -108,6 +108,8 @@ in
 
     autologin = lib.mkEnableOption "automatic login into the desktop session";
 
+    ssh = lib.mkEnableOption "the OpenSSH server";
+
     plymouthLogo = lib.mkOption {
       type = lib.types.path;
       default = ../panacea/panacea/assets/logo-256.png;

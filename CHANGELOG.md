@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## 2.49
+
+- Firefox opens with the Matte Black theme, installed for every profile.
+- The SSH server is off by default. Settings → Security → Remote Access switches it on or off, which rebuilds the system; password and root logins are refused.
+- Settings → Security holds Lock Screen and Remote Access, and Update and Backup & Restore share the Maintenance group.
+- Settings labels are Title Case throughout.
+- The demo GIF is new, and First boot shows the desktop.
+
 ## 2.48
 
 - Crush + Packages update 

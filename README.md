@@ -3,7 +3,7 @@
 ![NixRiot](docs/img/banner.webp)
 
 ![Status](https://img.shields.io/badge/status-release-9a2eef?labelColor=1b2b34)
-![Version](https://img.shields.io/badge/version-2.48-9a2eef?labelColor=1b2b34)
+![Version](https://img.shields.io/badge/version-2.49-9a2eef?labelColor=1b2b34)
 ![Platform](https://img.shields.io/badge/platform-NixOS-9a2eef?logo=nixos&logoColor=white&labelColor=1b2b34)
 ![Shell](https://img.shields.io/badge/shell-Hyprland-9a2eef?logo=hyprland&logoColor=9a2eef&labelColor=1b2b34)
 ![UI](https://img.shields.io/badge/UI-Quickshell-9a2eef?labelColor=1b2b34)
@@ -116,8 +116,8 @@ NixRiot ships no wallet files and no secrets. You own those.
   default.
 - **Mullvad VPN**: the daemon and the desktop app are installed and enabled by
   default, with the GUI in the app launcher and the `mullvad` command line.
-- **Security**: firewall, SSH hardening, sysctl hardening, MAC randomization,
-  `restic` and `rclone` for backups.
+- **Security**: firewall, no SSH server unless `nixriot.ssh` is enabled, sysctl
+  hardening, MAC randomization, `restic` and `rclone` for backups.
 - The **NixRiot wallpaper set** (39 WebP images, `01.webp` through `39.webp`).
 - A **night light** for the screen, off until you switch it on (`SUPER + N`).
 - A **password vault** (`SUPER + SHIFT + P`), encrypted with your login password.
@@ -182,8 +182,9 @@ disk until that answers.
    reused to unlock the new volume, so there is no third prompt. You will type
    this at every boot, so pick something you can remember and write it down
    somewhere safe.
-8. It partitions (512M ESP labeled `BOOT`, the rest as an encrypted `nixos`
-   volume), formats, mounts, and runs `nixos-install`.
+8. It partitions (512M ESP labeled `BOOT`, the rest as an encrypted `nixriot`
+   volume with a `nixriot-root` filesystem), formats, mounts, and runs
+   `nixos-install`.
 9. After formatting it writes a LUKS header backup to
    `/root/nixriot-luks-header.img` and warns you to copy it to a USB stick or
    another machine before rebooting. Keep that file: if the header is damaged,
@@ -267,9 +268,10 @@ instead of leaving it off, is planned.
 The machine boots in text mode (no splash). The LUKS passphrase prompt appears
 on the console, then the session starts on its own: NixRiot logs the desktop
 user in automatically, so the login screen is skipped. The lock screen
-(`SUPER + L`) is what protects the machine,
-and if you log out you land on the themed login screen. `sudo` asks for the
-password you set during install.
+(`SUPER + L`) is what protects the machine, and if you log out you land on the
+themed login screen. `sudo` asks for the password you set during install.
+
+![The NixRiot desktop after the first boot, with the island expanded](docs/img/desktop.webp)
 
 NixRiot ships no default account. The installer creates the user for you,
 with the password you chose.
@@ -320,7 +322,7 @@ another application land in the same view.
 |---|---|
 | `SUPER + Return` | Terminal (foot) |
 | `SUPER + SHIFT + Return` | Floating terminal |
-| `SUPER + T` | btop, process viewer |
+| `SUPER + T` | System Monitor (btop) |
 | `SUPER + B` | Firefox |
 | `SUPER + F` | Panacea Files |
 | `SUPER + E` | Panacea Files (alternate) |
@@ -335,7 +337,7 @@ another application land in the same view.
 | `SUPER + SHIFT + F` | Fullscreen |
 | `SUPER + L` | Lock |
 | `SUPER + SHIFT + T` or `SUPER + SHIFT + D` | Wallpapers |
-| `SUPER + SHIFT + R` | Backup and restore |
+| `SUPER + SHIFT + R` | Backup & Restore |
 | `SUPER + SHIFT + S` or `Print` | Screenshot (region) |
 | `SUPER + P` | Screen recording |
 | `SUPER + ALT + Right` | Float the active window on the right half |
@@ -401,7 +403,7 @@ full set.
 | `desktop/panacea.nix` | hyprland, quickshell, hyprpaper, hyprsunset, hypridle, foot, grim, slurp, wl-clipboard, cliphist, wf-recorder, yazi, swappy, mpvpaper, and the rest of the shell's runtime (tesseract with `nixriot.ocr`) |
 | `desktop/theme.nix` | JetBrains Mono Nerd Font, Material Design icons, Noto fonts, Bibata cursors, Kora icons |
 | `crypto/*` | monero-gui, bitcoin and bitcoind, glyphriot, wireguard-tools |
-| `security/*` | restic, rclone, firewall, SSH hardening, sysctl hardening |
+| `security/*` | restic, rclone, firewall, opt-in SSH, sysctl hardening |
 | `apps/games.nix` | optional, off by default |
 
 ---
@@ -435,7 +437,7 @@ center (Wi-Fi, Bluetooth, audio, power profile, and **Stay awake**, which stops
 the screen blanking, the machine sleeping and lid-close suspend until you turn it
 off). `SUPER + /` lists every current binding.
 
-**Settings → Island → Bar and island** chooses whether the island sits at the top
+**Settings → Island → Bar and Island** chooses whether the island sits at the top
 or the bottom of the screen, and turns on notch mode and auto-hide. The bottom
 placement opens its panels above the capsule instead of below it.
 
@@ -452,7 +454,7 @@ doing. Your selection is kept in `/etc/nixriot/hosts/installed/features.nix`,
 which an update preserves, and the same switches exist in `local.nix`
 (`nixriot.office`, `nixriot.games`, `nixriot.crypto.monero`,
 `nixriot.crypto.bitcoin`, `nixriot.claude`) if you
-prefer to edit there. Transmission and the games collection are off by default;
+prefer to edit there. The games collection is off by default;
 LibreOffice is about 1 GB.
 
 ### Your own packages
@@ -492,7 +494,7 @@ pause, double click to reset, or press `SUPER + ,` from anywhere.
 
 The NixRiot set (39 WebP images, `01.webp` through `39.webp`) ships in
 `panacea/hypr/wallpaper/`, default `02.webp`. Change the wallpaper from
-Settings > Appearance > Wallpapers, or with `SUPER + SHIFT + T` or
+**Settings → Appearance → Wallpapers**, or with `SUPER + SHIFT + T` or
 `SUPER + SHIFT + D`. The manifest is
 `panacea/hypr/wallpaper/WALLPAPERS.md`.
 
@@ -578,11 +580,12 @@ next to your username. The file holds both, and an update preserves it:
 }
 ```
 
-Monero GUI and Bitcoin Core come from nixpkgs. [GlyphRiot](https://github.com/CyphrRiot/glyphriot),
-a seed-phrase glyph tool for self-custody, is installed by default, built from source and pinned
-to a commit. WireGuard is configured with `nixriot.wireguard.enable = true;` in the same stanza.
-Wallet files and keys, seed phrases included, are yours to create and back up; the flake never
-ships them.
+Monero GUI and Bitcoin Core come from nixpkgs.
+[GlyphRiot](https://github.com/CyphrRiot/glyphriot), a seed-phrase glyph tool for
+self-custody, is installed by default, built from source and pinned to a commit.
+WireGuard is configured with `nixriot.wireguard.enable = true;` in the same
+stanza. Wallet files and keys, seed phrases included, are yours to create and
+back up; the flake never ships them.
 
 ---
 
@@ -649,7 +652,7 @@ subset of OpenRiot's list; several OpenRiot games are no longer in nixpkgs.
 project and keeps the machine files (`local.nix`, `hardware-configuration.nix`
 and `features.nix`, the Installs state).
 
-From the pill: **Settings → Update**. On the command line:
+From the pill: **Settings → Maintenance → Update**. On the command line:
 
 ```sh
 sudo nixriot-update apply
@@ -669,9 +672,9 @@ what's new window shows them once per version.
 
 ![The Update button in the pill, next to the VPN indicator](docs/img/update-pill.webp)
 
-![Settings, System page, with the update ready to install](docs/img/update-settings.webp)
+![The Update page in Settings, with the update ready to install](docs/img/update-settings.webp)
 
-![Settings, System page, while the update downloads](docs/img/update-progress.webp)
+![The Update page in Settings, while the update downloads](docs/img/update-progress.webp)
 
 ![The what's new window after the update](docs/img/whats-new.webp)
 
@@ -722,10 +725,11 @@ rebuild
 
 ## Backup and restore
 
-**Settings → Backup and restore** mirrors your home folder onto a mounted drive,
-verifies the mirror, and can put it back. The drive is picked from the mounted
-removable ones; **Automatic** uses `/run/media/<user>/Backup`, and picking a
-drive stores its path as `backupDrive` in `~/.config/panacea/settings.json`.
+**Settings → Maintenance → Backup & Restore** mirrors your home folder onto a
+mounted drive, verifies the mirror, and can put it back. The drive is picked
+from the mounted removable ones; **Automatic** uses `/run/media/<user>/Backup`,
+and picking a drive stores its path as `backupDrive` in
+`~/.config/panacea/settings.json`.
 
 ![The Backup and restore page, with the drive mounted and encrypted](docs/img/backup.webp)
 
@@ -761,7 +765,7 @@ so the change is discarded.
 Package versions come from the flake's `nixpkgs` input, not from `/etc/nixriot`.
 To move them for everyone, run `nix flake update nixpkgs` in a clone of this
 repository, commit the new `flake.lock`, and release; installed machines pick it
-up with the next update, run from **Settings → Update** or with
+up with the next update, run from **Settings → Maintenance → Update** or with
 `sudo nixriot-update apply`.
 
 Never install or upgrade system packages with `nix profile` or `nix-env`. They

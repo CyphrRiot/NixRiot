@@ -396,7 +396,7 @@ ColumnLayout {
             BindRow { bindId: "pillLauncher";  label: page.sys.tr("App launcher") }
             BindRow { bindId: "launchpad";     label: page.sys.tr("Launchpad (app grid)") }
             BindRow { bindId: "overview";      label: page.sys.tr("Workspace overview") }
-            BindRow { bindId: "pillControls";  label: page.sys.tr("Quick settings") }
+            BindRow { bindId: "pillControls";  label: page.sys.tr("Quick Settings") }
             BindRow { bindId: "pillSettings";  label: page.sys.tr("These settings") }
             BindRow { bindId: "pillShortcuts"; label: page.sys.tr("Shortcuts cheat sheet") }
             BindRow { bindId: "pillWifi";      label: page.sys.tr("Network list") }
@@ -408,10 +408,10 @@ ColumnLayout {
             BindRow { bindId: "pillNotif";     label: page.sys.tr("Notifications") }
             BindRow { bindId: "fileManager";   label: page.sys.tr("File manager") }
             BindRow { bindId: "pillVault";     label: page.sys.tr("Password manager") }
-            BindRow { bindId: "backup";        label: page.sys.tr("Backup and restore") }
+            BindRow { bindId: "backup";        label: page.sys.tr("Backup & Restore") }
 
             Head { text: page.sys.tr("System") }
-            BindRow { bindId: "lockScreen"; label: page.sys.tr("Lock screen") }
+            BindRow { bindId: "lockScreen"; label: page.sys.tr("Lock Screen") }
             BindRow { bindId: "screenOff";  label: page.sys.tr("Turn screen off") }
             BindRow { bindId: "runCommand"; label: page.sys.tr("Run a command") }
             BindRow { bindId: "pillAway";   label: page.sys.tr("Put the island away") }

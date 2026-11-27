@@ -3,7 +3,7 @@
   config = lib.mkIf config.nixriot.enable {
     networking.firewall.enable = true;
 
-    services.openssh.enable = true;
+    services.openssh.enable = config.nixriot.ssh;
     services.openssh.settings.PasswordAuthentication = false;
     services.openssh.settings.PermitRootLogin = "no";
 
