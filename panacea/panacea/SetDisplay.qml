@@ -92,6 +92,8 @@ ColumnLayout {
                         transform: m.transform,
                         vrr: !!m.vrr,
                         x: m.x, y: m.y,
+                        disabled: !!m.disabled,
+                        mirrorOf: String(m.mirrorOf || "none"),
                         modes: m.availableModes || []
                     }));
                 } catch (e) {
@@ -102,6 +104,14 @@ ColumnLayout {
     }
 
     function apply(m, over) {
+        var prev = {};
+        try { prev = (JSON.parse(page.sys.cfg.monOverrides || "{}") || {})[m.name] || {}; }
+        catch (e) { prev = {}; }
+        var mirror = over.mirror !== undefined ? over.mirror
+            : (prev.mirror !== undefined ? prev.mirror
+            : (m.mirrorOf && m.mirrorOf !== "none" ? m.mirrorOf : ""));
+        var enabled = over.enabled !== undefined ? over.enabled
+            : (prev.enabled !== undefined ? prev.enabled : !m.disabled);
         page.sys.monApply(m.name, {
             w:  over.w  !== undefined ? over.w  : m.w,
             h:  over.h  !== undefined ? over.h  : m.h,
@@ -109,7 +119,10 @@ ColumnLayout {
             scale: over.scale !== undefined ? over.scale : m.scale,
             transform: over.transform !== undefined ? over.transform : m.transform,
             vrr: m.vrr,
-            pos: over.pos !== undefined ? over.pos : page.placeOf(m)
+            pos: over.pos !== undefined ? over.pos
+                : (mirror ? "auto" : page.placeOf(m)),
+            mirror: mirror,
+            enabled: enabled
         });
         reload.restart();
     }
@@ -128,6 +141,12 @@ ColumnLayout {
         if (m.y >= base.y + base.h) return "auto-down";
         if (m.y + m.h <= base.y)    return "auto-up";
         return "auto";
+    }
+
+    function anyEnabledBesides(idx) {
+        for (var i = 0; i < page.mons.length; i++)
+            if (i !== idx && !page.mons[i].disabled) return true;
+        return false;
     }
 
     function modeText(s) {
@@ -237,7 +256,11 @@ ColumnLayout {
                 }
 
                 Text {
-                    text: card.res + " · " + Number(card.modelData.rr).toFixed(0) + " Hz"
+                    text: card.modelData.disabled
+                        ? page.sys.tr("Disabled")
+                        : card.modelData.mirrorOf !== "none"
+                          ? page.sys.tr("Mirroring") + " " + card.modelData.mirrorOf
+                          : card.res + " · " + Number(card.modelData.rr).toFixed(0) + " Hz"
                     color: page.sys.colMuted
                     font { family: page.sys.fontBody; pixelSize: page.sys.fontSize - 3 }
                 }
@@ -245,6 +268,7 @@ ColumnLayout {
 
             SetPick {
                 sys: page.sys
+                visible: !card.modelData.disabled && card.modelData.mirrorOf === "none"
                 label: page.sys.tr("Mode")
                 options: page.modeList(card.modelData)
                 value: page.modeValue(card.modelData)
@@ -253,7 +277,7 @@ ColumnLayout {
 
             Text {
                 Layout.fillWidth: true
-                visible: (card.modelData.modes || []).length === 0
+                visible: !card.modelData.disabled && (card.modelData.modes || []).length === 0
                 text: page.sys.tr("The monitor did not report any modes; usually that means "
                                   + "the graphics driver is not installed.")
                 color: page.sys.colCrit
@@ -263,24 +287,33 @@ ColumnLayout {
 
             SetSelect {
                 sys: page.sys
-                visible: page.mons.length > 1 && card.index > 0
+                visible: !card.modelData.disabled && page.mons.length > 1 && card.index > 0
                 label: page.sys.tr("Placement") + (page.mons.length > 1
                        ? " — " + page.sys.tr("relative to") + " " + page.mons[0].name : "")
                 options: [
                     { id: "auto-right", text: page.sys.tr("Right of") },
                     { id: "auto-left",  text: page.sys.tr("Left of") },
                     { id: "auto-up",    text: page.sys.tr("Above") },
-                    { id: "auto-down",  text: page.sys.tr("Below") }
+                    { id: "auto-down",  text: page.sys.tr("Below") },
+                    { id: "mirror",     text: page.sys.tr("Mirror") + " " + page.mons[0].name }
                 ]
-                value: page.placeOf(card.modelData)
-                onPicked: id => page.apply(card.modelData, { pos: id })
+                value: card.modelData.mirrorOf !== "none" ? "mirror" : page.placeOf(card.modelData)
+                onPicked: id => {
+                    if (id === "mirror") {
+                        var src = page.mons[0];
+                        if (src.disabled) page.apply(src, { enabled: true });
+                        page.apply(card.modelData, { mirror: src.name });
+                    } else {
+                        page.apply(card.modelData, { pos: id, mirror: "" });
+                    }
+                }
             }
 
             SetSlider {
                 id: brightSl
                 readonly property var b: page.brightOf(card.modelData.name)
                 sys: page.sys
-                visible: brightSl.b !== null
+                visible: brightSl.b !== null && !card.modelData.disabled
                 label: page.sys.tr("Brightness")
                 from: 1; to: 100; step: 1
                 value: brightSl.b ? brightSl.b.pct : 0
@@ -292,6 +325,7 @@ ColumnLayout {
                 Layout.fillWidth: true
                 visible: page.brightOf(card.modelData.name) === null
                          && !page.sys.batteryPresent
+                         && !card.modelData.disabled
                 text: !page.sys.ddcutilPresent
                       ? page.sys.tr("Monitor brightness is handled by ddcutil, which is not installed. "
                                     + "Install the ddcutil package and the slider will appear here.")
@@ -304,7 +338,7 @@ ColumnLayout {
 
             SetSlider {
                 sys: page.sys
-                visible: card.index === 0
+                visible: card.index === 0 && !card.modelData.disabled
                 label: page.sys.tr("Digital vibrance")
                 from: 0; to: 100; step: 5
                 value: page.sys.cfg.vibrance
@@ -314,6 +348,7 @@ ColumnLayout {
 
             SetPick {
                 sys: page.sys
+                visible: !card.modelData.disabled && card.modelData.mirrorOf === "none"
                 label: page.sys.tr("Scale")
                 options: ["1.00", "1.25", "1.50", "1.67", "1.75", "2.00", "2.50", "3.00"].map(
                     s => ({ id: s, text: s + "×" }))
@@ -323,6 +358,7 @@ ColumnLayout {
 
             SetSelect {
                 sys: page.sys
+                visible: !card.modelData.disabled && card.modelData.mirrorOf === "none"
                 label: page.sys.tr("Rotation")
                 options: [
                     { id: "0", text: "0°" },
@@ -332,6 +368,41 @@ ColumnLayout {
                 ]
                 value: String(card.modelData.transform)
                 onPicked: id => page.apply(card.modelData, { transform: +id })
+            }
+
+            SetCard {
+                sys: page.sys
+                visible: page.anyEnabledBesides(card.index)
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 10
+
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: 2
+
+                        Text {
+                            text: card.modelData.disabled ? page.sys.tr("Screen is off") : page.sys.tr("Turn this screen off")
+                            color: page.sys.colFg
+                            font { family: page.sys.fontBody; pixelSize: page.sys.fontSize - 1 }
+                        }
+                        Text {
+                            Layout.fillWidth: true
+                            text: card.modelData.disabled ? page.sys.tr("Wake this output back up.")
+                                                           : page.sys.tr("Stop sending video to this output.")
+                            color: page.sys.colMuted
+                            wrapMode: Text.WordWrap
+                            font { family: page.sys.fontBody; pixelSize: page.sys.fontSize - 3 }
+                        }
+                    }
+
+                    SetButton {
+                        sys: page.sys
+                        text: card.modelData.disabled ? page.sys.tr("Enable") : page.sys.tr("Disable")
+                        onClicked: page.apply(card.modelData, { enabled: card.modelData.disabled })
+                    }
+                }
             }
 
         }

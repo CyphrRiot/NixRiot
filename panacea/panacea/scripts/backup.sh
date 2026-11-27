@@ -7,6 +7,7 @@
 #
 #   backup.sh status  [DEST]
 #   backup.sh mount   [DEST]
+#   backup.sh unmount [DEST]
 #   backup.sh backup  [DEST]
 #   backup.sh verify  [DEST]
 #   backup.sh restore [--go] [DEST]
@@ -74,6 +75,20 @@ mount_drive() {
     udisksctl mount -b "/dev/disk/by-label/$LABEL" >/dev/null 2>&1
     for _ in 1 2 3 4 5 6 7 8 9 10; do
         mounted && return 0
+        sleep 0.5
+    done
+    return 1
+}
+
+unmount_drive() {
+    mounted || return 0
+    local dev
+    dev="$(drive_device)" || return 1
+    [ -n "$dev" ] || return 1
+    step "Unmounting $LABEL"
+    udisksctl unmount -b "$dev" >/dev/null 2>&1
+    for _ in 1 2 3 4 5 6 7 8 9 10; do
+        mounted || return 0
         sleep 0.5
     done
     return 1
@@ -258,6 +273,12 @@ case "${1:-}" in
         done_ok
         ;;
 
+    unmount)
+        unmount_drive || die unmount-failed "$DRIVE"
+        step "Unmounted $DRIVE"
+        done_ok
+        ;;
+
     backup)
         step "Checking the drive"
         if [ "$TEST" != 1 ]; then
@@ -362,7 +383,7 @@ case "${1:-}" in
         ;;
 
     *)
-        printf 'usage: backup.sh status|mount|backup|verify|restore [--go] [DEST]\n' >&2
+        printf 'usage: backup.sh status|mount|unmount|backup|verify|restore [--go] [DEST]\n' >&2
         exit 1
         ;;
 esac

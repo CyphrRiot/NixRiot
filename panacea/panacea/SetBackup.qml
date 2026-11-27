@@ -169,6 +169,13 @@ ColumnLayout {
                 enabled: !page.sys.backupBusy
                 onClicked: page.sys.backupStart("mount")
             }
+            SetButton {
+                sys: page.sys
+                visible: page.sys.backupMounted
+                text: page.sys.tr("Unmount")
+                enabled: !page.sys.backupBusy
+                onClicked: page.sys.backupStart("unmount")
+            }
         }
 
         RowLayout {

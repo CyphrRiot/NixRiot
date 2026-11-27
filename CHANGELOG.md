@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 2.46
+
+- You can turn a monitor on or off from Settings → Display, and a disabled screen shows as off until you enable it again.
+- The placement picker on a second monitor can mirror it onto the first monitor's content.
+- The Backup page can unmount the drive, not just mount it.
+
 ## 2.45
 
 - Fix back failures due to .gvfs iphone or android mounted filesystem

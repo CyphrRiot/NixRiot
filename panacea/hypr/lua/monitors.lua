@@ -28,14 +28,20 @@ hl.monitor({
 })
 
 for _, m in ipairs(saved) do
-    hl.monitor({
-        output    = m.output,
-        mode      = m.mode,
-        position  = m.position or "auto",
-        scale     = m.scale or 1.0,
-        transform = m.transform or 0,
-        vrr       = m.vrr or 0,
-    })
+    if m.disabled then
+        hl.monitor({ output = m.output, disabled = true })
+    else
+        local spec = {
+            output    = m.output,
+            mode      = m.mode,
+            position  = m.position or "auto",
+            scale     = m.scale or 1.0,
+            transform = m.transform or 0,
+            vrr       = m.vrr or 0,
+        }
+        if m.mirror then spec.mirror = m.mirror end
+        hl.monitor(spec)
+    end
 end
 
 -- The lid has the last word: a saved entry for the internal panel would switch

@@ -46,14 +46,19 @@ end
 local function restore(name)
     for _, entry in ipairs(saved) do
         if entry.output == name then
-            hl.monitor({
-                output = entry.output,
-                mode = entry.mode,
-                position = entry.position or "auto",
-                scale = entry.scale or 1.0,
-                transform = entry.transform or 0,
-                vrr = entry.vrr or 0,
-            })
+            if entry.disabled then
+                hl.monitor({ output = entry.output, disabled = true })
+            else
+                hl.monitor({
+                    output = entry.output,
+                    mode = entry.mode,
+                    position = entry.position or "auto",
+                    scale = entry.scale or 1.0,
+                    transform = entry.transform or 0,
+                    vrr = entry.vrr or 0,
+                    mirror = entry.mirror,
+                })
+            end
             return
         end
     end
@@ -72,7 +77,15 @@ local function apply()
             if docked and monitor.enabled then
                 hl.monitor({ output = monitor.name, disabled = true })
             elseif not docked and not monitor.enabled then
-                restore(monitor.name)
+                local anyOther = false
+                for _, m in ipairs(hl.get_monitors()) do
+                    if m.enabled and m.name ~= monitor.name then anyOther = true; break end
+                end
+                if anyOther then
+                    restore(monitor.name)
+                else
+                    hl.monitor({ output = monitor.name, mode = "preferred", position = "auto", scale = 1.0 })
+                end
             end
         end
     end

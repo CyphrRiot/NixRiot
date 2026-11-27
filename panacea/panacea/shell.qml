@@ -501,11 +501,22 @@ PanelWindow {
 
     function monCmd(n, o) {
         var mode = o.w + "x" + o.h + "@" + Number(o.rr).toFixed(2);
-        var lua = "hl.monitor({ output=\"" + n + "\", mode=\"" + mode
+        var lua, legacy;
+        if (o.enabled === false) {
+            lua = "hl.monitor({ output=\"" + n + "\", disabled=true })";
+            legacy = n + ",disable";
+        } else if (o.mirror) {
+            lua = "hl.monitor({ output=\"" + n + "\", position=\"auto\", mirror=\"" + o.mirror
+                + "\", scale=" + Number(o.scale).toFixed(6)
+                + ", transform=" + o.transform + ", vrr=" + (o.vrr ? 1 : 0) + " })";
+            legacy = n + ",preferred,auto,1,mirror," + o.mirror;
+        } else {
+            lua = "hl.monitor({ output=\"" + n + "\", mode=\"" + mode
                 + "\", position=\"" + o.pos + "\", scale=" + Number(o.scale).toFixed(6)
                 + ", transform=" + o.transform + ", vrr=" + (o.vrr ? 1 : 0) + " })";
-        var legacy = n + "," + mode + "," + o.pos + "," + Number(o.scale).toFixed(6)
-                   + ",transform," + o.transform + ",vrr," + (o.vrr ? 1 : 0);
+            legacy = n + "," + mode + "," + o.pos + "," + Number(o.scale).toFixed(6)
+                       + ",transform," + o.transform + ",vrr," + (o.vrr ? 1 : 0);
+        }
         return "out=$(hyprctl eval '" + lua + "' 2>&1); case \"$out\" in ok*) ;; *) "
              + "hyprctl keyword monitor '" + legacy + "' ;; esac";
     }
@@ -3179,6 +3190,7 @@ PanelWindow {
         var busyName = kind === "backup"  ? root.tr("Backing up")
                      : kind === "verify"  ? root.tr("Verifying")
                      : kind === "restore" ? root.tr("Restoring")
+                     : kind === "unmount" ? root.tr("Unmounting")
                                           : root.tr("Mounting");
         root.beginBusy(busyName, String.fromCodePoint(0xF006F), 0);
         // Run in a named systemd user scope so the whole tree (script + rsync)

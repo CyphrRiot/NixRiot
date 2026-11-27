@@ -22,14 +22,20 @@ tmp="$OUT.new"
     echo "return {"
     printf '%s' "$raw" | jq -r '
         to_entries[]
-        | "    { output = \"" + .key + "\""
-        + ", mode = \"" + (.value.w|tostring) + "x" + (.value.h|tostring)
-        + "@" + ((.value.rr|tonumber) | tostring) + "\""
-        + ", position = \"" + (.value.pos // "auto") + "\""
-        + ", scale = " + (((((.value.scale // 1) * 10000) | round) / 10000) | tostring)
-        + ", transform = " + ((.value.transform // 0) | tostring)
-        + ", vrr = " + (if .value.vrr then "1" else "0" end)
-        + " },"
+        | (if .value.enabled == false
+            then "    { output = \"" + .key + "\""
+               + ", disabled = true"
+               + " },"
+            else "    { output = \"" + .key + "\""
+               + ", mode = \"" + (.value.w|tostring) + "x" + (.value.h|tostring)
+               + "@" + ((.value.rr|tonumber) | tostring) + "\""
+               + ", position = \"" + (.value.pos // "auto") + "\""
+               + ", scale = " + (((((.value.scale // 1) * 10000) | round) / 10000) | tostring)
+               + ", transform = " + ((.value.transform // 0) | tostring)
+               + ", vrr = " + (if .value.vrr then "1" else "0" end)
+               + (if .value.mirror then ", mirror = \"" + .value.mirror + "\"" else "" end)
+               + " },"
+           end)
     ' 2>/dev/null
     echo "}"
 } > "$tmp"
