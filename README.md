@@ -39,6 +39,7 @@ This file is the manual. The reasoning is in
 - [Control center](#control-center)
 - [Desktop widgets](#desktop-widgets)
 - [Wallpapers](#wallpapers)
+- [Displays](#displays)
 - [Night light](#night-light)
 - [Password vault](#password-vault)
 - [Weather](#weather)
@@ -497,6 +498,23 @@ Settings > Appearance > Wallpapers, or with `SUPER + SHIFT + T` or
 
 Adding an image means adding a licence entry to that manifest. Live video
 wallpapers are not shipped.
+
+---
+
+## Displays
+
+Every connected screen is listed under **Settings → Devices → Display**. A
+screen can be switched off from that page: it shows as off and sends no
+video until you switch it back on. The setting survives a reboot, so a
+laptop panel docked to an external monitor stays off across reboots.
+
+Placement puts a second monitor to the right, left, above or below the
+first, or mirrors it onto the same picture at the first monitor's
+resolution. Mode, scale (limited to the values the compositor accepts),
+brightness, rotation and which screen the island sits on are all per
+screen.
+
+![The Display settings page, with the internal panel switched off](docs/img/displays.webp)
 
 ---
 
