@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 2.45
+
+- Fix back failures due to .gvfs iphone or android mounted filesystem
+
 ## 2.44
 
 - Better info in collapsed pill (update icon)

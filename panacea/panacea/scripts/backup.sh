@@ -97,7 +97,7 @@ plan_scan() {
 
     step "Planning"
     rsync -n -aH --delete --numeric-ids --no-specials \
-          --exclude=/lost+found \
+          --exclude=/lost+found --exclude=/.gvfs \
           --out-format='%n|%l' \
           "$SRC/" "$DEST/" 2>/dev/null > "$raw"
     rc=$?
@@ -280,7 +280,7 @@ case "${1:-}" in
         step "Copying $SRC"
         rsync -aH --delete --numeric-ids --human-readable --no-specials \
               --info=progress2 --info=name --no-inc-recursive \
-              --exclude=/lost+found \
+              --exclude=/lost+found --exclude=/.gvfs \
               ${BWLIMIT:+--bwlimit="$BWLIMIT"} \
               "$SRC/" "$DEST/" 2>"$err" | tr '\r' '\n' | parse_progress "$last" "${PLAN_BYTES:-0}" "$sent_list"
         rc=${PIPESTATUS[0]}
@@ -335,6 +335,7 @@ case "${1:-}" in
             step "Comparing $DEST against $SRC"
             drift="$(rsync -n -aH --numeric-ids --itemize-changes \
                            --no-specials \
+                           --exclude=/.gvfs \
                            "$DEST/" "$SRC/" 2>/dev/null | awk '!/^\.d\.\.t/')"
             printf '%s\n' "$drift" | head -20 | while IFS= read -r l; do
                 [ -n "$l" ] && printf 'STEP would change %s\n' "$(printf '%s' "$l" | cut -c1-70)"
@@ -349,6 +350,7 @@ case "${1:-}" in
         trap 'pkill -TERM -P $$ 2>/dev/null; rm -f "$err"; printf "DONE cancelled\n"; exit 130' INT TERM
         rsync -aH --numeric-ids --human-readable --no-specials \
               --info=progress2 --info=name --no-inc-recursive \
+              --exclude=/.gvfs \
               "$DEST/" "$SRC/" 2>"$err" | tr '\r' '\n' | parse_progress
         rc=${PIPESTATUS[0]}
         if [ "$rc" -ne 0 ] && [ "$rc" -ne 24 ]; then

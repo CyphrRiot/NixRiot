@@ -13,6 +13,12 @@ tag="$(curl -fsSL "https://api.github.com/repos/$repo/releases/latest" | jq -r .
 ver="${tag#v}"
 [ -n "$ver" ] || { echo "could not read the latest release tag" >&2; exit 1; }
 
+current="$(sed -n 's/.*version = "\(.*\)";.*/\1/p' "$file")"
+if [ "$current" = "$ver" ]; then
+  echo "crush $current (already up to date)"
+  exit 0
+fi
+
 url="https://github.com/$repo/releases/download/$tag/crush_${ver}_Linux_x86_64.tar.gz"
 hash="$(nix store prefetch-file --json --hash-type sha256 "$url" | jq -r .hash)"
 [ -n "$hash" ] || { echo "could not fetch $url" >&2; exit 1; }
