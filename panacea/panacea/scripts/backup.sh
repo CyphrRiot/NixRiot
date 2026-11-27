@@ -99,6 +99,10 @@ free_bytes() {
     df -B1 --output=avail "$DRIVE" 2>/dev/null | tail -1 | tr -d ' '
 }
 
+mirror_bytes() {
+    du -sb "$DEST" 2>/dev/null | cut -f1
+}
+
 # One read-only scan of the source before the copy. Emits STEP Planning and
 # PLAN, writes $SYS/manifest.txt, and refuses to start if the transfer will not
 # fit. Sets PLAN_FILES, PLAN_BYTES, PLAN_DELETES and PLAN_FREE. Returns rsync's
@@ -265,6 +269,11 @@ case "${1:-}" in
         else
             printf 'size=0\n'
         fi
+        if [ -r "$DRIVE/mirror-size" ]; then
+            printf 'total=%s\n' "$(head -1 "$DRIVE/mirror-size")"
+        else
+            printf 'total=0\n'
+        fi
         ;;
 
     mount)
@@ -332,6 +341,8 @@ case "${1:-}" in
 
         date -u +%Y-%m-%dT%H:%M:%SZ > "$STAMP"
         printf '%s\n' "${mirrored:-0}" > "$DRIVE/last-size"
+        mir="$(mirror_bytes)"
+        printf '%s\n' "${mir:-0}" > "$DRIVE/mirror-size"
         {
             printf '%s backup %s -> %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$SRC" "$DEST"
             printf 'size %s\n' "${mirrored:-0}"

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 2.51
+
+- Correct "Total Size" in Backup & Restore settings tab
+
 ## 2.50
 
 - Firefox opens with the Matte Black theme, installed for every profile.

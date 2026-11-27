@@ -183,6 +183,22 @@ ColumnLayout {
             spacing: 12
             Text {
                 Layout.fillWidth: true
+                text: page.sys.tr("Total size")
+                color: page.sys.colFg
+                font { family: page.sys.fontBody; pixelSize: page.sys.fontSize - 1 }
+            }
+            Text {
+                text: page.sys.backupMounted && Number(page.sys.backupStatus.total) > 0 ? page.human(page.sys.backupStatus.total) : "-"
+                color: page.sys.colMuted
+                font { family: page.sys.fontBody; pixelSize: page.sys.fontSize - 3 }
+            }
+        }
+
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: 12
+            Text {
+                Layout.fillWidth: true
                 text: page.sys.tr("Free space")
                 color: page.sys.colFg
                 font { family: page.sys.fontBody; pixelSize: page.sys.fontSize - 1 }
@@ -215,7 +231,7 @@ ColumnLayout {
             spacing: 12
             Text {
                 Layout.fillWidth: true
-                text: page.sys.tr("Mirror size")
+                text: page.sys.tr("Last transfer")
                 color: page.sys.colFg
                 font { family: page.sys.fontBody; pixelSize: page.sys.fontSize - 1 }
             }
