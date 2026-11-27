@@ -59,6 +59,9 @@ Item {
         { id: "backup",  title: view.sys.tr("Backup & Restore"), g: 0xF006F, page: "SetBackup.qml",
           sub: view.sys.tr("Mirror your home folder to a mounted drive, and put it back."),
           keys: "backup restore rsync drive mirror sync" },
+        { id: "iso",     title: view.sys.tr("Personal Image"), g: 0xF02CA, page: "SetPersonalIso.qml",
+          sub: view.sys.tr("Build an ISO that installs this machine's configuration."),
+          keys: "iso image own personal settings installer usb remaster" },
         { id: "display", title: view.sys.tr("Display"),        g: 0xF0379, page: "SetDisplay.qml",
           sub: view.sys.tr("Resolution, refresh rate and scale of the connected screens."),
           keys: "display monitor resolution refresh scale layout placement detect island" },
@@ -85,7 +88,7 @@ Item {
         { id: "security", title: view.sys.tr("Security"), g: 0xF033E, pages: ["lock", "ssh"] },
         { id: "vpn", title: "VPN", g: 0xF0582, pages: ["vpn"] },
         { id: "installs", title: view.sys.tr("Installs"), g: 0xF01DA, pages: ["installs"] },
-        { id: "maintenance", title: view.sys.tr("Maintenance"), g: 0xF0450, pages: ["update", "backup"] },
+        { id: "maintenance", title: view.sys.tr("Maintenance"), g: 0xF0450, pages: ["update", "backup", "iso"] },
         { id: "system", title: view.sys.tr("System"), g: 0xF0493, pages: ["system"] }
     ]
 

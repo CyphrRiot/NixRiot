@@ -56,7 +56,7 @@ PanelWindow {
             // Overlay mode: the island floats above windows without reserving a strip
             property bool   pillOverlay: true
             // The island stays visible while expanded (the panel opens as a separate floating card)
-            property bool   pillKeepVisible: false
+            property bool   pillKeepVisible: true
             // Away: the island is off the screen and the edge strip is inert, so
             // nothing brings it back except a panel opening or this toggle.
             property bool   pillAway: false
@@ -448,7 +448,7 @@ PanelWindow {
         colFg: "#ffffff", colOn: "#ffffff", mutedAlpha: 0.45, themeId: "nothing",
         spacingUnit: 8, smallRadius: 10,
         pillH: 38, pillPos: "top", pillScreen: "auto", pillAutoHide: false, pillOverlay: true,
-        pillKeepVisible: false, pillAway: false, closePanaceaFirst: true,
+        pillKeepVisible: true, pillAway: false, closePanaceaFirst: true,
         pillDrag: false, panelW: 540,
         monOverrides: "",
         notchMode: false, notchFlare: 12, collapsedW: 260, expandedH: 620,
@@ -869,7 +869,7 @@ PanelWindow {
 
     //
     readonly property bool cornersWanted:
-        !(root.settingsMode || root.wallsOpen || root.pillHidden)
+        !(capsule.inlineSettings || root.wallsOpen || root.pillHidden)
     property bool cornersOn: false
     Timer {
         id: cornerReveal
@@ -1530,6 +1530,12 @@ PanelWindow {
         } else { page = "vpn"; expanded = true; holdOpen = true; return; }
         vpnQuick.running = true;
     }
+    function openVpnApp() {
+        if (!cfg.vpnPreferredClient) { togglePage("vpn"); return; }
+        vpnClient.command = ["gio", "launch", cfg.vpnPreferredClient];
+        vpnClient.running = false;
+        vpnClient.running = true;
+    }
     Process {
         id: vpnStatus
         command: root.cfg.vpnPreferredClient ? ["python3", root.scriptDir + "/vpn.py", "client-status", root.cfg.vpnPreferredClient] : ["python3", root.scriptDir + "/vpn.py", "list"]
@@ -1923,6 +1929,10 @@ PanelWindow {
     readonly property bool launcherOpen: expanded && page === "launcher"
 
     function collapse() {
+        if (expanded) {
+            hoverExpandArmed = false;
+            capsuleHover.markArmPoint();
+        }
         expanded = false;
         chatFilePickerOpen = false;
         holdOpen = false;
@@ -2312,6 +2322,13 @@ PanelWindow {
     function openWeatherDetails() {
         root.weatherDetailsOpen = true;
         root.refreshWeatherForecast();
+    }
+
+    onWeatherDetailsOpenChanged: {
+        if (!root.weatherDetailsOpen) {
+            root.hoverExpandArmed = false;
+            capsuleHover.markArmPoint();
+        }
     }
 
     function refreshWeatherForecast() {
@@ -3325,6 +3342,79 @@ PanelWindow {
         running: root.backupBusy
         repeat: true
         onTriggered: root.backupElapsed++
+    }
+
+    property bool isoBusy: false
+    property string isoStep: ""
+    property string isoLog: ""
+    property string isoPath: ""
+    property string isoError: ""
+    property int isoElapsed: 0
+
+    readonly property string isoScript: root.scriptDir + "/personaliso.sh"
+
+    function isoStart() {
+        if (root.isoBusy) return;
+        root.isoStep = root.tr("Preparing");
+        root.isoLog = ""; root.isoPath = ""; root.isoError = "";
+        root.isoElapsed = 0;
+        root.isoBusy = true;
+        root.beginBusy(root.tr("Building the image"), String.fromCodePoint(0xF02CA), 0);
+        pIsoJob.command = ["systemd-run", "--user", "--scope", "--collect", "--quiet",
+                           "--unit=panacea-iso", root.isoScript, "start"];
+        pIsoJob.running = false;
+        pIsoJob.running = true;
+    }
+
+    function isoCancel() {
+        if (!root.isoBusy) return;
+        pIsoKill.running = false;
+        pIsoKill.running = true;
+        pIsoJob.running = false;
+    }
+
+    function isoFinish(failed) {
+        root.isoBusy = false;
+        root.endBusy();
+        if (failed && root.isoError.length === 0) root.isoError = failed;
+    }
+
+    Process {
+        id: pIsoJob
+        stdout: SplitParser {
+            onRead: line => {
+                var t = line.trim().split(" ");
+                if (t[0] === "STEP") {
+                    root.isoStep = t.slice(1).join(" ");
+                } else if (t[0] === "LOG") {
+                    root.isoLog = t.slice(1).join(" ");
+                } else if (t[0] === "DONE") {
+                    root.isoPath = t.slice(1).join(" ");
+                    root.isoStep = "";
+                    root.isoFinish("");
+                } else if (t[0] === "ERROR") {
+                    root.isoError = t.slice(2).join(" ") || t[1] || root.tr("Failed");
+                    root.isoFinish("");
+                }
+            }
+        }
+        onRunningChanged: {
+            if (running || !root.isoBusy) return;
+            root.isoFinish(root.isoError.length ? "" : root.tr("Cancelled"));
+        }
+    }
+
+    Process {
+        id: pIsoKill
+        command: ["systemctl", "--user", "kill", "--signal=SIGTERM",
+                  "panacea-iso.scope"]
+    }
+
+    Timer {
+        interval: 1000
+        running: root.isoBusy
+        repeat: true
+        onTriggered: root.isoElapsed++
     }
 
     property var vaultPrompt: null           // {pw, label}
@@ -4532,7 +4622,7 @@ PanelWindow {
             intersection: Intersection.Combine
         }
         Region {
-            item: (root.cfg.pillKeepVisible && !root.settingsMode && (root.expanded || detachedPanel.opacity > 0.005)) ? detachedPanel : null
+            item: (root.cfg.pillKeepVisible && (root.expanded || detachedPanel.opacity > 0.005)) ? detachedPanel : null
             intersection: Intersection.Combine
         }
         // The trace of the collapsed pill: see hoverPad above.
@@ -4545,7 +4635,7 @@ PanelWindow {
     WlrLayershell.keyboardFocus: root.holdOpen && !root.chatFilePickerOpen ? WlrKeyboardFocus.Exclusive
                                               : WlrKeyboardFocus.None
 
-    readonly property var activePanel: (root.cfg.pillKeepVisible && root.expanded && !root.settingsMode) ? detachedPanel : capsule
+    readonly property var activePanel: (root.cfg.pillKeepVisible && root.expanded) ? detachedPanel : capsule
 
     Repeater {
         model: 4
@@ -4724,10 +4814,11 @@ PanelWindow {
         anchors.verticalCenter:   root.pillSide ? parent.verticalCenter : undefined
 
         readonly property real freeGap: root.cfg.notchMode ? 0 : root.cfg.islandGap
-        readonly property real edgeMargin: root.settingsMode && !root.pillSide
+        readonly property bool inlineSettings: root.settingsMode && !root.cfg.pillKeepVisible
+        readonly property real edgeMargin: inlineSettings && !root.pillSide
                                            ? 24
                                            : root.pillHidden ? -(targetH + 4) : freeGap
-        readonly property real sideMargin: root.settingsMode && root.pillSide
+        readonly property real sideMargin: inlineSettings && root.pillSide
                                            ? Math.max(24, (root.width - width) / 2)
                                            : root.pillHidden ? -(width + 4) : freeGap
         anchors.topMargin:    root.pillAtTop    ? edgeMargin : 0
@@ -4779,7 +4870,7 @@ PanelWindow {
                 : root.toastActive
                 ? toastCapsule.implicitHeight + 24 : root.pillH
 
-        width: root.settingsMode ? root.settingsW
+        width: inlineSettings ? root.settingsW
              : (root.expanded && !root.cfg.pillKeepVisible) ? root.panelW
              : root.pillSide     ? idleThick
                                  : idleLen
@@ -4822,7 +4913,7 @@ PanelWindow {
         // the settings page works. Every other page reports its content height
         // and the panel follows it.
         readonly property bool stagePage: root.page === "files" || root.page === "media"
-        readonly property real targetH: root.settingsMode && root.page === "settings" ? settingsPanelH
+        readonly property real targetH: inlineSettings && root.page === "settings" ? settingsPanelH
                 : (root.expanded && !root.cfg.pillKeepVisible)
                   ? Math.min(contentH, stagePage
                                    ? Math.max(root.cfg.expandedH, Math.round(root.height * 0.72))
@@ -4858,10 +4949,10 @@ PanelWindow {
         Behavior on opacity { NumberAnimation { duration: root.animFast } }
 
         color: root.colBg
-        readonly property real edgeR: (root.settingsMode || !root.cfg.notchMode)
+        readonly property real edgeR: (inlineSettings || !root.cfg.notchMode)
                                       ? (root.cfg.islandRadius > 0 ? root.cfg.islandRadius : 26)
                                       : 0
-        readonly property real freeR: (root.settingsMode || (root.expanded && !root.cfg.pillKeepVisible))
+        readonly property real freeR: (inlineSettings || (root.expanded && !root.cfg.pillKeepVisible))
                 ? (root.cfg.islandRadius > 0 && !root.cfg.notchMode ? root.cfg.islandRadius : 26)
                 : (root.cfg.islandRadius > 0 && !root.cfg.notchMode
                    ? root.cfg.islandRadius : root.pillH / 2)
@@ -4943,6 +5034,7 @@ PanelWindow {
                 if (!root.hoverExpandArmed) return;
                 if (root.toastActive || root.btToastActive || root.wifiToastActive || root.acToastActive || root.recPickActive || root.voxActive) return;
                 if (root.cfg.pillAutoHide) return;
+                if (root.weatherDetailsOpen) return;
                 capsule.openPanel();
             }
         }
@@ -4959,7 +5051,8 @@ PanelWindow {
                 // hover state settle, or the panel collapses mid-expansion.
                 if (root.morphing) { collapseTimer.restart(); return; }
                 if (capsuleHover.hovered || hoverPadHover.hovered
-                    || (detachedHover.hovered && root.cfg.pillKeepVisible) || root.holdOpen) return;
+                    || (detachedHover.hovered && root.cfg.pillKeepVisible) || root.holdOpen
+                    || root.weatherDetailsOpen) return;
                 root.collapse();
             }
         }
@@ -4976,7 +5069,7 @@ PanelWindow {
         MouseArea {
             anchors.fill: parent
             z: -1
-            enabled: root.cfg.pillKeepVisible && root.expanded && !root.settingsMode
+            enabled: root.cfg.pillKeepVisible && root.expanded
                      && !root.toastActive && !root.pillDragging
             cursorShape: Qt.PointingHandCursor
             onClicked: root.collapse()
@@ -5726,7 +5819,7 @@ PanelWindow {
             anchors.leftMargin: 18
             anchors.rightMargin: 18
             height: root.pillH
-            visible: (!root.expanded || (root.cfg.pillKeepVisible && !root.settingsMode)) && !root.btToastActive && !root.wifiToastActive && !root.acToastActive && !root.recPickActive && !root.voxActive
+            visible: (!root.expanded || root.cfg.pillKeepVisible) && !root.btToastActive && !root.wifiToastActive && !root.acToastActive && !root.recPickActive && !root.voxActive
                      && !root.osdActive && !root.toastActive
             opacity: root.pillSide ? 0 : (visible ? 1 : 0)
             Behavior on opacity { NumberAnimation { duration: root.animFast } }
@@ -6052,7 +6145,7 @@ PanelWindow {
                 anchors.centerIn: parent
                 width: root.pillH
                 spacing: 7
-                visible: (!root.expanded || (root.cfg.pillKeepVisible && !root.settingsMode)) && !root.btToastActive && !root.wifiToastActive && !root.acToastActive && !root.recPickActive && !root.voxActive
+                visible: (!root.expanded || root.cfg.pillKeepVisible) && !root.btToastActive && !root.wifiToastActive && !root.acToastActive && !root.recPickActive && !root.voxActive
                 opacity: root.pillSide ? 1 : 0
                 Behavior on opacity { NumberAnimation { duration: root.animFast } }
 
@@ -6476,8 +6569,8 @@ PanelWindow {
             MouseArea {
                 anchors.fill: parent; acceptedButtons: Qt.LeftButton | Qt.RightButton; cursorShape: Qt.PointingHandCursor
                 onClicked: mouse => {
-                    if (mouse.button === Qt.RightButton || (!root.cfg.vpnPreferred && !root.cfg.vpnPreferredClient)) { root.page = "vpn"; root.holdOpen = true; }
-                    else root.togglePreferredVpn();
+                    if (mouse.button === Qt.RightButton) { root.page = "vpn"; root.holdOpen = true; }
+                    else root.openVpnApp();
                 }
             }
         }
@@ -6601,7 +6694,7 @@ PanelWindow {
         Loader {
             id: contentLoader
             z: 10
-            parent: (root.cfg.pillKeepVisible && !root.settingsMode && (root.expanded || detachedPanel.opacity > 0.005)) ? detachedPanel : capsule
+            parent: (root.cfg.pillKeepVisible && (root.expanded || detachedPanel.opacity > 0.005)) ? detachedPanel : capsule
             anchors.top: parent ? parent.top : undefined
             anchors.topMargin: (root.page === "main" || root.page === "chat" || root.page === "vpn") && !root.settingsMode ? 55 : 15
             anchors.horizontalCenter: parent ? parent.horizontalCenter : undefined
@@ -6611,7 +6704,8 @@ PanelWindow {
             // file manager and the media viewer draw a stage and are given the
             // panel's height; every other page reports its content and the panel
             // follows it.
-            height: (root.settingsMode && root.page === "settings") ? capsule.settingsPanelH - 30
+            height: (root.settingsMode && root.page === "settings")
+                  ? (parent === detachedPanel ? parent.height : capsule.settingsPanelH) - 30
                   : capsule.stagePage && parent ? parent.height - 30
                   : implicitHeight
             active: (root.expanded || capsule.height > root.pillH + 4 || (root.cfg.pillKeepVisible && detachedPanel.opacity > 0.005))
@@ -6683,9 +6777,9 @@ PanelWindow {
     Rectangle {
         id: detachedPanel
         z: 50
-        readonly property bool showMe: root.cfg.pillKeepVisible && !root.settingsMode && root.expanded
+        readonly property bool showMe: root.cfg.pillKeepVisible && root.expanded
 
-        visible: root.cfg.pillKeepVisible && !root.settingsMode && (root.expanded || opacity > 0.005)
+        visible: root.cfg.pillKeepVisible && (root.expanded || opacity > 0.005)
         opacity: showMe ? 1 : 0
         scale: showMe ? 1 : 0.96
 
@@ -6742,13 +6836,15 @@ PanelWindow {
 
         readonly property real panelGap: root.cfg.islandGap > 0 ? root.cfg.islandGap : 10
 
-        width: (root.cfg.pillKeepVisible && !root.settingsMode && (root.expanded || opacity > 0.005)) ? root.panelW : 0
+        width: (root.cfg.pillKeepVisible && (root.expanded || opacity > 0.005))
+               ? (root.settingsMode ? root.settingsW : root.panelW) : 0
 
         readonly property real detachedTargetH:
-            Math.min(capsule.contentH, capsule.stagePage
+            root.page === "settings" ? capsule.settingsPanelH
+            : Math.min(capsule.contentH, capsule.stagePage
                                       ? Math.max(root.cfg.expandedH, Math.round(root.height * 0.72))
                                       : root.cfg.expandedH)
-        height: (root.cfg.pillKeepVisible && !root.settingsMode && (root.expanded || opacity > 0.005))
+        height: (root.cfg.pillKeepVisible && (root.expanded || opacity > 0.005))
                 ? Math.min(detachedTargetH,
                            Math.max(0, root.pillAtBottom
                                        ? capsule.y - panelGap - 24

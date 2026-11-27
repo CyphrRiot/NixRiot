@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 2.52
+
+- Clicking the VPN chip in the island opens the selected VPN app instead of disconnecting it.
+- The bar stays visible by default while the island is open.
+- Settings → Maintenance → Personal Image builds an installer ISO with this machine's account, Installs selection and Panacea settings.
+
 ## 2.51
 
 - Correct "Total Size" in Backup & Restore settings tab

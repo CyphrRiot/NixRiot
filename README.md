@@ -3,7 +3,7 @@
 ![NixRiot](docs/img/banner.webp)
 
 ![Status](https://img.shields.io/badge/status-release-9a2eef?labelColor=1b2b34)
-![Version](https://img.shields.io/badge/version-2.51-9a2eef?labelColor=1b2b34)
+![Version](https://img.shields.io/badge/version-2.52-9a2eef?labelColor=1b2b34)
 ![Platform](https://img.shields.io/badge/platform-NixOS-9a2eef?logo=nixos&logoColor=white&labelColor=1b2b34)
 ![Shell](https://img.shields.io/badge/shell-Hyprland-9a2eef?logo=hyprland&logoColor=9a2eef&labelColor=1b2b34)
 ![UI](https://img.shields.io/badge/UI-Quickshell-9a2eef?labelColor=1b2b34)
@@ -49,6 +49,7 @@ This file is the manual. The reasoning is in
 - [Games](#games)
 - [Updating](#updating)
 - [Backup and restore](#backup-and-restore)
+- [Personal image](#personal-image)
 - [Advanced: build your own image](#advanced-build-your-own-image)
 - [Troubleshooting](#troubleshooting)
 - [Donations](#donations)
@@ -104,7 +105,8 @@ NixRiot ships no wallet files and no secrets. You own those.
 - **fish** with a prompt of its own (hostname, directory, git branch, exit
   status), plus the OpenRiot aliases and functions.
 - **Helix** (the default editor), Crush, and a plain text editor.
-- **Firefox** and zathura. LibreOffice is optional: install it from
+- **Firefox** and zathura. Firefox opens with the Matte Black theme, installed
+  for every profile. LibreOffice is optional: install it from
   **Settings → Installs**, or set `nixriot.office = true;` in
   `/etc/nixriot/hosts/installed/local.nix` and run `rebuild`. LibreOffice opens
   with the dark theme on its first launch.
@@ -116,8 +118,10 @@ NixRiot ships no wallet files and no secrets. You own those.
   default.
 - **Mullvad VPN**: the daemon and the desktop app are installed and enabled by
   default, with the GUI in the app launcher and the `mullvad` command line.
-- **Security**: firewall, no SSH server unless `nixriot.ssh` is enabled, sysctl
-  hardening, MAC randomization, `restic` and `rclone` for backups.
+- **Security**: firewall, sysctl hardening, MAC randomization, `restic` and
+  `rclone` for backups. The SSH server is off by default and is switched on in
+  **Settings → Security → Remote Access**, which rebuilds the system with
+  password and root logins refused.
 - The **NixRiot wallpaper set** (39 WebP images, `01.webp` through `39.webp`).
 - A **night light** for the screen, off until you switch it on (`SUPER + N`).
 - A **password vault** (`SUPER + SHIFT + P`), encrypted with your login password.
@@ -398,8 +402,8 @@ full set.
 |---|---|
 | `apps/shell.nix` | fish, zoxide, ripgrep, fd, fzf, btop, fastfetch, lsd, bat, pv, jq, signal-desktop, gurk-rs |
 | `apps/editors.nix` | helix, gnome-text-editor, crush, git |
-| `apps/media.nix` | mpv, lollypop, ffmpeg, ffmpegthumbnailer, cava, transmission (optional) |
-| `apps/office.nix` | zathura, firefox, file-roller, libreoffice (optional) |
+| `apps/media.nix` | mpv, lollypop, ffmpeg, ffmpegthumbnailer, cava, transmission (on by default) |
+| `apps/office.nix` | zathura, firefox with the Matte Black theme, file-roller, libreoffice (optional) |
 | `desktop/panacea.nix` | hyprland, quickshell, hyprpaper, hyprsunset, hypridle, foot, grim, slurp, wl-clipboard, cliphist, wf-recorder, yazi, swappy, mpvpaper, and the rest of the shell's runtime (tesseract with `nixriot.ocr`) |
 | `desktop/theme.nix` | JetBrains Mono Nerd Font, Material Design icons, Noto fonts, Bibata cursors, Kora icons |
 | `crypto/*` | monero-gui, bitcoin and bitcoind, glyphriot, wireguard-tools |
@@ -731,6 +735,10 @@ from the mounted removable ones; **Automatic** uses `/run/media/<user>/Backup`,
 and picking a drive stores its path as `backupDrive` in
 `~/.config/panacea/settings.json`.
 
+The page shows **Total size** (what the mirror holds), **Free space**,
+**Last backup**, and **Last transfer**, the bytes copied by the last run. Mount
+and Unmount sit beside the drive picker.
+
 ![The Backup and restore page, with the drive mounted and encrypted](docs/img/backup.webp)
 
 Back up now copies with `rsync -aH --delete`, so the drive is a mirror of
@@ -773,6 +781,42 @@ land outside the flake, survive updates unpredictably, and cannot be reproduced.
 
 Panacea's own updater is replaced by an adapter that drives `nixriot-update`;
 the upstream one rewrote the config tree and would fight the flake.
+
+---
+
+## Personal image
+
+**Settings → Maintenance → Personal Image** builds an installer ISO from this
+machine's tree, so a fresh install already has your setup. It carries the
+username and hostname from `hosts/installed/local.nix`, the Installs selection
+from `features.nix` (Claude, LibreOffice, the games collection and any package
+you added by name), and your Panacea settings from
+`~/.config/panacea/settings.json`.
+
+API keys are removed from the copy before the build: `aiKey`, `weatherKey`,
+`vpnPreferredClient` and `updNotifiedVer`. Hardware, passwords, SSH keys, the
+vault and application data are not carried. The `hardware-configuration.nix`
+inside the image is replaced when the installer runs `nixos-generate-config`.
+
+![The Personal Image page in Settings, building an image](docs/img/personal-iso.webp)
+
+The image lands in `~/Downloads` as `NixRiot-<hostname>-<date>.iso`, with a
+`.sha256` beside it. Building needs about 8 GB free in `/nix`, 3 GB where the
+file is saved, and network access for anything this machine does not already
+have cached; expect 20 to 60 minutes. The result is unsigned and is not the
+official release.
+
+Booting it asks only for the target disk, the LUKS passphrase and the user
+password: the baked username and hostname are reused. Set `NIXRIOT_USER` or
+`NIXRIOT_HOSTNAME` at the installer to override them, and use
+`NIXRIOT_DISK`, `NIXRIOT_PASSPHRASE` and `NIXRIOT_PASSWORD` for an unattended
+install as usual.
+
+The same build from a terminal:
+
+```sh
+~/.config/panacea/scripts/personaliso.sh start
+```
 
 ---
 

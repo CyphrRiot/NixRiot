@@ -130,7 +130,7 @@ Item {
                     onPicked: view.chooseProfile(modelData.id)
                 }
             }
-            Text { Layout.fillWidth: true; Layout.topMargin: 4; wrapMode: Text.WordWrap; text: view.sys.tr("Your choice is saved. Click the country in the island to control the connection."); color: view.sys.colMuted; font { family: view.sys.fontBody; pixelSize: 10 } }
+            Text { Layout.fillWidth: true; Layout.topMargin: 4; wrapMode: Text.WordWrap; text: view.sys.tr("Your choice is saved. The country in the island opens the app; the power button on the island VPN page connects and disconnects."); color: view.sys.colMuted; font { family: view.sys.fontBody; pixelSize: 10 } }
         }
     }
 }

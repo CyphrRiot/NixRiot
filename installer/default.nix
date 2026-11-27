@@ -41,14 +41,20 @@ pkgs.writeScriptBin "nixriot-install" ''
     [ -n "''${NIXRIOT_PASSWORD:-}" ] || { echo "NIXRIOT_DISK is set but NIXRIOT_PASSWORD is not." >&2; exit 1; }
   fi
 
+  personal_user=""
+  personal_host=""
+  if [ -r /etc/nixriot/personal-image ]; then
+    personal_user="$(sed -n 's/^user=//p' /etc/nixriot/personal-image | head -1)"
+    personal_host="$(sed -n 's/^host=//p' /etc/nixriot/personal-image | head -1)"
+    echo
+    echo "This is a personal image: it keeps ''${personal_user:-the user}@''${personal_host:-nixriot}."
+    echo "Set NIXRIOT_USER or NIXRIOT_HOSTNAME to install as something else."
+  fi
+
   if [ -n "''${NIXRIOT_USER:-}" ]; then
     user="$NIXRIOT_USER"
-    case "$user" in
-      root|*[!a-z0-9_-]*|[0-9_-]*)
-        echo "Invalid NIXRIOT_USER: $user" >&2
-        exit 1
-        ;;
-    esac
+  elif [ -n "$personal_user" ]; then
+    user="$personal_user"
   else
     while :; do
       read -r -p "Username for the desktop user: " user
@@ -66,8 +72,17 @@ pkgs.writeScriptBin "nixriot-install" ''
     done
   fi
 
+  case "$user" in
+    ""|root|*[!a-z0-9_-]*|[0-9_-]*)
+      echo "Invalid username: $user" >&2
+      exit 1
+      ;;
+  esac
+
   if [ -n "''${NIXRIOT_HOSTNAME:-}" ]; then
     host="$NIXRIOT_HOSTNAME"
+  elif [ -n "$personal_host" ]; then
+    host="$personal_host"
   else
     while :; do
       read -r -p "Hostname for this machine [nixriot]: " host
@@ -91,6 +106,20 @@ pkgs.writeScriptBin "nixriot-install" ''
   fi
 
   host="''${host:-nixriot}"
+  case "$host" in
+    -*|*-|"")
+      echo "Invalid hostname: $host" >&2
+      exit 1
+      ;;
+    *[!a-z0-9-]*)
+      echo "Invalid hostname: $host" >&2
+      exit 1
+      ;;
+  esac
+  if [ "''${#host}" -gt 63 ]; then
+    echo "Hostname is longer than 63 characters." >&2
+    exit 1
+  fi
 
   if [ -n "''${NIXRIOT_PASSWORD:-}" ]; then
     user_pass="$NIXRIOT_PASSWORD"
