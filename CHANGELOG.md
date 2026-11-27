@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 2.48
+
+- Crush + Packages update 
+
 ## 2.47
 
 - Deleting on a phone or a gvfs mount deletes permanently instead of moving to trash. The Files app now shows "Deleting: <name>" while the delete is in flight.
