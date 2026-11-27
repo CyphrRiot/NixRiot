@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-## 2.49
+## 2.50
 
 - Firefox opens with the Matte Black theme, installed for every profile.
 - The SSH server is off by default. Settings → Security → Remote Access switches it on or off, which rebuilds the system; password and root logins are refused.
