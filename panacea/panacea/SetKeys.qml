@@ -461,6 +461,7 @@ ColumnLayout {
             BindRow { bindId: "fileManagerTui"; label: page.sys.tr("Files (TUI)") }
             BindRow { bindId: "notes";          label: page.sys.tr("Text editor") }
             BindRow { bindId: "crush";          label: page.sys.tr("Crush") }
+            BindRow { bindId: "calculator";     label: page.sys.tr("Calculator") }
             BindRow { bindId: "music";          label: page.sys.tr("Music player") }
             BindRow { bindId: "mail";           label: page.sys.tr("Proton Mail") }
             BindRow { bindId: "mailKey";        label: page.sys.tr("Proton Mail (mail key)"); manual: true }

@@ -5,6 +5,7 @@
       zathura
       firefox
       file-roller
+      gnome-calculator
     ] ++ lib.optionals config.nixriot.office [ libreoffice ];
 
     environment.etc."firefox/extensions/matte-black.xpi".source = pkgs.fetchurl {

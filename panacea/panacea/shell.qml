@@ -263,6 +263,7 @@ PanelWindow {
             property string bind_toggleSplit: "SUPER + J"
             property string bind_notes: "SUPER + O"
             property string bind_crush: "SUPER + C"
+            property string bind_calculator: "SUPER + equal"
             property string bind_music: "SUPER + SHIFT + K"
             property string bind_mail: "SUPER + M"
             property string bind_mailKey: "XF86Mail"
@@ -365,6 +366,7 @@ PanelWindow {
         toggleSplit:    "SUPER + J",
         notes:          "SUPER + O",
         crush:          "SUPER + C",
+        calculator:     "SUPER + equal",
         music:          "SUPER + SHIFT + K",
         mail:           "SUPER + M",
         mailKey:        "XF86Mail",

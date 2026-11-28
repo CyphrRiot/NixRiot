@@ -43,8 +43,8 @@ hl.window_rule({
     name  = "calculator",
     match = { class = "org.gnome.Calculator" },
     float = true,
-    size  = "400 500",
-    move  = "(monitor_w-410) 95",
+    size  = "380 520",
+    center = true,
 })
 
 -- GTK4 on the Intel GPU leaves blinking damage behind while scrolling with the

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 2.53
+
+- `SUPER + =` opens GNOME Calculator as a centered floating window.
+
 ## 2.52
 
 - Clicking the VPN chip in the island opens the selected VPN app instead of disconnecting it.
